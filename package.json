@@ -15,7 +15,8 @@
         "clean": "rm -rf .next",
         "dev:clean": "npm run clean && npm run dev",
         "test": "jest --passWithNoTests",
-        "test:watch": "jest --watch"
+        "test:watch": "jest --watch",
+        "prepare": "husky"
     },
     "dependencies": {
         "@radix-ui/react-slot": "^1.2.3",
