@@ -31,4 +31,3 @@ describe('counterSlice', () => {
         expect(reducer(state, reset())).toEqual({ value: 0 });
     });
 });
-
