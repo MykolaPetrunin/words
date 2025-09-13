@@ -16,6 +16,8 @@
         "dev:clean": "npm run clean && npm run dev",
         "test": "jest --passWithNoTests",
         "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage --passWithNoTests",
+        "test:coverage:watch": "jest --coverage --watch",
         "prepare": "husky"
     },
     "dependencies": {

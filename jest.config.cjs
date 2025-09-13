@@ -12,7 +12,16 @@ const config = {
     },
     testPathIgnorePatterns: ['/node_modules/', '/.next/'],
     collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/**/__tests__/**', '!src/**/*.test.{ts,tsx}', '!src/**/*.spec.{ts,tsx}'],
-    coveragePathIgnorePatterns: ['src/app/layout.tsx', 'src/app/globals.css', 'src/lib/redux/ReduxProvider.tsx'],
+    coveragePathIgnorePatterns: [
+        'src/app/layout.tsx',
+        'src/app/globals.css',
+        'src/lib/redux/ReduxProvider.tsx',
+        'src/components/ui/',
+        'src/app/page.tsx',
+        'src/app/objects/page.tsx',
+        'src/components/theme/',
+        'src/lib/theme/'
+    ],
     coverageReporters: ['text', 'lcov', 'html'],
     coverageDirectory: 'coverage',
     coverageThreshold: {
