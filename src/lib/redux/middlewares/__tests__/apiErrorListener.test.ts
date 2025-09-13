@@ -1,8 +1,5 @@
 import { apiErrorListener } from '../apiErrorListener';
 
-const mockAlert = jest.fn();
-global.alert = mockAlert;
-
 describe('apiErrorListener', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -19,9 +16,16 @@ describe('apiErrorListener', () => {
         expect(typeof middleware).toBe('function');
     });
 
-    it('should handle listener configuration', () => {
+    it('should have listener configuration methods', () => {
         expect(apiErrorListener).toHaveProperty('startListening');
         expect(apiErrorListener).toHaveProperty('stopListening');
         expect(apiErrorListener).toHaveProperty('clearListeners');
+    });
+
+    it('should be a listener middleware instance', () => {
+        expect(apiErrorListener.middleware).toBeDefined();
+        expect(typeof apiErrorListener.startListening).toBe('function');
+        expect(typeof apiErrorListener.stopListening).toBe('function');
+        expect(typeof apiErrorListener.clearListeners).toBe('function');
     });
 });
