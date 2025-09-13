@@ -22,7 +22,7 @@ const config = {
         'src/components/theme/',
         'src/lib/theme/'
     ],
-    coverageReporters: ['text', 'lcov', 'html'],
+    coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
     coverageDirectory: 'coverage',
     coverageThreshold: {
         global: {
