@@ -1,34 +1,34 @@
 #!/bin/sh
 . ~/.nvm/nvm.sh
 
-echo "🔨 Перевірка збірки..."
+echo "🔨 Checking build..."
 npm run build
 
 if [ $? -ne 0 ]; then
-    echo "❌ Збірка провалилась! Виправте помилки перед комітом."
+    echo "❌ Build failed! Fix errors before committing."
     exit 1
 fi
 
-echo "✅ Збірка успішна!"
+echo "✅ Build successful!"
 echo ""
 
-echo "🧹 Запуск lint-staged..."
+echo "🧹 Running lint-staged..."
 npx lint-staged
 
 if [ $? -ne 0 ]; then
-    echo "❌ Lint-staged провалився! Виправте помилки перед комітом."
+    echo "❌ Lint-staged failed! Fix errors before committing."
     exit 1
 fi
 
-echo "✅ Lint-staged пройшов!"
+echo "✅ Lint-staged passed!"
 echo ""
 
-echo "📊 Перевірка покриття тестами..."
+echo "📊 Checking test coverage..."
 npm run test:coverage:check
 
 if [ $? -ne 0 ]; then
-    echo "❌ Покриття тестами недостатнє! Додайте більше тестів."
+    echo "❌ Test coverage is insufficient! Add more tests."
     exit 1
 fi
 
-echo "✅ Всі перевірки пройдені! Коміт дозволено. 🎉"
+echo "✅ All checks passed! Commit allowed. 🎉"
