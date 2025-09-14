@@ -1,12 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { auth, signIn as firebaseSignIn, signOut as firebaseSignOut, signUp as firebaseSignUp, onAuthStateChange } from '@/lib/firebase/firebaseClient';
 import { AuthContextType, User } from '@/lib/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const PUBLIC_PATHS: ReadonlyArray<string> = ['/', '/login', '/signup'];
 
 interface AuthProviderProps {
     children: ReactNode;
@@ -16,6 +18,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChange(async (firebaseUser) => {
@@ -24,13 +27,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (firebaseUser) {
                 const idToken = await auth.currentUser?.getIdToken();
                 if (idToken) {
-                    await fetch('/api/auth/session', {
+                    const response = await fetch('/api/auth/session', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ idToken })
                     });
+                    if (response.ok && PUBLIC_PATHS.includes(pathname)) {
+                        router.replace('/dashboard');
+                    }
                 }
             } else {
                 await fetch('/api/auth/logout', {
@@ -42,12 +48,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [pathname, router]);
 
     const signIn = async (email: string, password: string): Promise<void> => {
         try {
             await firebaseSignIn(email, password);
-            router.push('/dashboard');
         } catch (error) {
             console.error('Sign in error:', error);
             throw error;
@@ -57,7 +62,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const signUp = async (email: string, password: string): Promise<void> => {
         try {
             await firebaseSignUp(email, password);
-            router.push('/dashboard');
         } catch (error) {
             console.error('Sign up error:', error);
             throw error;

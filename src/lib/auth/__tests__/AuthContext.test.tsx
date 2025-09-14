@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
 
 import * as firebaseClient from '@/lib/firebase/firebaseClient';
@@ -8,7 +8,8 @@ import { User } from '@/lib/types/auth';
 import { AuthProvider, useAuth } from '../AuthContext';
 
 jest.mock('next/navigation', () => ({
-    useRouter: jest.fn()
+    useRouter: jest.fn(),
+    usePathname: jest.fn()
 }));
 
 jest.mock('@/lib/firebase/firebaseClient', () => ({
@@ -25,7 +26,8 @@ global.fetch = jest.fn();
 
 describe('AuthContext', () => {
     const mockPush = jest.fn();
-    const mockRouter = { push: mockPush };
+    const mockReplace = jest.fn();
+    const mockRouter = { push: mockPush, replace: mockReplace };
     const mockUser: User = {
         uid: 'test-uid',
         email: 'test@example.com',
@@ -36,6 +38,7 @@ describe('AuthContext', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (useRouter as jest.Mock).mockReturnValue(mockRouter);
+        (usePathname as jest.Mock).mockReturnValue('/login');
         (global.fetch as jest.Mock).mockResolvedValue({
             ok: true,
             json: jest.fn().mockResolvedValue({})
@@ -59,14 +62,14 @@ describe('AuthContext', () => {
             expect(result.current.user).toBeNull();
         });
 
-        it('should handle authenticated user on mount', async () => {
+        it('should handle authenticated user on mount and redirect from public path', async () => {
             const mockUnsubscribe = jest.fn();
             const mockGetIdToken = jest.fn().mockResolvedValue('test-token');
             const mockCurrentUser = {
                 getIdToken: mockGetIdToken
             };
 
-            (firebaseClient.auth as { currentUser: typeof mockCurrentUser }).currentUser = mockCurrentUser;
+            (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
             (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
                 callback(mockUser);
                 return mockUnsubscribe;
@@ -88,16 +91,17 @@ describe('AuthContext', () => {
                 },
                 body: JSON.stringify({ idToken: 'test-token' })
             });
+            expect(mockReplace).toHaveBeenCalledWith('/dashboard');
         });
 
-        it('should handle authenticated user without idToken', async () => {
+        it('should handle authenticated user without idToken and not redirect', async () => {
             const mockUnsubscribe = jest.fn();
             const mockGetIdToken = jest.fn().mockResolvedValue(null);
             const mockCurrentUser = {
                 getIdToken: mockGetIdToken
             };
 
-            (firebaseClient.auth as { currentUser: typeof mockCurrentUser }).currentUser = mockCurrentUser;
+            (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
             (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
                 callback(mockUser);
                 return mockUnsubscribe;
@@ -113,6 +117,83 @@ describe('AuthContext', () => {
             });
 
             expect(global.fetch).not.toHaveBeenCalledWith('/api/auth/session', expect.any(Object));
+            expect(mockReplace).not.toHaveBeenCalled();
+        });
+
+        it('should not redirect from protected path after session creation', async () => {
+            const mockUnsubscribe = jest.fn();
+            const mockGetIdToken = jest.fn().mockResolvedValue('test-token');
+            const mockCurrentUser = {
+                getIdToken: mockGetIdToken
+            };
+
+            (usePathname as jest.Mock).mockReturnValue('/dashboard');
+            (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
+            (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
+                callback(mockUser);
+                return mockUnsubscribe;
+            });
+
+            (global.fetch as jest.Mock).mockResolvedValue({
+                ok: true,
+                json: jest.fn().mockResolvedValue({})
+            });
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+
+            const { result } = renderHook(() => useAuth(), { wrapper });
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+                expect(result.current.user).toEqual(mockUser);
+            });
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/auth/session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idToken: 'test-token' })
+            });
+            expect(mockReplace).not.toHaveBeenCalled();
+        });
+
+        it('should not redirect when session creation fails', async () => {
+            const mockUnsubscribe = jest.fn();
+            const mockGetIdToken = jest.fn().mockResolvedValue('test-token');
+            const mockCurrentUser = {
+                getIdToken: mockGetIdToken
+            };
+
+            (usePathname as jest.Mock).mockReturnValue('/login');
+            (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
+            (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
+                callback(mockUser);
+                return mockUnsubscribe;
+            });
+
+            (global.fetch as jest.Mock).mockResolvedValue({
+                ok: false,
+                json: jest.fn().mockResolvedValue({})
+            });
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+
+            const { result } = renderHook(() => useAuth(), { wrapper });
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+                expect(result.current.user).toEqual(mockUser);
+            });
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/auth/session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idToken: 'test-token' })
+            });
+            expect(mockReplace).not.toHaveBeenCalled();
         });
 
         it('should handle unauthenticated user on mount', async () => {
@@ -165,7 +246,8 @@ describe('AuthContext', () => {
             });
 
             expect(firebaseClient.signIn).toHaveBeenCalledWith('test@example.com', 'password123');
-            expect(mockPush).toHaveBeenCalledWith('/dashboard');
+            expect(mockPush).not.toHaveBeenCalled();
+            expect(mockReplace).not.toHaveBeenCalled();
         });
 
         it('should handle sign in error', async () => {
@@ -198,7 +280,8 @@ describe('AuthContext', () => {
             });
 
             expect(firebaseClient.signUp).toHaveBeenCalledWith('test@example.com', 'password123');
-            expect(mockPush).toHaveBeenCalledWith('/dashboard');
+            expect(mockPush).not.toHaveBeenCalled();
+            expect(mockReplace).not.toHaveBeenCalled();
         });
 
         it('should handle sign up error', async () => {
