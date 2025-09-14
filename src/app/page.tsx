@@ -1,133 +1,143 @@
 'use client';
 
-import { Code2, Layers, Rocket, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
-import * as React from 'react';
+import React from 'react';
 
-import ThemeToggle from '@/components/theme/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { decrement, increment, reset } from '@/lib/redux/slices/counterSlice';
+import { useAuth } from '@/lib/auth/AuthContext';
 
-import { useAppDispatch, useAppSelector } from '../lib/redux/ReduxProvider';
-
-interface FeatureItem {
-    id: 'ts' | 'eslint' | 'prettier' | 'next' | 'redux';
-    title: string;
-    description: string;
-    Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-}
-
-function FeatureCard({ feature }: { feature: FeatureItem }): React.JSX.Element {
-    const { Icon } = feature;
-    return (
-        <Card className="transition-colors">
-            <CardHeader className="pb-3">
-                <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-md bg-secondary text-secondary-foreground">
-                    <Icon />
-                </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-                <CardDescription>{feature.description}</CardDescription>
-            </CardContent>
-        </Card>
-    );
-}
-
-export default function Home(): React.JSX.Element {
-    const count = useAppSelector((state) => state.counter.value);
-    const dispatch = useAppDispatch();
-
-    const handleDecrement: React.MouseEventHandler<HTMLButtonElement> = () => {
-        dispatch(decrement());
-    };
-
-    const handleReset: React.MouseEventHandler<HTMLButtonElement> = () => {
-        dispatch(reset());
-    };
-
-    const handleIncrement: React.MouseEventHandler<HTMLButtonElement> = () => {
-        dispatch(increment());
-    };
-
-    const features: FeatureItem[] = [
-        { id: 'ts', title: 'TypeScript', description: 'Строга типізація для надійного коду', Icon: Code2 },
-        { id: 'eslint', title: 'ESLint', description: 'Автоматична перевірка якості коду', Icon: ShieldCheck },
-        { id: 'prettier', title: 'Prettier', description: 'Консистентне форматування коду', Icon: Sparkles },
-        { id: 'next', title: 'Next.js 15', description: 'Актуальний стек та архітектура', Icon: Rocket },
-        { id: 'redux', title: 'Redux Toolkit', description: 'Сучасне управління станом', Icon: Layers }
-    ];
+export default function Home(): React.ReactElement {
+    const { user, loading } = useAuth();
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6">
-                <div className="text-lg font-semibold tracking-tight">Next.js TS Starter</div>
-                <div className="flex items-center gap-2">
-                    <Button asChild variant="outline" size="sm">
-                        <a href="#features">Можливості</a>
-                    </Button>
-                    <Button asChild size="sm">
-                        <Link href="/objects">Об&apos;єкти</Link>
-                    </Button>
-                    <ThemeToggle />
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+            {/* Navigation */}
+            <nav className="border-b bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm fixed top-0 w-full z-50">
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex justify-between items-center">
+                        <h1 className="text-2xl font-bold">Words Next</h1>
+                        <div className="flex gap-4">
+                            {loading ? (
+                                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                            ) : user ? (
+                                <Button asChild>
+                                    <Link href="/dashboard">
+                                        Перейти до Dashboard
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button variant="ghost" asChild>
+                                        <Link href="/login">Увійти</Link>
+                                    </Button>
+                                    <Button asChild>
+                                        <Link href="/signup">Зареєструватися</Link>
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </header>
+            </nav>
 
-            <main className="mx-auto w-full max-w-7xl px-6 pb-20 pt-6 md:pt-10">
-                <section className="mb-10 text-center">
-                    <h1 className="mb-3 text-4xl font-bold tracking-tight md:text-6xl">Ласкаво просимо до Next.js</h1>
-                    <p className="mx-auto mb-6 max-w-2xl text-muted-foreground md:text-lg">Сучасний старт із TypeScript, ESLint, Prettier та Redux Toolkit</p>
-                    <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-                        <Button asChild size="lg">
-                            <a href="#counter">Спробувати лічильник</a>
+            {/* Hero Section */}
+            <section className="pt-32 pb-20 px-4">
+                <div className="container mx-auto text-center">
+                    <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Вивчайте слова легко та ефективно
+                    </h2>
+                    <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+                        Сучасна платформа для вивчення нових слів з використанням передових технологій та персоналізованого підходу до навчання
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                        {!user && (
+                            <>
+                                <Button size="lg" asChild>
+                                    <Link href="/signup">
+                                        Почати безкоштовно
+                                        <ArrowRight className="ml-2 h-5 w-5" />
+                                    </Link>
+                                </Button>
+                                <Button size="lg" variant="outline" asChild>
+                                    <Link href="/login">Увійти в акаунт</Link>
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* Features Section */}
+            <section className="py-20 px-4">
+                <div className="container mx-auto">
+                    <h3 className="text-3xl font-bold text-center mb-12">Чому обирають Words Next?</h3>
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <Card>
+                            <CardHeader>
+                                <Zap className="h-10 w-10 text-blue-600 mb-4" />
+                                <CardTitle>Швидке навчання</CardTitle>
+                                <CardDescription>Використовуйте сучасні методики для швидкого запам&apos;ятовування</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    Наші алгоритми адаптуються під ваш темп навчання та допомагають засвоювати матеріал максимально ефективно
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <BookOpen className="h-10 w-10 text-green-600 mb-4" />
+                                <CardTitle>Великий словник</CardTitle>
+                                <CardDescription>Тисячі слів з детальними поясненнями та прикладами</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    База постійно оновлюється новими словами та виразами, щоб ви завжди мали актуальний матеріал
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <Shield className="h-10 w-10 text-purple-600 mb-4" />
+                                <CardTitle>Безпека даних</CardTitle>
+                                <CardDescription>Ваші дані захищені сучасними технологіями шифрування</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    Ми використовуємо Firebase Authentication для забезпечення максимального захисту вашого акаунту
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="py-20 px-4 bg-gray-100 dark:bg-gray-800">
+                <div className="container mx-auto text-center">
+                    <h3 className="text-3xl font-bold mb-4">Готові почати навчання?</h3>
+                    <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">Приєднуйтесь до тисяч користувачів, які вже покращують свій словниковий запас</p>
+                    {!user && (
+                        <Button size="lg" asChild>
+                            <Link href="/signup">
+                                Створити безкоштовний акаунт
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
                         </Button>
-                        <Button asChild variant="outline" size="lg">
-                            <a href="#features">Переглянути можливості</a>
-                        </Button>
-                    </div>
-                </section>
+                    )}
+                </div>
+            </section>
 
-                <section id="counter" className="mb-16">
-                    <Card className="mx-auto max-w-xl">
-                        <CardHeader>
-                            <CardTitle className="text-2xl">Redux Counter</CardTitle>
-                            <CardDescription>Класичний приклад керування станом</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div aria-live="polite" className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-md bg-muted text-4xl font-bold">
-                                {count}
-                            </div>
-                            <div className="flex justify-center gap-3">
-                                <Button onClick={handleDecrement} variant="destructive" size="lg">
-                                    -1
-                                </Button>
-                                <Button onClick={handleReset} variant="secondary" size="lg">
-                                    Скинути
-                                </Button>
-                                <Button onClick={handleIncrement} size="lg">
-                                    +1
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </section>
-
-                <section id="features">
-                    <div className="mb-6 text-center">
-                        <h2 className="text-3xl font-semibold md:text-4xl">Можливості</h2>
-                        <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">Оптимізований стек інструментів для швидкого старту та масштабування</p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {features.map((feature) => (
-                            <FeatureCard key={feature.id} feature={feature} />
-                        ))}
-                    </div>
-                </section>
-            </main>
-
-            <footer className="mx-auto w-full max-w-7xl px-6 pb-8 pt-10 text-center text-sm text-muted-foreground">
-                Готово до роботи з TypeScript, ESLint, Prettier, Redux Toolkit
+            {/* Footer */}
+            <footer className="py-8 px-4 border-t">
+                <div className="container mx-auto text-center text-gray-600 dark:text-gray-400">
+                    <p>&copy; 2025 Words Next. Всі права захищені.</p>
+                </div>
             </footer>
         </div>
     );

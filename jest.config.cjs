@@ -4,7 +4,15 @@ const config = {
     setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
     transform: {
-        '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }]
+        '^.+\\.(ts|tsx)$': [
+            'ts-jest',
+            {
+                tsconfig: {
+                    jsx: 'react',
+                    esModuleInterop: true
+                }
+            }
+        ]
     },
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
