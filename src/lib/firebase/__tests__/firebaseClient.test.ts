@@ -37,8 +37,7 @@ describe('firebaseClient', () => {
     });
 
     describe('initialization', () => {
-        // These tests are commented out due to ESLint restrictions on require()
-        // The initialization is tested implicitly through other tests
+        // Firebase initialization is tested implicitly through other tests
     });
 
     describe('mapFirebaseUserToUser', () => {
