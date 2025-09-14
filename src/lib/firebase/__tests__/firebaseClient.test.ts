@@ -1,7 +1,7 @@
 import { getApps, initializeApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, signOut as firebaseSignOut, User as FirebaseUser, getAuth, onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
 
-import { auth, mapFirebaseUserToUser, onAuthStateChange, signIn, signOut, signUp } from '../firebaseClient';
+import { auth, createFirebaseApp, FirebaseAppDependencies, mapFirebaseUserToUser, onAuthStateChange, signIn, signOut, signUp } from '../firebaseClient';
 
 jest.mock('firebase/app', () => ({
     initializeApp: jest.fn(),
@@ -36,8 +36,54 @@ describe('firebaseClient', () => {
         (getAuth as jest.Mock).mockReturnValue(mockAuth);
     });
 
-    describe('initialization', () => {
-        // Firebase initialization is tested implicitly through other tests
+    describe('createFirebaseApp', () => {
+        it('should initialize new app when no apps exist', () => {
+            const mockApp = {} as unknown as import('firebase/app').FirebaseApp;
+            const mockAuthInstance = {} as unknown as import('firebase/auth').Auth;
+
+            const getAppsMock: FirebaseAppDependencies['getApps'] = jest.fn(() => [] as import('firebase/app').FirebaseApp[]);
+            const getAppMock: FirebaseAppDependencies['getApp'] = jest.fn(() => mockApp);
+            const initializeAppMock: FirebaseAppDependencies['initializeApp'] = jest.fn(() => mockApp);
+            const getAuthMock: FirebaseAppDependencies['getAuth'] = jest.fn(() => mockAuthInstance);
+
+            const { app: appInstance, auth: authInstance } = createFirebaseApp({
+                getApps: getAppsMock,
+                getApp: getAppMock,
+                initializeApp: initializeAppMock,
+                getAuth: getAuthMock
+            });
+
+            expect(getAppsMock).toHaveBeenCalled();
+            expect(initializeAppMock).toHaveBeenCalledTimes(1);
+            expect(getAppMock).not.toHaveBeenCalled();
+            expect(getAuthMock).toHaveBeenCalledWith(appInstance);
+            expect(appInstance).toBe(mockApp);
+            expect(authInstance).toBe(mockAuthInstance);
+        });
+
+        it('should reuse existing app when apps exist', () => {
+            const mockApp = {} as unknown as import('firebase/app').FirebaseApp;
+            const mockAuthInstance = {} as unknown as import('firebase/auth').Auth;
+
+            const getAppsMock: FirebaseAppDependencies['getApps'] = jest.fn(() => [mockApp] as import('firebase/app').FirebaseApp[]);
+            const getAppMock: FirebaseAppDependencies['getApp'] = jest.fn(() => mockApp);
+            const initializeAppMock: FirebaseAppDependencies['initializeApp'] = jest.fn(() => mockApp);
+            const getAuthMock: FirebaseAppDependencies['getAuth'] = jest.fn(() => mockAuthInstance);
+
+            const { app: appInstance, auth: authInstance } = createFirebaseApp({
+                getApps: getAppsMock,
+                getApp: getAppMock,
+                initializeApp: initializeAppMock,
+                getAuth: getAuthMock
+            });
+
+            expect(getAppsMock).toHaveBeenCalled();
+            expect(getAppMock).toHaveBeenCalledTimes(1);
+            expect(initializeAppMock).not.toHaveBeenCalled();
+            expect(getAuthMock).toHaveBeenCalledWith(appInstance);
+            expect(appInstance).toBe(mockApp);
+            expect(authInstance).toBe(mockAuthInstance);
+        });
     });
 
     describe('mapFirebaseUserToUser', () => {

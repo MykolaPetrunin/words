@@ -1,4 +1,6 @@
+import type { FirebaseApp } from 'firebase/app';
 import { getApp, getApps, initializeApp } from 'firebase/app';
+import type { Auth } from 'firebase/auth';
 import { createUserWithEmailAndPassword, signOut as firebaseSignOut, User as FirebaseUser, getAuth, onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { User } from '@/lib/types/auth';
@@ -13,8 +15,20 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+export interface FirebaseAppDependencies {
+    getApps: () => FirebaseApp[];
+    getApp: () => FirebaseApp;
+    initializeApp: (config: typeof firebaseConfig) => FirebaseApp;
+    getAuth: (app: FirebaseApp) => Auth;
+}
+
+export const createFirebaseApp = (dependencies: FirebaseAppDependencies): { app: FirebaseApp; auth: Auth } => {
+    const appInstance = dependencies.getApps().length === 0 ? dependencies.initializeApp(firebaseConfig) : dependencies.getApp();
+    const authInstance = dependencies.getAuth(appInstance);
+    return { app: appInstance, auth: authInstance };
+};
+
+const { auth } = createFirebaseApp({ getApps, getApp, initializeApp, getAuth });
 
 export const mapFirebaseUserToUser = (firebaseUser: FirebaseUser | null): User | null => {
     if (!firebaseUser) return null;
