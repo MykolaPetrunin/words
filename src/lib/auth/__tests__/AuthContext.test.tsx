@@ -19,6 +19,7 @@ jest.mock('@/lib/firebase/firebaseClient', () => ({
     signIn: jest.fn(),
     signUp: jest.fn(),
     signOut: jest.fn(),
+    signInWithGoogle: jest.fn(),
     onAuthStateChange: jest.fn()
 }));
 
@@ -295,6 +296,40 @@ describe('AuthContext', () => {
             const { result } = renderHook(() => useAuth(), { wrapper });
 
             await expect(result.current.signUp('test@example.com', 'password123')).rejects.toThrow('Sign up failed');
+            expect(mockPush).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('signInWithGoogle', () => {
+        it('should sign in with Google successfully', async () => {
+            const mockUnsubscribe = jest.fn();
+            (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
+            (firebaseClient.signInWithGoogle as jest.Mock).mockResolvedValue(undefined);
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+
+            const { result } = renderHook(() => useAuth(), { wrapper });
+
+            await act(async () => {
+                await result.current.signInWithGoogle();
+            });
+
+            expect(firebaseClient.signInWithGoogle).toHaveBeenCalled();
+            expect(mockPush).not.toHaveBeenCalled();
+            expect(mockReplace).not.toHaveBeenCalled();
+        });
+
+        it('should handle Google sign in error', async () => {
+            const mockUnsubscribe = jest.fn();
+            const mockError = new Error('Google sign in failed');
+            (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
+            (firebaseClient.signInWithGoogle as jest.Mock).mockRejectedValue(mockError);
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+
+            const { result } = renderHook(() => useAuth(), { wrapper });
+
+            await expect(result.current.signInWithGoogle()).rejects.toThrow('Google sign in failed');
             expect(mockPush).not.toHaveBeenCalled();
         });
     });

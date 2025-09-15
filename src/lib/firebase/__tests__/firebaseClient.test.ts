@@ -1,7 +1,28 @@
 import { getApps, initializeApp } from 'firebase/app';
-import { createUserWithEmailAndPassword, signOut as firebaseSignOut, User as FirebaseUser, getAuth, onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import {
+    createUserWithEmailAndPassword,
+    signOut as firebaseSignOut,
+    User as FirebaseUser,
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult
+} from 'firebase/auth';
 
-import { auth, createFirebaseApp, FirebaseAppDependencies, mapFirebaseUserToUser, onAuthStateChange, signIn, signOut, signUp } from '../firebaseClient';
+import {
+    auth,
+    createFirebaseApp,
+    FirebaseAppDependencies,
+    mapFirebaseUserToUser,
+    onAuthStateChange,
+    signIn,
+    signOut,
+    signUp,
+    signInWithGoogle,
+    handleRedirectResult
+} from '../firebaseClient';
 
 jest.mock('firebase/app', () => ({
     initializeApp: jest.fn(),
@@ -14,7 +35,14 @@ jest.mock('firebase/auth', () => ({
     signInWithEmailAndPassword: jest.fn(),
     createUserWithEmailAndPassword: jest.fn(),
     signOut: jest.fn(),
-    onAuthStateChanged: jest.fn()
+    onAuthStateChanged: jest.fn(),
+    GoogleAuthProvider: jest.fn().mockImplementation(() => ({
+        setCustomParameters: jest.fn(),
+        addScope: jest.fn()
+    })),
+    signInWithPopup: jest.fn(),
+    signInWithRedirect: jest.fn(),
+    getRedirectResult: jest.fn()
 }));
 
 describe('firebaseClient', () => {
@@ -177,6 +205,77 @@ describe('firebaseClient', () => {
             (firebaseSignOut as jest.Mock).mockRejectedValue(error);
 
             await expect(signOut()).rejects.toThrow('Sign out failed');
+        });
+    });
+
+    describe('signInWithGoogle', () => {
+        it('should call signInWithPopup with google provider', async () => {
+            await signInWithGoogle();
+
+            expect(signInWithPopup).toHaveBeenCalledWith(auth, expect.objectContaining({}));
+        });
+
+        it('should use redirect when popup is blocked', async () => {
+            const popupBlockedError = new Error('Popup blocked') as Error & { code: string };
+            popupBlockedError.code = 'auth/popup-blocked';
+            (signInWithPopup as jest.Mock).mockRejectedValue(popupBlockedError);
+
+            await signInWithGoogle();
+
+            expect(signInWithPopup).toHaveBeenCalledWith(auth, expect.objectContaining({}));
+            expect(signInWithRedirect).toHaveBeenCalledWith(auth, expect.objectContaining({}));
+        });
+
+        it('should use redirect when unauthorized domain error occurs', async () => {
+            const unauthorizedError = new Error('Unauthorized domain') as Error & { code: string };
+            unauthorizedError.code = 'auth/unauthorized-domain';
+            (signInWithPopup as jest.Mock).mockRejectedValue(unauthorizedError);
+
+            await signInWithGoogle();
+
+            expect(signInWithPopup).toHaveBeenCalledWith(auth, expect.objectContaining({}));
+            expect(signInWithRedirect).toHaveBeenCalledWith(auth, expect.objectContaining({}));
+        });
+
+        it('should throw error for other error codes', async () => {
+            const otherError = new Error('Other error') as Error & { code: string };
+            otherError.code = 'auth/other-error';
+            (signInWithPopup as jest.Mock).mockRejectedValue(otherError);
+
+            await expect(signInWithGoogle()).rejects.toThrow('Other error');
+            expect(signInWithRedirect).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('handleRedirectResult', () => {
+        it('should return mapped user when redirect result exists', async () => {
+            const mockFirebaseUser: Partial<FirebaseUser> = {
+                uid: 'test-uid',
+                email: 'test@example.com',
+                displayName: 'Test User',
+                photoURL: null
+            };
+            const mockResult = { user: mockFirebaseUser };
+            (getRedirectResult as jest.Mock).mockResolvedValue(mockResult);
+
+            const result = await handleRedirectResult();
+
+            expect(getRedirectResult).toHaveBeenCalledWith(auth);
+            expect(result).toEqual({
+                uid: 'test-uid',
+                email: 'test@example.com',
+                displayName: 'Test User',
+                photoURL: null
+            });
+        });
+
+        it('should return null when no redirect result', async () => {
+            (getRedirectResult as jest.Mock).mockResolvedValue(null);
+
+            const result = await handleRedirectResult();
+
+            expect(getRedirectResult).toHaveBeenCalledWith(auth);
+            expect(result).toBeNull();
         });
     });
 

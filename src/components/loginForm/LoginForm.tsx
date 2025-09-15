@@ -11,7 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth/AuthContext';
+
+import { GoogleSignInButton } from './components/GoogleSignInButton';
 
 const formSchema = z.object({
     email: z.string().email('Невірна електронна адреса'),
@@ -52,6 +55,12 @@ export const LoginForm: React.FC = () => {
                 <CardDescription>Введіть свої дані для входу в систему</CardDescription>
             </CardHeader>
             <CardContent>
+                <GoogleSignInButton disabled={isLoading} />
+                <div className="my-4 flex items-center">
+                    <Separator className="flex-1" />
+                    <span className="px-2 text-sm text-muted-foreground">або</span>
+                    <Separator className="flex-1" />
+                </div>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField

@@ -3,7 +3,14 @@
 import { usePathname, useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-import { auth, signIn as firebaseSignIn, signOut as firebaseSignOut, signUp as firebaseSignUp, onAuthStateChange } from '@/lib/firebase/firebaseClient';
+import {
+    auth,
+    signIn as firebaseSignIn,
+    signOut as firebaseSignOut,
+    signUp as firebaseSignUp,
+    signInWithGoogle as firebaseSignInWithGoogle,
+    onAuthStateChange
+} from '@/lib/firebase/firebaseClient';
 import { AuthContextType, User } from '@/lib/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,6 +75,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
+    const signInWithGoogle = async (): Promise<void> => {
+        try {
+            await firebaseSignInWithGoogle();
+        } catch (error) {
+            console.error('Google sign in error:', error);
+            throw error;
+        }
+    };
+
     const signOut = async (): Promise<void> => {
         try {
             await firebaseSignOut();
@@ -86,6 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loading,
         signIn,
         signUp,
+        signInWithGoogle,
         signOut
     };
 
