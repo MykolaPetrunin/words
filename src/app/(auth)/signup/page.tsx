@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { SignupForm } from '@/components/auth/SignupForm';
+import { SignupForm } from '@/components/signupForm/SignupForm';
 
 export default function SignupPage(): React.ReactElement {
     return (

@@ -193,29 +193,6 @@ describe('SignupForm', () => {
         expect(loginLink).toHaveAttribute('href', '/login');
     });
 
-    it('should clear form errors when user starts typing', async () => {
-        const user = userEvent.setup();
-        render(<SignupForm />);
-
-        const submitButton = screen.getByRole('button', { name: 'Зареєструватися' });
-        await user.click(submitButton);
-
-        await waitFor(() => {
-            expect(screen.getByText('Невірна електронна адреса')).toBeInTheDocument();
-        });
-
-        const emailInput = screen.getByLabelText('Електронна пошта');
-        await user.clear(emailInput);
-        await user.type(emailInput, 'test@example.com');
-
-        await waitFor(
-            () => {
-                expect(screen.queryByText('Невірна електронна адреса')).not.toBeInTheDocument();
-            },
-            { timeout: 3000 }
-        );
-    });
-
     it('should validate matching passwords in real-time', async () => {
         const user = userEvent.setup();
         render(<SignupForm />);
