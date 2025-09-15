@@ -1,10 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { UserMenu } from '@/components/userMenu/UserMenu';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { User } from '@/lib/types/auth';
-
-import { UserMenu } from '../UserMenu';
 
 jest.mock('@/lib/auth/AuthContext', () => ({
     useAuth: jest.fn()

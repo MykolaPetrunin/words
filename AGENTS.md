@@ -33,3 +33,35 @@
     - Keep this file concise and focused
     - Remove unnecessary examples or explanations
     - Focus only on essential coding rules
+
+## Project Structure & File Organization
+
+These structure rules apply only to `src/components/`. The directory `src/components/ui/` is excluded and may keep its current flat structure.
+
+## Workflow Rules
+
+- Commit messages: when asked to commit, create a commit message with at most 10 words describing the change. Only in english
+- Failure policy: if tests or the build fail, fix the errors; do not modify test, ESLint, or Prettier configuration files during this process
+
+### Component Folder Structure (only for `src/components/`)
+
+```
+rootFolder/
+├─ ComponentName.tsx
+├─ configs.ts
+├─ utils.ts
+├─ types.ts
+├─ components/
+└─ hooks/
+```
+
+- Folder name: `camelCase`, identical to component name
+- Main component file: `ComponentName.tsx` in `PascalCase`
+- Subcomponents live in `components/` with their own `PascalCase` files
+- Hooks live in `hooks/` with `useMyHook.ts`
+- Use `.ts` for files without JSX and `.tsx` when JSX is present
+- No `index.ts` files in `src/components/` except where Next.js routing requires special files elsewhere in the app
+
+Notes:
+
+- The folder structure requirement does not affect `src/components/ui/`.

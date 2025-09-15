@@ -8,7 +8,7 @@ jest.mock('next/navigation', () => ({
     usePathname: jest.fn()
 }));
 
-jest.mock('@/components/UserMenu', () => ({
+jest.mock('@/components/userMenu/UserMenu', () => ({
     UserMenu: () => <div data-testid="user-menu">UserMenu Component</div>
 }));
 

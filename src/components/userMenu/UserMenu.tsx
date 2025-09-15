@@ -7,19 +7,17 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/auth/AuthContext';
 
-export const UserMenu: React.FC = () => {
+export function UserMenu(): React.ReactElement | null {
     const { user, signOut } = useAuth();
 
     if (!user) {
         return null;
     }
 
-    const handleSignOut = async (): Promise<void> => {
-        try {
-            await signOut();
-        } catch (error) {
+    const handleSignOut = (_event: Event): void => {
+        signOut().catch((error: unknown) => {
             console.error('Error signing out:', error);
-        }
+        });
     };
 
     return (
@@ -37,11 +35,11 @@ export const UserMenu: React.FC = () => {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleSignOut}>
+                <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onSelect={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" data-testid="lucide-log-out" />
                     <span>Вийти</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
-};
+}

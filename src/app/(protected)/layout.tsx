@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
 
-import { UserMenu } from '@/components/UserMenu';
+import { UserMenu } from '@/components/userMenu/UserMenu';
 import { cn } from '@/lib/utils';
 
 const navigation = [
