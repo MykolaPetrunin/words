@@ -11,6 +11,8 @@ beforeAll(() => {
             (args[0].includes('Sign in error:') ||
                 args[0].includes('Sign up error:') ||
                 args[0].includes('Sign out error:') ||
+                args[0].includes('Error signing out:') ||
+                args[0].includes('Google sign in error:') ||
                 args[0].includes('Session creation error:') ||
                 args[0].includes('objectsApi getObjects error'))
         ) {
