@@ -19,7 +19,8 @@ describe('firebaseAdmin', () => {
     const mockAuth = {
         verifyIdToken: jest.fn(),
         createSessionCookie: jest.fn(),
-        verifySessionCookie: jest.fn()
+        verifySessionCookie: jest.fn(),
+        getUser: jest.fn()
     };
 
     beforeEach(() => {
@@ -431,6 +432,62 @@ describe('firebaseAdmin', () => {
                 clientEmail: 'test@example.com',
                 privateKey: 'BEGIN PRIVATE KEY\n' + 'a'.repeat(1000) + '\nEND PRIVATE KEY'
             });
+        });
+    });
+
+    describe('getUserProfile', () => {
+        let getUserProfile: (uid: string) => Promise<{ displayName?: string | null; email?: string | null }>;
+
+        beforeEach(async () => {
+            const firebaseAdminModule = await import('../firebaseAdmin');
+            getUserProfile = firebaseAdminModule.getUserProfile;
+        });
+
+        it('should return displayName and email from user record', async () => {
+            mockAuth.getUser.mockResolvedValue({ displayName: 'John Doe', email: 'john@example.com' });
+
+            const result = await getUserProfile('uid-1');
+
+            expect(mockAuth.getUser).toHaveBeenCalledWith('uid-1');
+            expect(result).toEqual({ displayName: 'John Doe', email: 'john@example.com' });
+        });
+
+        it('should handle null displayName and email', async () => {
+            mockAuth.getUser.mockResolvedValue({ displayName: null, email: null });
+
+            const result = await getUserProfile('uid-2');
+
+            expect(result).toEqual({ displayName: null, email: null });
+        });
+
+        it('should initialize admin if not already initialized before getUserProfile', async () => {
+            mockGetApps.mockReturnValueOnce([]);
+            mockInitializeApp.mockReturnValueOnce(mockApp);
+            mockGetAuth.mockReturnValueOnce(mockAuth);
+            mockAuth.getUser.mockResolvedValue({ displayName: 'Init First', email: 'init@example.com' });
+
+            const result = await getUserProfile('uid-3');
+
+            expect(result).toEqual({ displayName: 'Init First', email: 'init@example.com' });
+            expect(mockInitializeApp).toHaveBeenCalledTimes(1);
+            expect(mockGetAuth).toHaveBeenCalledTimes(1);
+        });
+
+        it('should not reinitialize when admin already exists before getUserProfile', async () => {
+            const firebaseAdminModule = await import('../firebaseAdmin');
+            mockAuth.verifyIdToken.mockResolvedValue({ uid: 'preinit' });
+            await firebaseAdminModule.verifyIdToken('token-pre');
+
+            mockInitializeApp.mockClear();
+            mockGetAuth.mockClear();
+
+            mockAuth.getUser.mockResolvedValue({ displayName: 'Already Init', email: 'already@example.com' });
+
+            const result = await getUserProfile('uid-4');
+
+            expect(result).toEqual({ displayName: 'Already Init', email: 'already@example.com' });
+            expect(mockInitializeApp).not.toHaveBeenCalled();
+            expect(mockGetAuth).not.toHaveBeenCalled();
         });
     });
 });

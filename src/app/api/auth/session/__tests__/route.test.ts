@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 
 import { createSessionCookie, getUserProfile, verifyIdToken } from '@/lib/firebase/firebaseAdmin';
+import { upsertUserByFirebaseId } from '@/lib/repositories/userRepository';
 
 import { POST } from '../route';
 
@@ -12,6 +13,10 @@ jest.mock('@/lib/firebase/firebaseAdmin', () => ({
     createSessionCookie: jest.fn(),
     verifyIdToken: jest.fn(),
     getUserProfile: jest.fn()
+}));
+
+jest.mock('@/lib/repositories/userRepository', () => ({
+    upsertUserByFirebaseId: jest.fn()
 }));
 
 jest.mock('next/server', () => ({
@@ -50,7 +55,7 @@ describe('POST /api/auth/session', () => {
 
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: mockIdToken })
-        } as Parameters<typeof POST>[0];
+        } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
         const data = await response.json();
@@ -70,7 +75,7 @@ describe('POST /api/auth/session', () => {
     it('should return error when idToken is missing', async () => {
         const mockRequest = {
             json: jest.fn().mockResolvedValue({})
-        } as Parameters<typeof POST>[0];
+        } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
         const data = await response.json();
@@ -84,7 +89,7 @@ describe('POST /api/auth/session', () => {
     it('should handle invalid JSON in request body', async () => {
         const mockRequest = {
             json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
-        } as Parameters<typeof POST>[0];
+        } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
         const data = await response.json();
@@ -102,7 +107,7 @@ describe('POST /api/auth/session', () => {
 
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: mockIdToken })
-        } as Parameters<typeof POST>[0];
+        } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
         const data = await response.json();
@@ -125,7 +130,7 @@ describe('POST /api/auth/session', () => {
 
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: mockIdToken })
-        } as Parameters<typeof POST>[0];
+        } as unknown as Parameters<typeof POST>[0];
 
         await POST(mockRequest);
 
@@ -142,7 +147,7 @@ describe('POST /api/auth/session', () => {
     it('should handle empty idToken', async () => {
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: '' })
-        } as Parameters<typeof POST>[0];
+        } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
         const data = await response.json();
@@ -154,12 +159,115 @@ describe('POST /api/auth/session', () => {
     it('should handle null idToken', async () => {
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: null })
-        } as Parameters<typeof POST>[0];
+        } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
         const data = await response.json();
 
         expect(data).toEqual({ error: 'Missing ID token' });
         expect(response.status).toBe(400);
+    });
+
+    it('should return 401 when decoded token has no uid', async () => {
+        (verifyIdToken as jest.Mock).mockResolvedValue({});
+        const mockRequest = {
+            json: jest.fn().mockResolvedValue({ idToken: 'token' })
+        } as unknown as Parameters<typeof POST>[0];
+
+        const response = await POST(mockRequest);
+        const data = await response.json();
+
+        expect(data).toEqual({ error: 'Invalid token' });
+        expect(response.status).toBe(401);
+    });
+
+    it('should return 400 when email missing in token and profile', async () => {
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid1' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: 'John Doe', email: null });
+        const mockRequest = {
+            json: jest.fn().mockResolvedValue({ idToken: 'token' })
+        } as unknown as Parameters<typeof POST>[0];
+
+        const response = await POST(mockRequest);
+        const data = await response.json();
+
+        expect(data).toEqual({ error: 'Email not found in token' });
+        expect(response.status).toBe(400);
+    });
+
+    it('should parse single-word displayName into firstName only', async () => {
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid1', email: 'a@b.com' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: 'Cher', email: 'a@b.com' });
+        (createSessionCookie as jest.Mock).mockResolvedValue('cookie');
+
+        const mockRequest = {
+            json: jest.fn().mockResolvedValue({ idToken: 'token' })
+        } as unknown as Parameters<typeof POST>[0];
+
+        await POST(mockRequest);
+
+        expect(upsertUserByFirebaseId).toHaveBeenCalledWith({
+            firebaseId: 'uid1',
+            email: 'a@b.com',
+            firstName: 'Cher',
+            lastName: ''
+        });
+    });
+
+    it('should parse multi-word displayName into firstName and lastName', async () => {
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid2', email: 'b@c.com' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: '  John   Ronald   Reuel   Tolkien  ', email: 'b@c.com' });
+        (createSessionCookie as jest.Mock).mockResolvedValue('cookie');
+
+        const mockRequest = {
+            json: jest.fn().mockResolvedValue({ idToken: 'token' })
+        } as unknown as Parameters<typeof POST>[0];
+
+        await POST(mockRequest);
+
+        expect(upsertUserByFirebaseId).toHaveBeenCalledWith({
+            firebaseId: 'uid2',
+            email: 'b@c.com',
+            firstName: 'John',
+            lastName: 'Ronald Reuel Tolkien'
+        });
+    });
+
+    it('should use email from profile when token email missing', async () => {
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid3' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: 'Jane Doe', email: 'profile@example.com' });
+        (createSessionCookie as jest.Mock).mockResolvedValue('cookie');
+
+        const mockRequest = {
+            json: jest.fn().mockResolvedValue({ idToken: 'token' })
+        } as unknown as Parameters<typeof POST>[0];
+
+        await POST(mockRequest);
+
+        expect(upsertUserByFirebaseId).toHaveBeenCalledWith({
+            firebaseId: 'uid3',
+            email: 'profile@example.com',
+            firstName: 'Jane',
+            lastName: 'Doe'
+        });
+    });
+
+    it('should handle missing displayName and set empty names', async () => {
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid4', email: 'x@y.com' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: null, email: 'x@y.com' });
+        (createSessionCookie as jest.Mock).mockResolvedValue('cookie');
+
+        const mockRequest = {
+            json: jest.fn().mockResolvedValue({ idToken: 'token' })
+        } as unknown as Parameters<typeof POST>[0];
+
+        await POST(mockRequest);
+
+        expect(upsertUserByFirebaseId).toHaveBeenCalledWith({
+            firebaseId: 'uid4',
+            email: 'x@y.com',
+            firstName: '',
+            lastName: ''
+        });
     });
 });
