@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-import { createSessionCookie } from '@/lib/firebase/firebaseAdmin';
+import { createSessionCookie, getUserProfile, verifyIdToken } from '@/lib/firebase/firebaseAdmin';
 
 import { POST } from '../route';
 
@@ -9,7 +9,9 @@ jest.mock('next/headers', () => ({
 }));
 
 jest.mock('@/lib/firebase/firebaseAdmin', () => ({
-    createSessionCookie: jest.fn()
+    createSessionCookie: jest.fn(),
+    verifyIdToken: jest.fn(),
+    getUserProfile: jest.fn()
 }));
 
 jest.mock('next/server', () => ({
@@ -37,13 +39,14 @@ describe('POST /api/auth/session', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (cookies as jest.Mock).mockResolvedValue(mockCookieStore);
-        process.env.NODE_ENV = 'test';
     });
 
     it('should create session cookie successfully', async () => {
         const mockIdToken = 'valid-id-token';
         const mockSessionCookie = 'session-cookie-value';
         (createSessionCookie as jest.Mock).mockResolvedValue(mockSessionCookie);
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid1', email: 'a@b.com' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: 'John Doe', email: 'a@b.com' });
 
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: mockIdToken })
@@ -56,7 +59,7 @@ describe('POST /api/auth/session', () => {
         expect(mockCookieStore.set).toHaveBeenCalledWith('session', mockSessionCookie, {
             maxAge: 60 * 60 * 24 * 14 * 1000,
             httpOnly: true,
-            secure: false,
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/'
         });
@@ -112,10 +115,13 @@ describe('POST /api/auth/session', () => {
     });
 
     it('should set secure cookie in production', async () => {
-        process.env.NODE_ENV = 'production';
+        const prevNodeEnv = process.env.NODE_ENV;
+        Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', configurable: true });
         const mockIdToken = 'valid-id-token';
         const mockSessionCookie = 'session-cookie-value';
         (createSessionCookie as jest.Mock).mockResolvedValue(mockSessionCookie);
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid1', email: 'a@b.com' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: 'John Doe', email: 'a@b.com' });
 
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: mockIdToken })
@@ -130,6 +136,7 @@ describe('POST /api/auth/session', () => {
             sameSite: 'lax',
             path: '/'
         });
+        Object.defineProperty(process.env, 'NODE_ENV', { value: prevNodeEnv, configurable: true });
     });
 
     it('should handle empty idToken', async () => {

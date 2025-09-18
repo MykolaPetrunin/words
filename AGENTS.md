@@ -66,3 +66,11 @@ rootFolder/
 Notes:
 
 - The folder structure requirement does not affect `src/components/ui/`.
+
+## Database & Prisma
+
+- Use snake_case for all database table and column names
+- Do not use uppercase identifiers in the database
+- Keep Prisma models in PascalCase and fields in camelCase; map to DB with `@@map` and `@map`
+- Prefer plural table names (e.g., `users`)
+- Avoid reserved words as table names

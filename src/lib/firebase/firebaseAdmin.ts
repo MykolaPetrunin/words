@@ -81,3 +81,16 @@ export const verifySessionCookie = async (
         throw new Error('Invalid session');
     }
 };
+
+export const getUserProfile = async (
+    uid: string
+): Promise<{
+    displayName?: string | null;
+    email?: string | null;
+}> => {
+    if (!adminAuth) {
+        initializeAdmin();
+    }
+    const record = await adminAuth.getUser(uid);
+    return { displayName: record.displayName, email: record.email };
+};

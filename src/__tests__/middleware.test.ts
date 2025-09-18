@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { middleware } from '../middleware';
 
 // Mock NextResponse.redirect and NextResponse.next
-const createMockNextRequest = (url: string, headers: Record<string, string> = {}): NextRequest => {
+const createMockNextRequest = (url: string, headers?: Record<string, string>): NextRequest => {
     return {
         nextUrl: {
             pathname: new URL(url).pathname,
@@ -11,7 +11,7 @@ const createMockNextRequest = (url: string, headers: Record<string, string> = {}
         },
         cookies: {
             get: jest.fn((name: string) => {
-                if (name === 'session' && headers.cookie?.includes('session=')) {
+                if (name === 'session' && headers?.cookie?.includes('session=')) {
                     return { name: 'session', value: 'test-session-value' };
                 }
                 return undefined;
