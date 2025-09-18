@@ -40,6 +40,7 @@ These structure rules apply only to `src/components/`. The directory `src/compon
 
 ## Workflow Rules
 
+- Do not modify ESLint, Prettier, or test configurations without explicit user permission
 - Commit messages: when asked to commit, create a commit message with at most 10 words describing the change. Only in english
 - Failure policy: if tests or the build fail, fix the errors; do not modify test, ESLint, or Prettier configuration files during this process
 
