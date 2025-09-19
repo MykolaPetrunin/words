@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { appPaths } from '@/lib/appPaths';
+
 import { middleware } from '../middleware';
 
 // Mock NextResponse.redirect and NextResponse.next
@@ -44,7 +46,7 @@ describe('middleware', () => {
 
     const createMockRequest = (pathname: string, hasSession: boolean = false): NextRequest => {
         const url = `${mockUrl}${pathname}`;
-        const headers = hasSession ? { cookie: 'session=test-session-value' } : {};
+        const headers = hasSession ? { cookie: 'session=test-session-value' } : undefined;
         return createMockNextRequest(url, headers);
     };
 
@@ -63,7 +65,7 @@ describe('middleware', () => {
         });
 
         it('should allow access to login page', async () => {
-            const nextRequest = createMockRequest('/login');
+            const nextRequest = createMockRequest(appPaths.login);
 
             const response = await middleware(nextRequest);
 
@@ -72,7 +74,7 @@ describe('middleware', () => {
         });
 
         it('should allow access to signup page', async () => {
-            const nextRequest = createMockRequest('/signup');
+            const nextRequest = createMockRequest(appPaths.signup);
 
             const response = await middleware(nextRequest);
 
@@ -83,11 +85,11 @@ describe('middleware', () => {
 
     describe('protected paths without session', () => {
         it('should redirect to login from dashboard', async () => {
-            const nextRequest = createMockRequest('/dashboard');
+            const nextRequest = createMockRequest(appPaths.dashboard);
 
             const response = await middleware(nextRequest);
 
-            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/login', mockUrl));
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL(appPaths.login, mockUrl));
             expect(response.status).toBe(307);
         });
 
@@ -96,7 +98,7 @@ describe('middleware', () => {
 
             const response = await middleware(nextRequest);
 
-            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/login', mockUrl));
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL(appPaths.login, mockUrl));
             expect(response.status).toBe(307);
         });
 
@@ -105,7 +107,7 @@ describe('middleware', () => {
 
             const response = await middleware(nextRequest);
 
-            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/login', mockUrl));
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL(appPaths.login, mockUrl));
             expect(response.status).toBe(307);
         });
     });
@@ -121,27 +123,27 @@ describe('middleware', () => {
         });
 
         it('should redirect from login to dashboard with session', async () => {
-            const nextRequest = createMockRequest('/login', true);
+            const nextRequest = createMockRequest(appPaths.login, true);
 
             const response = await middleware(nextRequest);
 
-            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/dashboard', mockUrl));
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL(appPaths.dashboard, mockUrl));
             expect(response.status).toBe(307);
         });
 
         it('should redirect from signup to dashboard with session', async () => {
-            const nextRequest = createMockRequest('/signup', true);
+            const nextRequest = createMockRequest(appPaths.signup, true);
 
             const response = await middleware(nextRequest);
 
-            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/dashboard', mockUrl));
+            expect(NextResponse.redirect).toHaveBeenCalledWith(new URL(appPaths.dashboard, mockUrl));
             expect(response.status).toBe(307);
         });
     });
 
     describe('protected paths with session', () => {
         it('should allow access to dashboard with session', async () => {
-            const nextRequest = createMockRequest('/dashboard', true);
+            const nextRequest = createMockRequest(appPaths.dashboard, true);
 
             const response = await middleware(nextRequest);
 

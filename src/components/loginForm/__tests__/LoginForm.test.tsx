@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { toast } from 'sonner';
 
+import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 import { LoginForm } from '../LoginForm';
@@ -157,7 +158,7 @@ describe('LoginForm', () => {
         render(<LoginForm />);
 
         const signupLink = screen.getByText('Зареєструватися');
-        expect(signupLink).toHaveAttribute('href', '/signup');
+        expect(signupLink).toHaveAttribute('href', appPaths.signup);
     });
 
     it('should clear form errors when user starts typing', async () => {

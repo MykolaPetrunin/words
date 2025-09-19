@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { toast } from 'sonner';
 
+import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 import { SignupForm } from '../SignupForm';
@@ -190,7 +191,7 @@ describe('SignupForm', () => {
         render(<SignupForm />);
 
         const loginLink = screen.getByText('Увійти');
-        expect(loginLink).toHaveAttribute('href', '/login');
+        expect(loginLink).toHaveAttribute('href', appPaths.login);
     });
 
     it('should validate matching passwords in real-time', async () => {

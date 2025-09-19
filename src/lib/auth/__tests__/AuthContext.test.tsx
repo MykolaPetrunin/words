@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
 
+import { appPaths } from '@/lib/appPaths';
 import * as firebaseClient from '@/lib/firebase/firebaseClient';
 import { User } from '@/lib/types/auth';
 
@@ -39,7 +40,7 @@ describe('AuthContext', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (useRouter as jest.Mock).mockReturnValue(mockRouter);
-        (usePathname as jest.Mock).mockReturnValue('/login');
+        (usePathname as jest.Mock).mockReturnValue(appPaths.login);
         (global.fetch as jest.Mock).mockResolvedValue({
             ok: true,
             json: jest.fn().mockResolvedValue({})
@@ -92,7 +93,7 @@ describe('AuthContext', () => {
                 },
                 body: JSON.stringify({ idToken: 'test-token' })
             });
-            expect(mockReplace).toHaveBeenCalledWith('/dashboard');
+            expect(mockReplace).toHaveBeenCalledWith(appPaths.dashboard);
         });
 
         it('should handle authenticated user without idToken and not redirect', async () => {
@@ -128,7 +129,7 @@ describe('AuthContext', () => {
                 getIdToken: mockGetIdToken
             };
 
-            (usePathname as jest.Mock).mockReturnValue('/dashboard');
+            (usePathname as jest.Mock).mockReturnValue(appPaths.dashboard);
             (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
             (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
                 callback(mockUser);
@@ -166,7 +167,7 @@ describe('AuthContext', () => {
                 getIdToken: mockGetIdToken
             };
 
-            (usePathname as jest.Mock).mockReturnValue('/login');
+            (usePathname as jest.Mock).mockReturnValue(appPaths.login);
             (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
             (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
                 callback(mockUser);
@@ -352,7 +353,7 @@ describe('AuthContext', () => {
             expect(global.fetch).toHaveBeenCalledWith('/api/auth/logout', {
                 method: 'POST'
             });
-            expect(mockPush).toHaveBeenCalledWith('/');
+            expect(mockPush).toHaveBeenCalledWith(appPaths.root);
         });
 
         it('should handle sign out error', async () => {

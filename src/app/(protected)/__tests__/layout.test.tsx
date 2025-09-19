@@ -2,6 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { usePathname } from 'next/navigation';
 import React from 'react';
 
+import { appPaths } from '@/lib/appPaths';
+
 import ProtectedLayout from '../layout';
 
 jest.mock('@/lib/firebase/firebaseClient', () => ({
@@ -47,7 +49,7 @@ describe('ProtectedLayout', () => {
     });
 
     it('should render children and sidebar', () => {
-        (usePathname as jest.Mock).mockReturnValue('/dashboard');
+        (usePathname as jest.Mock).mockReturnValue(appPaths.dashboard);
 
         render(
             <ProtectedLayout>
@@ -60,7 +62,7 @@ describe('ProtectedLayout', () => {
     });
 
     it('should include dashboard link', () => {
-        (usePathname as jest.Mock).mockReturnValue('/dashboard');
+        (usePathname as jest.Mock).mockReturnValue(appPaths.dashboard);
 
         render(
             <ProtectedLayout>
@@ -69,7 +71,7 @@ describe('ProtectedLayout', () => {
         );
 
         const dashboardLinks = screen.getAllByRole('link', { name: 'Dashboard' });
-        const hasDashboardHref = dashboardLinks.some((a) => a.getAttribute('href') === '/dashboard');
+        const hasDashboardHref = dashboardLinks.some((a) => a.getAttribute('href') === appPaths.dashboard);
         expect(hasDashboardHref).toBe(true);
     });
 });

@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { appPaths } from '@/lib/appPaths';
 import { verifySessionCookie } from '@/lib/firebase/firebaseAdmin';
 
 export interface SessionUser {
@@ -34,7 +35,7 @@ export async function requireAuth(): Promise<SessionUser> {
     const session = await getServerSession();
 
     if (!session) {
-        redirect('/login');
+        redirect(appPaths.login);
     }
 
     return session;

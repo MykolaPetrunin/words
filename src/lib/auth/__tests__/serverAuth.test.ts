@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { appPaths } from '@/lib/appPaths';
 import { verifySessionCookie } from '@/lib/firebase/firebaseAdmin';
 
 import { getServerSession, requireAuth, SessionUser } from '../serverAuth';
@@ -134,7 +135,7 @@ describe('serverAuth', () => {
 
             await requireAuth();
 
-            expect(redirect).toHaveBeenCalledWith('/login');
+            expect(redirect).toHaveBeenCalledWith(appPaths.login);
         });
 
         it('should redirect to login when session is invalid', async () => {
@@ -145,7 +146,7 @@ describe('serverAuth', () => {
 
             await requireAuth();
 
-            expect(redirect).toHaveBeenCalledWith('/login');
+            expect(redirect).toHaveBeenCalledWith(appPaths.login);
 
             consoleError.mockRestore();
         });

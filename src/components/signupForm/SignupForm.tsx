@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 import { GoogleSignInButton } from './components/GoogleSignInButton';
@@ -116,7 +117,7 @@ export const SignupForm: React.FC = () => {
                 </Form>
                 <div className="mt-4 text-center text-sm">
                     Вже маєте акаунт?{' '}
-                    <Link href="/login" className="text-primary hover:underline">
+                    <Link href={appPaths.login} className="text-primary hover:underline">
                         Увійти
                     </Link>
                 </div>

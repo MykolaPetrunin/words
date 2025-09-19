@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function Home(): React.ReactElement {
@@ -23,7 +24,7 @@ export default function Home(): React.ReactElement {
                                 <div className="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                             ) : user ? (
                                 <Button asChild>
-                                    <Link href="/dashboard">
+                                    <Link href={appPaths.dashboard}>
                                         Перейти до Dashboard
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Link>
@@ -31,10 +32,10 @@ export default function Home(): React.ReactElement {
                             ) : (
                                 <>
                                     <Button variant="ghost" asChild>
-                                        <Link href="/login">Увійти</Link>
+                                        <Link href={appPaths.login}>Увійти</Link>
                                     </Button>
                                     <Button asChild>
-                                        <Link href="/signup">Зареєструватися</Link>
+                                        <Link href={appPaths.signup}>Зареєструватися</Link>
                                     </Button>
                                 </>
                             )}
@@ -56,13 +57,13 @@ export default function Home(): React.ReactElement {
                         {!user && (
                             <>
                                 <Button size="lg" asChild>
-                                    <Link href="/signup">
+                                    <Link href={appPaths.signup}>
                                         Почати безкоштовно
                                         <ArrowRight className="ml-2 h-5 w-5" />
                                     </Link>
                                 </Button>
                                 <Button size="lg" variant="outline" asChild>
-                                    <Link href="/login">Увійти в акаунт</Link>
+                                    <Link href={appPaths.login}>Увійти в акаунт</Link>
                                 </Button>
                             </>
                         )}
@@ -124,7 +125,7 @@ export default function Home(): React.ReactElement {
                     <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">Приєднуйтесь до тисяч користувачів, які вже покращують свій словниковий запас</p>
                     {!user && (
                         <Button size="lg" asChild>
-                            <Link href="/signup">
+                            <Link href={appPaths.signup}>
                                 Створити безкоштовний акаунт
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>

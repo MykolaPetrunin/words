@@ -3,19 +3,20 @@
 import { usePathname, useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
+import { appPaths } from '@/lib/appPaths';
 import {
     auth,
     signIn as firebaseSignIn,
+    signInWithGoogle as firebaseSignInWithGoogle,
     signOut as firebaseSignOut,
     signUp as firebaseSignUp,
-    signInWithGoogle as firebaseSignInWithGoogle,
     onAuthStateChange
 } from '@/lib/firebase/firebaseClient';
 import { AuthContextType, User } from '@/lib/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const PUBLIC_PATHS: ReadonlyArray<string> = ['/', '/login', '/signup'];
+const PUBLIC_PATHS: ReadonlyArray<string> = [appPaths.root, appPaths.login, appPaths.signup];
 
 interface AuthProviderProps {
     children: ReactNode;
@@ -42,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         body: JSON.stringify({ idToken })
                     });
                     if (response.ok && PUBLIC_PATHS.includes(pathname)) {
-                        router.replace('/dashboard');
+                        router.replace(appPaths.dashboard);
                     }
                 }
             } else {
@@ -90,7 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await fetch('/api/auth/logout', {
                 method: 'POST'
             });
-            router.push('/');
+            router.push(appPaths.root);
         } catch (error) {
             console.error('Sign out error:', error);
             throw error;

@@ -44,6 +44,11 @@ These structure rules apply only to `src/components/`. The directory `src/compon
 - Commit messages: when asked to commit, create a commit message with at most 10 words describing the change. Only in english
 - Failure policy: if tests or the build fail, fix the errors; do not modify test, ESLint, or Prettier configuration files during this process
 
+### App Paths Configuration
+
+- All application routes must be defined in `src/lib/appPaths.ts` as a strictly typed readonly object `appPaths`
+- Import and use `appPaths` instead of hardcoded strings in middleware, components, tests, and services
+
 ### Component Folder Structure (only for `src/components/`)
 
 ```
