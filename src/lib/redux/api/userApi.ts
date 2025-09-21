@@ -7,6 +7,7 @@ import { getBaseQuery } from '../services/authToken';
 export interface UpdateMeInput {
     firstName?: string;
     lastName?: string;
+    questionsPerSession?: number;
     locale?: UserLocale;
 }
 

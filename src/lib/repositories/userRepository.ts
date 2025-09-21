@@ -14,6 +14,7 @@ export interface DbUser {
     email: string;
     firstName: string;
     lastName: string;
+    questionsPerSession: number;
     locale: UserLocale;
     createdAt: Date;
     updatedAt: Date;
@@ -22,6 +23,7 @@ export interface DbUser {
 export interface UpdateUserInput {
     firstName?: string;
     lastName?: string;
+    questionsPerSession?: number;
     locale?: UserLocale;
 }
 
@@ -50,9 +52,12 @@ export async function updateUserLocale(firebaseId: string, locale: UserLocale): 
 }
 
 export async function updateUser(firebaseId: string, updates: UpdateUserInput): Promise<DbUser> {
-    const data: { firstName?: string; lastName?: string; locale?: UserLocale } = {};
+    const data: { firstName?: string; lastName?: string; questionsPerSession?: number; locale?: UserLocale } = {};
     if (typeof updates.firstName === 'string') data.firstName = updates.firstName;
     if (typeof updates.lastName === 'string') data.lastName = updates.lastName;
+    if (typeof updates.questionsPerSession === 'number' && updates.questionsPerSession >= 1 && updates.questionsPerSession <= 50) {
+        data.questionsPerSession = updates.questionsPerSession;
+    }
     if (updates.locale === 'uk' || updates.locale === 'en') data.locale = updates.locale;
     const updated = await prisma.user.update({ where: { firebaseId }, data });
     return mapToDbUser(updated);
@@ -65,6 +70,7 @@ const mapToDbUser = (u: unknown): DbUser => {
         email: string;
         firstName: string;
         lastName: string;
+        questionsPerSession: number;
         createdAt: Date;
         updatedAt: Date;
     } & Record<string, unknown>;
@@ -76,6 +82,7 @@ const mapToDbUser = (u: unknown): DbUser => {
         email: base.email,
         firstName: base.firstName,
         lastName: base.lastName,
+        questionsPerSession: base.questionsPerSession,
         locale,
         createdAt: base.createdAt,
         updatedAt: base.updatedAt

@@ -39,6 +39,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => (
 const defaultInitialData = {
     firstName: 'John',
     lastName: 'Doe',
+    questionsPerSession: 10,
     locale: 'uk' as const
 };
 
@@ -58,11 +59,13 @@ describe('AccountForm', () => {
         expect(screen.getByText('Емейл')).toBeInTheDocument();
         expect(screen.getByText("Ім'я")).toBeInTheDocument();
         expect(screen.getByText('Прізвище')).toBeInTheDocument();
+        expect(screen.getByText('Кількість питань в одній сесії')).toBeInTheDocument();
         expect(screen.getByText('Мова інтерфейсу')).toBeInTheDocument();
 
         // Перевіряємо початкові значення
         expect(screen.getByDisplayValue('John')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Doe')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('10')).toBeInTheDocument();
         expect(screen.getByText('john@doe.com')).toBeInTheDocument();
 
         // Початково кнопки відключені (форма не dirty)
@@ -88,7 +91,7 @@ describe('AccountForm', () => {
         await user.click(screen.getByRole('button', { name: 'Зберегти' }));
 
         await waitFor(() => {
-            expect(updateMock).toHaveBeenCalledWith({ firstName: 'Jack', lastName: 'Doe', locale: 'uk' });
+            expect(updateMock).toHaveBeenCalledWith({ firstName: 'Jack', lastName: 'Doe', questionsPerSession: 10, locale: 'uk' });
         });
     });
 
@@ -151,7 +154,61 @@ describe('AccountForm', () => {
         await user.click(screen.getByRole('button', { name: 'Зберегти' }));
 
         await waitFor(() => {
-            expect(updateMock).toHaveBeenCalledWith({ firstName: 'John', lastName: 'Doe', locale: 'en' });
+            expect(updateMock).toHaveBeenCalledWith({ firstName: 'John', lastName: 'Doe', questionsPerSession: 10, locale: 'en' });
+        });
+    });
+
+    it('changes questions per session and submits form', async () => {
+        const user = userEvent.setup();
+        render(<AccountForm initialData={defaultInitialData} email={defaultEmail} />, { wrapper: Providers });
+
+        const questionsInput = screen.getByLabelText('Кількість питань в одній сесії');
+        await user.clear(questionsInput);
+        await user.type(questionsInput, '15');
+
+        // Сабмітимо форму
+        await user.click(screen.getByRole('button', { name: 'Зберегти' }));
+
+        await waitFor(() => {
+            expect(updateMock).toHaveBeenCalledWith({ firstName: 'John', lastName: 'Doe', questionsPerSession: 15, locale: 'uk' });
+        });
+    });
+
+    it('validates questions per session range', async () => {
+        const user = userEvent.setup();
+        render(<AccountForm initialData={defaultInitialData} email={defaultEmail} />, { wrapper: Providers });
+
+        const questionsInput = screen.getByLabelText('Кількість питань в одній сесії');
+
+        // Тестуємо значення поза діапазоном (0 - занадто мало)
+        await user.clear(questionsInput);
+        await user.type(questionsInput, '0');
+        await user.click(screen.getByRole('button', { name: 'Зберегти' }));
+
+        await waitFor(() => {
+            // Перевіряємо, що форма не сабмітиться і updateMock не викликається через помилку валідації
+            expect(updateMock).not.toHaveBeenCalled();
+        });
+
+        // Очистимо мок і спробуємо максимальне значення + 1
+        updateMock.mockClear();
+        await user.clear(questionsInput);
+        await user.type(questionsInput, '51');
+        await user.click(screen.getByRole('button', { name: 'Зберегти' }));
+
+        await waitFor(() => {
+            // Перевіряємо, що форма не сабмітиться і updateMock не викликається через помилку валідації
+            expect(updateMock).not.toHaveBeenCalled();
+        });
+
+        // Тестуємо валідне значення
+        updateMock.mockClear();
+        await user.clear(questionsInput);
+        await user.type(questionsInput, '25');
+        await user.click(screen.getByRole('button', { name: 'Зберегти' }));
+
+        await waitFor(() => {
+            expect(updateMock).toHaveBeenCalledWith({ firstName: 'John', lastName: 'Doe', questionsPerSession: 25, locale: 'uk' });
         });
     });
 

@@ -1,8 +1,10 @@
 'use client';
 
+import type { Route } from 'next';
 import Link from 'next/link';
 
 import { UserNav } from '@/components/appSidebar/components/userNav/UserNav';
+import { menuItemsConfig } from '@/components/appSidebar/configs';
 import {
     Sidebar,
     SidebarContent,
@@ -16,7 +18,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/hooks/useI18n';
-import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
 
@@ -36,28 +37,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenu>
                     {isUserLoading ? (
                         <>
-                            <SidebarMenuItem>
-                                <SidebarMenuSubButton>
-                                    <Skeleton className="h-5 w-full" />
-                                </SidebarMenuSubButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuSubButton>
-                                    <Skeleton className="h-5 w-3/4" />
-                                </SidebarMenuSubButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuSubButton>
-                                    <Skeleton className="h-5 w-5/6" />
-                                </SidebarMenuSubButton>
-                            </SidebarMenuItem>
+                            {menuItemsConfig.map((_, index) => (
+                                <SidebarMenuItem key={index}>
+                                    <SidebarMenuSubButton>
+                                        <Skeleton className="h-4 w-4 rounded" />
+                                        <Skeleton className="h-5 w-full" />
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuItem>
+                            ))}
                         </>
                     ) : (
-                        <SidebarMenuItem>
-                            <SidebarMenuSubButton asChild>
-                                <Link href={appPaths.dashboard}>{t('common.dashboard')}</Link>
-                            </SidebarMenuSubButton>
-                        </SidebarMenuItem>
+                        <>
+                            {menuItemsConfig.map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                    <SidebarMenuItem key={item.index}>
+                                        <SidebarMenuSubButton asChild>
+                                            <Link href={item.href as Route}>
+                                                <Icon />
+                                                {t(item.textKey)}
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuItem>
+                                );
+                            })}
+                        </>
                     )}
                 </SidebarMenu>
             </SidebarContent>

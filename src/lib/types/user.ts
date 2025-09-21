@@ -6,6 +6,7 @@ export interface ApiUser {
     email: string;
     firstName: string;
     lastName: string;
+    questionsPerSession: number;
     locale: UserLocale;
     createdAt: string;
     updatedAt: string;

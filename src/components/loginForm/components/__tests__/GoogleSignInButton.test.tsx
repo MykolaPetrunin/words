@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import { useAuth } from '@/lib/auth/AuthContext';
 import I18nProvider from '@/lib/i18n/I18nProvider';
+import { clientLogger } from '@/lib/logger';
 import ReduxProvider from '@/lib/redux/ReduxProvider';
 
 import { GoogleSignInButton } from '../GoogleSignInButton';
@@ -19,6 +20,12 @@ jest.mock('@/lib/auth/AuthContext', () => ({
     useAuth: jest.fn()
 }));
 
+jest.mock('@/lib/logger', () => ({
+    clientLogger: {
+        error: jest.fn()
+    }
+}));
+
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 describe('GoogleSignInButton', () => {
@@ -29,7 +36,6 @@ describe('GoogleSignInButton', () => {
         mockUseAuth.mockReturnValue({
             signInWithGoogle: mockSignInWithGoogle
         } as ReturnType<typeof useAuth>);
-        console.error = jest.fn() as jest.MockedFunction<typeof console.error>;
     });
 
     const Providers = ({ children }: { children: React.ReactNode }) => (
@@ -98,7 +104,7 @@ describe('GoogleSignInButton', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Помилка входу через Google. Спробуйте ще раз.');
-            expect(console.error).toHaveBeenCalledWith('Google sign in error:', error);
+            expect(clientLogger.error).toHaveBeenCalledWith('Google sign in from button failed', error);
         });
     });
 

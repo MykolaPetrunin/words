@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
 import I18nProvider from '@/lib/i18n/I18nProvider';
+import { clientLogger } from '@/lib/logger';
 import ReduxProvider from '@/lib/redux/ReduxProvider';
 
 import { SignupForm } from '../SignupForm';
@@ -17,6 +18,12 @@ jest.mock('@/lib/auth/AuthContext', () => ({
 jest.mock('sonner', () => ({
     toast: {
         success: jest.fn(),
+        error: jest.fn()
+    }
+}));
+
+jest.mock('@/lib/logger', () => ({
+    clientLogger: {
         error: jest.fn()
     }
 }));
@@ -141,8 +148,6 @@ describe('SignupForm', () => {
         const mockError = new Error('Sign up failed');
         mockSignUp.mockRejectedValue(mockError);
 
-        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-
         render(<SignupForm />, { wrapper: Providers });
 
         const emailInput = screen.getByLabelText('Електронна пошта');
@@ -159,10 +164,8 @@ describe('SignupForm', () => {
         await waitFor(() => {
             expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'password123');
             expect(toast.error).toHaveBeenCalledWith('Помилка реєстрації. Можливо, цей email вже використовується.');
-            expect(consoleError).toHaveBeenCalledWith(mockError);
+            expect(clientLogger.error).toHaveBeenCalledWith('Signup form submission failed', mockError, { email: 'test@example.com' });
         });
-
-        consoleError.mockRestore();
     });
 
     it('should disable form during submission', async () => {

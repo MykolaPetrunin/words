@@ -18,6 +18,7 @@ export default async function AccountPage(): Promise<React.ReactElement> {
     const initialData = {
         firstName: dbUser.firstName,
         lastName: dbUser.lastName,
+        questionsPerSession: dbUser.questionsPerSession,
         locale: dbUser.locale
     };
 

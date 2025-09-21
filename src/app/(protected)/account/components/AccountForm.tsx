@@ -18,6 +18,7 @@ import { setUserLocale } from '@/lib/redux/slices/currentUserSlice';
 const accountFormSchema = z.object({
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
+    questionsPerSession: z.number().int().min(1).max(50),
     locale: z.enum(['uk', 'en'])
 });
 
@@ -86,6 +87,19 @@ export default function AccountForm({ initialData, email }: AccountFormProps): R
                             <Label htmlFor="lastName">{t('account.lastName')}</Label>
                             <Input id="lastName" {...register('lastName')} className={errors.lastName ? 'border-red-500' : ''} />
                             {errors.lastName && <p className="text-sm text-red-500">{errors.lastName.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="questionsPerSession">{t('account.questionsPerSession')}</Label>
+                            <Input
+                                id="questionsPerSession"
+                                type="number"
+                                min="1"
+                                max="50"
+                                {...register('questionsPerSession', { valueAsNumber: true })}
+                                className={errors.questionsPerSession ? 'border-red-500' : ''}
+                            />
+                            <p className="text-sm text-muted-foreground">{t('account.questionsPerSessionHelper')}</p>
+                            {errors.questionsPerSession && <p className="text-sm text-red-500">{errors.questionsPerSession.message}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="locale">{t('account.interfaceLanguage')}</Label>

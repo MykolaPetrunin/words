@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id         String     @id @default(cuid())
-  firebaseId String     @unique @map("firebase_id")
-  email      String     @unique
-  firstName  String     @map("first_name")
-  lastName   String     @map("last_name")
-  createdAt  DateTime   @default(now()) @map("created_at")
-  updatedAt  DateTime   @updatedAt @map("updated_at")
-  locale     UserLocale @default(uk) @map("locale")
+  id                 String     @id @default(cuid())
+  firebaseId         String     @unique @map("firebase_id")
+  email              String     @unique
+  firstName          String     @map("first_name")
+  lastName           String     @map("last_name")
+  questionsPerSession Int       @default(10) @map("questions_per_session")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+  locale             UserLocale @default(uk) @map("locale")
 
   questionScores        UserQuestionScore[]
   bookLevelScores       UserBookLevelScore[]

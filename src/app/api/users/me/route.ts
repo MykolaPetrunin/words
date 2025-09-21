@@ -12,6 +12,7 @@ const serialize = (user: NonNullable<Awaited<ReturnType<typeof getUserByFirebase
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        questionsPerSession: user.questionsPerSession,
         locale: user.locale,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString()
@@ -46,17 +47,21 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = (await request.json()) as { locale?: UserLocale; firstName?: string; lastName?: string };
+    const body = (await request.json()) as { locale?: UserLocale; firstName?: string; lastName?: string; questionsPerSession?: number };
     const newLocale = body.locale;
     const firstName = body.firstName;
     const lastName = body.lastName;
+    const questionsPerSession = body.questionsPerSession;
     if (newLocale && newLocale !== 'uk' && newLocale !== 'en') {
         return NextResponse.json({ error: 'Invalid locale' }, { status: 400 });
+    }
+    if (questionsPerSession !== undefined && (typeof questionsPerSession !== 'number' || questionsPerSession < 1 || questionsPerSession > 50)) {
+        return NextResponse.json({ error: 'Invalid questionsPerSession' }, { status: 400 });
     }
 
     try {
         const decoded = await verifyIdToken(authHeader.replace('Bearer ', ''));
-        const updated = await updateUser(decoded.uid, { firstName, lastName, locale: newLocale });
+        const updated = await updateUser(decoded.uid, { firstName, lastName, questionsPerSession, locale: newLocale });
         const response = NextResponse.json(serialize(updated));
         if (newLocale) {
             response.cookies.set('locale', newLocale, {
