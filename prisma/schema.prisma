@@ -29,8 +29,8 @@ model Book {
   id            String   @id @default(cuid())
   titleUk       String   @map("title_uk")
   titleEn       String   @map("title_en")
-  descriptionUk String?  @map("description_uk")
-  descriptionEn String?  @map("description_en")
+  descriptionUk String?  @map("description_uk") @db.Text
+  descriptionEn String?  @map("description_en") @db.Text
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -63,6 +63,8 @@ model Question {
   id        String   @id @default(cuid())
   textUk    String   @map("text_uk")
   textEn    String   @map("text_en")
+  theoryUk  String?  @map("theory_uk") @db.Text
+  theoryEn  String?  @map("theory_en") @db.Text
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -78,14 +80,16 @@ model Question {
 }
 
 model Answer {
-  id         String   @id @default(cuid())
-  questionId String   @map("question_id")
-  textUk     String   @map("text_uk")
-  textEn     String   @map("text_en")
-  isCorrect  Boolean  @map("is_correct")
-  orderIndex Int      @map("order_index")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(cuid())
+  questionId          String   @map("question_id")
+  textUk              String   @map("text_uk")
+  textEn              String   @map("text_en")
+  isCorrect           Boolean  @map("is_correct")
+  wrongAnswerTheoryUk String?  @map("wrong_answer_theory_uk") @db.Text
+  wrongAnswerTheoryEn String?  @map("wrong_answer_theory_en") @db.Text
+  orderIndex          Int      @map("order_index")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
@@ -154,8 +158,8 @@ model Subject {
   id            String   @id @default(cuid())
   nameUk        String   @map("name_uk")
   nameEn        String   @map("name_en")
-  descriptionUk String?  @map("description_uk")
-  descriptionEn String?  @map("description_en")
+  descriptionUk String?  @map("description_uk") @db.Text
+  descriptionEn String?  @map("description_en") @db.Text
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
