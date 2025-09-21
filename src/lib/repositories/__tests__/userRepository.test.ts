@@ -67,7 +67,7 @@ describe('userRepository.updateUser', () => {
     it('updates names only when locale is invalid', async () => {
         const raw = { id: '1', firebaseId: 'f', email: 'e', firstName: 'x', lastName: 'y', locale: 'uk', createdAt: new Date(), updatedAt: new Date() };
         (prisma.user.update as jest.Mock).mockResolvedValue(raw);
-        const res = await updateUser('f', { firstName: 'x', lastName: 'y', locale: 'xx' as any });
+        const res = await updateUser('f', { firstName: 'x', lastName: 'y', locale: 'xx' as 'uk' | 'en' });
         expect(prisma.user.update).toHaveBeenCalledWith({ where: { firebaseId: 'f' }, data: { firstName: 'x', lastName: 'y' } });
         expect(res.locale).toBe('uk');
     });

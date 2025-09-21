@@ -7,22 +7,204 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         String     @id @default(cuid())
+  firebaseId String     @unique @map("firebase_id")
+  email      String     @unique
+  firstName  String     @map("first_name")
+  lastName   String     @map("last_name")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  locale     UserLocale @default(uk) @map("locale")
+
+  questionScores        UserQuestionScore[]
+  bookLevelScores       UserBookLevelScore[]
+  subjectLevelScores    UserSubjectLevelScore[]
+
+  @@map("users")
+}
+
+model Book {
+  id            String   @id @default(cuid())
+  titleUk       String   @map("title_uk")
+  titleEn       String   @map("title_en")
+  descriptionUk String?  @map("description_uk")
+  descriptionEn String?  @map("description_en")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  bookQuestions    BookQuestion[]
+  userLevelScores  UserBookLevelScore[]
+  bookSubjects     BookSubject[]
+
+  @@map("books")
+}
+
+model Level {
+  id         String   @id
+  key        String   @unique
+  nameUk     String   @map("name_uk")
+  nameEn     String   @map("name_en")
+  isActive   Boolean  @default(true) @map("is_active")
+  orderIndex Int      @default(0) @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  questions              Question[]
+  userBookLevelScores    UserBookLevelScore[]
+  userSubjectLevelScores UserSubjectLevelScore[]
+
+  @@map("levels")
+}
+
+model Question {
+  id        String   @id @default(cuid())
+  textUk    String   @map("text_uk")
+  textEn    String   @map("text_en")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  levelId   String   @map("level_id")
+
+  answers       Answer[]
+  bookQuestions BookQuestion[]
+  userScores    UserQuestionScore[]
+  level         Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@map("questions")
+  @@index([levelId])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String   @map("question_id")
+  textUk     String   @map("text_uk")
+  textEn     String   @map("text_en")
+  isCorrect  Boolean  @map("is_correct")
+  orderIndex Int      @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("answers")
+  @@index([questionId])
+  @@unique([questionId, orderIndex])
+}
+
+model BookQuestion {
+  id         String   @id @default(cuid())
+  bookId     String   @map("book_id")
+  questionId String   @map("question_id")
+  orderIndex Int      @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  book     Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, questionId])
+  @@unique([bookId, orderIndex])
+  @@map("book_questions")
+  @@index([bookId])
+  @@index([questionId])
+}
+
+model UserQuestionScore {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  questionId String   @map("question_id")
+  score      Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@map("user_question_scores")
+  @@index([userId])
+  @@index([questionId])
+}
+
+model UserBookLevelScore {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  bookId         String   @map("book_id")
+  levelId        String   @map("level_id")
+  averageScore   Float    @map("average_score")
+  totalQuestions Int      @map("total_questions")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId, levelId])
+  @@map("user_book_level_scores")
+  @@index([userId])
+  @@index([bookId])
+  @@index([levelId])
+}
+
+model Subject {
+  id            String   @id @default(cuid())
+  nameUk        String   @map("name_uk")
+  nameEn        String   @map("name_en")
+  descriptionUk String?  @map("description_uk")
+  descriptionEn String?  @map("description_en")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  bookSubjects           BookSubject[]
+  userSubjectLevelScores UserSubjectLevelScore[]
+
+  @@map("subjects")
+}
+
+model BookSubject {
+  id        String   @id @default(cuid())
+  bookId    String   @map("book_id")
+  subjectId String   @map("subject_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  book    Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, subjectId])
+  @@map("book_subjects")
+  @@index([bookId])
+  @@index([subjectId])
+}
+
+model UserSubjectLevelScore {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  subjectId      String   @map("subject_id")
+  levelId        String   @map("level_id")
+  averageScore   Float    @map("average_score")
+  totalQuestions Int      @map("total_questions")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  level   Level   @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId, levelId])
+  @@map("user_subject_level_scores")
+  @@index([userId])
+  @@index([subjectId])
+  @@index([levelId])
+}
+
 enum UserLocale {
   uk
   en
 
   @@map("user_locale")
-}
-
-model User {
-  id         String   @id @default(cuid())
-  firebaseId String   @unique @map("firebase_id")
-  email      String   @unique
-  firstName  String   @map("first_name")
-  lastName   String   @map("last_name")
-  locale     UserLocale @default(uk) @map("locale")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  @@map("users")
 }

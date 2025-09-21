@@ -3,11 +3,17 @@ import React from 'react';
 
 import I18nProvider, { useI18nContext } from '@/lib/i18n/I18nProvider';
 
+interface MockState {
+    currentUser: {
+        user: null;
+    };
+}
+
 jest.mock('@/lib/redux/ReduxProvider', () => {
     const actual = jest.requireActual('@/lib/redux/ReduxProvider');
     return {
         ...actual,
-        useAppSelector: (fn: (s: any) => any) => fn({ currentUser: { user: null } })
+        useAppSelector: (fn: (s: MockState) => unknown) => fn({ currentUser: { user: null } })
     };
 });
 

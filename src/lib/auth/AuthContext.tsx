@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         return () => unsubscribe();
-    }, [pathname, router]);
+    }, [pathname, router, dispatch]);
 
     const signIn = async (email: string, password: string): Promise<void> => {
         try {

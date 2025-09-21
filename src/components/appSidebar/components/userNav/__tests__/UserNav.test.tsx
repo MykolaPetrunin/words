@@ -1,5 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -18,16 +17,27 @@ jest.mock('next/navigation', () => ({
     useRouter: jest.fn()
 }));
 
+jest.mock('lucide-react', () => ({
+    BadgeCheck: () => <span>BadgeCheck</span>,
+    ChevronsUpDown: ({ className }: { className?: string }) => <span className={className}>ChevronsUpDown</span>,
+    LogOut: () => <span>LogOut</span>
+}));
+
 let __isMobile = false;
 jest.mock('@/components/ui/sidebar', () => {
     interface Props {
         children?: React.ReactNode;
         side?: 'left' | 'right' | 'top' | 'bottom';
+        className?: string;
+        _size?: string;
+        _asChild?: boolean;
     }
 
     return {
         SidebarTrigger: ({ children }: Props) => <button>{children}</button>,
-        SidebarMenuButton: ({ children }: Props) => <button>{children}</button>,
+        SidebarMenu: ({ children }: Props) => <div>{children}</div>,
+        SidebarMenuItem: ({ children }: Props) => <div>{children}</div>,
+        SidebarMenuButton: ({ children, className }: Props) => <button className={className}>{children}</button>,
         useSidebar: () => ({ isMobile: __isMobile })
     };
 });
@@ -38,16 +48,23 @@ jest.mock('@/hooks/isMobile/useIsMobile', () => ({
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
     DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    DropdownMenuContent: ({ children, side }: { children: React.ReactNode; side?: string }) => <div data-side={side}>{children}</div>,
-    DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => <button onClick={onClick}>{children}</button>,
-    DropdownMenuLabel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    DropdownMenuTrigger: ({ children }: { children: React.ReactNode; asChild?: boolean }) => <div>{children}</div>,
+    DropdownMenuContent: ({ children, side }: { children: React.ReactNode; side?: string; className?: string; align?: string; sideOffset?: number }) => (
+        <div data-side={side}>{children}</div>
+    ),
+    DropdownMenuItem: ({ children, onClick, onSelect }: { children: React.ReactNode; onClick?: () => void; onSelect?: (e: Event) => void; className?: string }) => (
+        <button onClick={onClick} onMouseDown={(e) => onSelect?.(e as unknown as Event)}>
+            {children}
+        </button>
+    ),
+    DropdownMenuLabel: ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>,
+    DropdownMenuGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     DropdownMenuSeparator: () => <hr />
 }));
 
 jest.mock('@/components/ui/avatar', () => ({
     Avatar: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    AvatarImage: ({ src, alt }: { src?: string; alt?: string }) => <img src={src} alt={alt} />,
+    AvatarImage: ({ src, alt }: { src?: string; alt?: string }) => <div data-src={src} data-alt={alt} />,
     AvatarFallback: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }));
 
@@ -63,9 +80,7 @@ jest.mock('@/components/ui/tooltip', () => ({
 }));
 
 jest.mock('@/components/ui/button', () => ({
-    Button: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void; variant?: string; size?: string }) => (
-        <button onClick={onClick}>{children}</button>
-    )
+    Button: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void; variant?: string; size?: string }) => <button onClick={onClick}>{children}</button>
 }));
 
 describe('UserNav', () => {
@@ -117,8 +132,9 @@ describe('UserNav', () => {
         const errorSpy = jest.spyOn(console, 'error');
 
         render(<UserNav />, { wrapper: Providers });
-        const exitButton = screen.getByRole('button', { name: 'Вийти' });
-        await userEvent.click(exitButton);
+        const exitButton = screen.getByText('Вийти').closest('button')!;
+
+        fireEvent.mouseDown(exitButton);
 
         await waitFor(() => {
             expect(mockSignOut).toHaveBeenCalled();
@@ -202,8 +218,8 @@ describe('UserNav', () => {
 
         render(<UserNav />, { wrapper: Providers });
 
-        const accountBtn = screen.getByRole('button', { name: 'Акаунт' });
-        await userEvent.click(accountBtn);
+        const accountBtn = screen.getByText('Акаунт').closest('button')!;
+        fireEvent.mouseDown(accountBtn);
 
         expect(push).toHaveBeenCalledWith(appPaths.account);
     });

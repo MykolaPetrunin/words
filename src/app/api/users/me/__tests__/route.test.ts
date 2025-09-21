@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { headers } from 'next/headers';
 
 import { getUserByFirebaseId, updateUser, updateUserLocale } from '@/lib/repositories/userRepository';
 
@@ -43,31 +44,29 @@ jest.mock('@/lib/repositories/userRepository', () => ({
     updateUserLocale: jest.fn()
 }));
 
+const mockedHeaders = headers as jest.MockedFunction<typeof headers>;
+
 describe('users/me route', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
     });
 
     it('GET returns 401 without auth header', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map());
+        mockedHeaders.mockResolvedValue(new Map());
         const res = await GET();
         expect(res.status).toBe(401);
     });
 
     it('GET returns 404 when user not found', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
         (getUserByFirebaseId as jest.Mock).mockResolvedValue(null);
         const res = await GET();
         expect(res.status).toBe(404);
     });
 
     it('GET returns user with headers', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
         (getUserByFirebaseId as jest.Mock).mockResolvedValue({
             id: '1',
             firebaseId: 'uid1',
@@ -87,16 +86,14 @@ describe('users/me route', () => {
     });
 
     it('GET returns 500 on server error', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
         (getUserByFirebaseId as jest.Mock).mockRejectedValue(new Error('db'));
         const res = await GET();
         expect(res.status).toBe(500);
     });
 
     it('PATCH validates locale', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
         const body = { locale: 'de' } as unknown as { locale: 'de' };
         const req = { json: jest.fn().mockResolvedValue(body) } as unknown as NextRequest;
         const res = await PATCH(req);
@@ -104,8 +101,7 @@ describe('users/me route', () => {
     });
 
     it('PATCH updates locale and sets cookie and headers', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
         (updateUserLocale as jest.Mock).mockResolvedValue({
             id: '1',
             firebaseId: 'uid1',
@@ -126,8 +122,7 @@ describe('users/me route', () => {
     });
 
     it('PATCH updates names without locale', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
         (updateUser as jest.Mock).mockResolvedValue({
             id: '1',
             firebaseId: 'uid1',
@@ -146,16 +141,14 @@ describe('users/me route', () => {
     });
 
     it('PATCH returns 401 without auth header', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map());
+        mockedHeaders.mockResolvedValue(new Map());
         const req = { json: jest.fn().mockResolvedValue({}) } as unknown as NextRequest;
         const res = await PATCH(req);
         expect(res.status).toBe(401);
     });
 
     it('PATCH returns 500 on server error', async () => {
-        const { headers } = require('next/headers');
-        headers.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
+        mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
         (updateUser as jest.Mock).mockRejectedValue(new Error('db'));
         const req = { json: jest.fn().mockResolvedValue({ firstName: 'X' }) } as unknown as NextRequest;
         const res = await PATCH(req);
