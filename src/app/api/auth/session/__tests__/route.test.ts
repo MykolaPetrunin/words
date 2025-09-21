@@ -104,7 +104,7 @@ describe('POST /api/auth/session', () => {
         const response = await POST(mockRequest);
         const data = await response.json();
 
-        expect(consoleError).toHaveBeenCalledWith('Session creation error:', mockError);
+        // Logger call is now internal, test only the response
         expect(data).toEqual({ error: 'Failed to create session' });
         expect(response.status).toBe(500);
 

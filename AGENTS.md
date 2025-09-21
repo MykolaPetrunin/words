@@ -37,11 +37,20 @@ Always reference `package.json` for available dependencies and versions before s
     - Type event handlers
     - **useEffect Usage**: Use `useEffect` ONLY for side effects and third-party integrations (APIs, subscriptions, DOM manipulation). Avoid for state calculations that can be derived during render
     - **Forms**: React Hook Form + Zod validation, reset `isDirty` after save with `setInitialData(data); reset(data);`
+    - **Error handling**: Use typed logger with context
+
+    ```typescript
+    } catch (error) {
+        clientLogger.error('Form submission failed', error, { email: data.email });
+        toast.error(t('auth.error'));
+    }
+    ```
 
 4. **Code Quality**
     - **FORBIDDEN** to add comments in code
     - Code must be self-documenting through proper naming
     - Use TypeScript utility types (`Partial<T>`, `Pick<T>`, `Omit<T>`)
+    - **Use typed logger: `clientLogger.error()` instead of `console.error()`**
 
 5. **Loading States**
     - Every route needs `loading.tsx` with skeleton

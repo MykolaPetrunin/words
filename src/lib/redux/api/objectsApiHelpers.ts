@@ -1,5 +1,6 @@
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
+import { clientLogger } from '@/lib/logger';
 import type { ApiObject } from '@/lib/types/objects';
 
 import type { CreateObjectInput, UpdateObjectInput } from './objectsApi';
@@ -10,7 +11,7 @@ export const LIST_ID = 'LIST' as const;
 export const getObjectsQuery = () => ({ url: '/objects', cache: 'no-store' as RequestCache });
 
 export const transformErrorResponse = (response: FetchBaseQueryError): { error: string; status: number | string; data?: unknown } => {
-    console.error('objectsApi getObjects error', response);
+    clientLogger.error('Objects API getObjects failed', undefined, { status: response.status, data: response.data });
     return { error: 'Сталася помилка', status: response.status };
 };
 

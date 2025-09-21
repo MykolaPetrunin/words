@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createSessionCookie, getUserProfile, verifyIdToken } from '@/lib/firebase/firebaseAdmin';
+import { serverLogger } from '@/lib/logger';
 import { getUserByFirebaseId, upsertUserByFirebaseId } from '@/lib/repositories/userRepository';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         return response;
     } catch (error) {
-        console.error('Session creation error:', error);
+        serverLogger.error('Session creation failed', error as Error, { endpoint: '/api/auth/session' });
         return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
     }
 }

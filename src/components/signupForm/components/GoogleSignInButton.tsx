@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { clientLogger } from '@/lib/logger';
 
 interface GoogleSignInButtonProps {
     disabled?: boolean;
@@ -23,7 +24,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ disabled
             toast.success(t('auth.googleSignInSuccess'));
         } catch (error) {
             toast.error(t('auth.googleSignInError'));
-            console.error('Google sign in error:', error);
+            clientLogger.error('Google sign in from button failed', error as Error);
         } finally {
             setIsLoading(false);
         }

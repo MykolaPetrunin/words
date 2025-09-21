@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/hooks/useI18n';
 import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { clientLogger } from '@/lib/logger';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
 
 export function UserNav(): React.ReactElement | null {
@@ -66,7 +67,7 @@ export function UserNav(): React.ReactElement | null {
 
     const handleSignOut = (_event: Event): void => {
         signOut().catch((error: unknown) => {
-            console.error('Error signing out:', error);
+            clientLogger.error('Sign out from nav failed', error as Error, { userId: user?.id });
         });
     };
 

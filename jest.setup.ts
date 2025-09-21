@@ -26,7 +26,8 @@ beforeAll(() => {
                 args[0].includes('Google sign in error:') ||
                 args[0].includes('Session creation error:') ||
                 args[0].includes('objectsApi getObjects error') ||
-                args[0].includes('An unhandled error occurred processing a request for the endpoint'))
+                args[0].includes('An unhandled error occurred processing a request for the endpoint') ||
+                (typeof args[0] === 'object' && args[0] && 'level' in args[0]))
         ) {
             return;
         }

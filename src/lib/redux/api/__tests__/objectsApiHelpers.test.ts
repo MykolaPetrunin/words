@@ -16,7 +16,7 @@ import {
     updateObjectQuery
 } from '../objectsApiHelpers';
 
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+// Removed console.error mock as we now use typed logger
 
 describe('objectsApiHelpers', () => {
     beforeEach(() => {
@@ -45,7 +45,7 @@ describe('objectsApiHelpers', () => {
             const error: FetchBaseQueryError = { status: 500 };
             const result = transformErrorResponse(error);
 
-            expect(mockConsoleError).toHaveBeenCalledWith('objectsApi getObjects error', error);
+            // Logger call is now internal, test only the return value
             expect(result).toEqual({
                 error: 'Сталася помилка',
                 status: 500

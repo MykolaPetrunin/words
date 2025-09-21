@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { useI18n } from '@/hooks/useI18n';
 import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { clientLogger } from '@/lib/logger';
 
 import { GoogleSignInButton } from './components/GoogleSignInButton';
 
@@ -52,7 +53,7 @@ export const SignupForm: React.FC = () => {
             toast.success(t('auth.signupSuccess'));
         } catch (error) {
             toast.error(t('auth.signupError'));
-            console.error(error);
+            clientLogger.error('Signup form submission failed', error as Error, { email: data.email });
         } finally {
             setIsLoading(false);
         }

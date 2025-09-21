@@ -12,6 +12,7 @@ import {
     signUp as firebaseSignUp,
     onAuthStateChange
 } from '@/lib/firebase/firebaseClient';
+import { clientLogger } from '@/lib/logger';
 import { useAppDispatch, useAppSelector } from '@/lib/redux/ReduxProvider';
 import { userApi } from '@/lib/redux/api/userApi';
 import { clearAuthToken, setAuthToken } from '@/lib/redux/services/authToken';
@@ -86,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             await firebaseSignIn(email, password);
         } catch (error) {
-            console.error('Sign in error:', error);
+            clientLogger.error('Sign in failed', error as Error, { email });
             throw error;
         }
     };
@@ -95,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             await firebaseSignUp(email, password);
         } catch (error) {
-            console.error('Sign up error:', error);
+            clientLogger.error('Sign up failed', error as Error, { email });
             throw error;
         }
     };
@@ -104,7 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             await firebaseSignInWithGoogle();
         } catch (error) {
-            console.error('Google sign in error:', error);
+            clientLogger.error('Google sign in failed', error as Error);
             throw error;
         }
     };
@@ -117,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
             router.push(appPaths.root);
         } catch (error) {
-            console.error('Sign out error:', error);
+            clientLogger.error('Sign out failed', error as Error);
             throw error;
         }
     };
