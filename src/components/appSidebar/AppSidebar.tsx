@@ -2,10 +2,20 @@
 
 import Link from 'next/link';
 
+import { UserNav } from '@/components/appSidebar/components/userNav/UserNav';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuSubButton,
+    SidebarRail,
+    SidebarTrigger
+} from '@/components/ui/sidebar';
 import { useI18n } from '@/hooks/useI18n';
 import { appPaths } from '@/lib/appPaths';
-import { UserNav } from '@/components/appSidebar/components/userNav/UserNav';
-import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuSubButton, SidebarRail } from '@/components/ui/sidebar';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const t = useI18n();
@@ -24,6 +34,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarContent>
+
+            <SidebarFooter>
+                <SidebarTrigger className="hidden md:flex" />
+            </SidebarFooter>
 
             <SidebarRail />
         </Sidebar>
