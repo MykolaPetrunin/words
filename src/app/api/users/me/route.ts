@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { verifyIdToken } from '@/lib/firebase/firebaseAdmin';
-import { getUserByFirebaseId, updateUser, updateUserLocale } from '@/lib/repositories/userRepository';
+import { getUserByFirebaseId, updateUser } from '@/lib/repositories/userRepository';
 import type { ApiUser, UserLocale } from '@/lib/types/user';
 
 const serialize = (user: NonNullable<Awaited<ReturnType<typeof getUserByFirebaseId>>>): ApiUser => {
@@ -56,7 +56,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     try {
         const decoded = await verifyIdToken(authHeader.replace('Bearer ', ''));
-        const updated = newLocale ? await updateUserLocale(decoded.uid, newLocale) : await updateUser(decoded.uid, { firstName, lastName, locale: newLocale });
+        const updated = await updateUser(decoded.uid, { firstName, lastName, locale: newLocale });
         const response = NextResponse.json(serialize(updated));
         if (newLocale) {
             response.cookies.set('locale', newLocale, {

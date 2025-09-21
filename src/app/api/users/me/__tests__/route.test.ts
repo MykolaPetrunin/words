@@ -1,7 +1,7 @@
-import { NextRequest } from 'next/server';
 import { headers } from 'next/headers';
+import { NextRequest } from 'next/server';
 
-import { getUserByFirebaseId, updateUser, updateUserLocale } from '@/lib/repositories/userRepository';
+import { getUserByFirebaseId, updateUser } from '@/lib/repositories/userRepository';
 
 import { GET, PATCH } from '../route';
 
@@ -102,7 +102,7 @@ describe('users/me route', () => {
 
     it('PATCH updates locale and sets cookie and headers', async () => {
         mockedHeaders.mockResolvedValue(new Map([['authorization', 'Bearer token']]));
-        (updateUserLocale as jest.Mock).mockResolvedValue({
+        (updateUser as jest.Mock).mockResolvedValue({
             id: '1',
             firebaseId: 'uid1',
             email: 'a@b.com',

@@ -12,7 +12,7 @@ export interface UpdateMeInput {
 
 export const userApi = createApi({
     reducerPath: 'userApi',
-    baseQuery: getBaseQuery({ baseUrl: '' }),
+    baseQuery: getBaseQuery({ baseUrl: '', includeCredentials: true }),
     tagTypes: ['CurrentUser'] as const,
     endpoints: (builder) => ({
         getMe: builder.query<ApiUser, void>({

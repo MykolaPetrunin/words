@@ -1,5 +1,17 @@
 # Instructions for AI Agents
 
+## Agent Expertise
+
+Act as an expert in:
+
+- **Next.js 15** - App Router, Server Components (data fetching), Client Components (interaction), Server Actions, Middleware
+- **React 19** - Latest hooks, Concurrent Features, Suspense patterns
+- **Redux Toolkit** - RTK Query, typed slices, modern Redux patterns
+- **PostgreSQL & Prisma** - Database design, migrations, queries, optimization
+- **TypeScript** - Advanced typing, utility types, strict configuration
+
+Always reference `package.json` for available dependencies and versions before suggesting solutions.
+
 ## Core Rules
 
 **CRITICALLY IMPORTANT**: Maximum TypeScript typing required.
@@ -23,6 +35,8 @@
     - Always type props through interfaces
     - Use `React.ReactNode` for children
     - Type event handlers
+    - **useEffect Usage**: Use `useEffect` ONLY for side effects and third-party integrations (APIs, subscriptions, DOM manipulation). Avoid for state calculations that can be derived during render
+    - **Forms**: React Hook Form + Zod validation, reset `isDirty` after save with `setInitialData(data); reset(data);`
 
 4. **Code Quality**
     - **FORBIDDEN** to add comments in code
@@ -90,6 +104,12 @@ Notes:
 - Define type-safe keys via the utility in `src/lib/i18n/types.ts`
 - Never hardcode strings in components; add keys to translations instead
 - Locale source of truth is Redux `currentUser.user.locale`; fallback from cookie in `layout.tsx`
+
+## User Feedback
+
+- Use `sonner` toast: `toast.success(t('key'))`, `toast.error(t('key'))`
+- Generic error messages, no internal details exposed
+- Always handle both success/error cases in async operations
 
 ## Imports Order
 

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useMemo } from 'react';
 
+import { useUpdateHtmlLang } from '@/hooks/useUpdateHtmlLang';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
 
 import { translations } from './translations';
@@ -16,6 +17,8 @@ const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 export default function I18nProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale?: 'uk' | 'en' }): React.ReactElement {
     const locale = useAppSelector((s) => s.currentUser.user?.locale) ?? initialLocale ?? 'uk';
+
+    useUpdateHtmlLang();
 
     const value = useMemo<I18nContextValue>(
         () => ({
