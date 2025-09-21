@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 interface GoogleSignInButtonProps {
@@ -13,14 +14,15 @@ interface GoogleSignInButtonProps {
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ disabled = false }) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const { signInWithGoogle } = useAuth();
+    const t = useI18n();
 
     const handleGoogleSignIn = async (): Promise<void> => {
         setIsLoading(true);
         try {
             await signInWithGoogle();
-            toast.success('Ви успішно увійшли через Google!');
+            toast.success(t('auth.googleSignInSuccess'));
         } catch (error) {
-            toast.error('Помилка входу через Google. Спробуйте ще раз.');
+            toast.error(t('auth.googleSignInError'));
             console.error('Google sign in error:', error);
         } finally {
             setIsLoading(false);
@@ -41,7 +43,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ disabled
                     fill="#EA4335"
                 />
             </svg>
-            {isLoading ? 'Вхід через Google...' : 'Увійти через Google'}
+            {isLoading ? t('auth.googleSigningIn') : t('auth.googleSignIn')}
         </Button>
     );
 };

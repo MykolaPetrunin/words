@@ -5,6 +5,7 @@ import { clearAuthToken, getBaseQuery, setAuthToken } from '../authToken';
 
 interface MockFetchBaseQueryConfig {
     baseUrl: string;
+    credentials?: RequestCredentials;
     prepareHeaders: (headers: Headers, api: BaseQueryApi) => Headers;
 }
 
@@ -50,8 +51,19 @@ describe('authToken service', () => {
 
             expect(fetchBaseQuery).toHaveBeenCalledWith({
                 baseUrl: 'https://api.restful-api.dev',
+                credentials: 'same-origin',
                 prepareHeaders: expect.any(Function)
             });
+        });
+
+        it('should respect custom baseUrl and includeCredentials', () => {
+            getBaseQuery({ baseUrl: '/api', includeCredentials: true });
+            const mockFetchBaseQuery = fetchBaseQuery as jest.MockedFunction<typeof fetchBaseQuery>;
+            const config = mockFetchBaseQuery.mock.calls[mockFetchBaseQuery.mock.calls.length - 1][0] as MockFetchBaseQueryConfig & {
+                credentials: RequestCredentials;
+            };
+            expect(config.baseUrl).toBe('/api');
+            expect(config.credentials).toBe('include');
         });
 
         it('should prepare headers without token when not set', () => {

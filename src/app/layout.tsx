@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
 
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/lib/auth/AuthContext';
+import I18nProvider from '@/lib/i18n/I18nProvider';
 import ReduxProvider from '@/lib/redux/ReduxProvider';
 import ThemeProvider from '@/lib/theme/ThemeProvider';
 import './globals.css';
@@ -14,16 +16,21 @@ export const metadata: Metadata = {
     description: 'Сучасна платформа для вивчення нових слів'
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+    const cookieStore = await cookies();
+    const cookieLocale = cookieStore.get('locale')?.value;
+    const initialLocale = cookieLocale === 'en' ? 'en' : 'uk';
     return (
-        <html lang="uk" suppressHydrationWarning>
+        <html lang={initialLocale} suppressHydrationWarning>
             <body className={inter.className}>
                 <ThemeProvider>
                     <ReduxProvider>
-                        <AuthProvider>
-                            {children}
-                            <Toaster />
-                        </AuthProvider>
+                        <I18nProvider initialLocale={initialLocale}>
+                            <AuthProvider>
+                                {children}
+                                <Toaster />
+                            </AuthProvider>
+                        </I18nProvider>
                     </ReduxProvider>
                 </ThemeProvider>
             </body>

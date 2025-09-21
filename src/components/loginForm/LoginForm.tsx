@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { useI18n } from '@/hooks/useI18n';
 import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
 
@@ -27,6 +28,7 @@ type FormData = z.infer<typeof formSchema>;
 export const LoginForm: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const { signIn } = useAuth();
+    const t = useI18n();
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -40,9 +42,9 @@ export const LoginForm: React.FC = () => {
         setIsLoading(true);
         try {
             await signIn(data.email, data.password);
-            toast.success('Ви успішно увійшли!');
+            toast.success(t('auth.loginSuccess'));
         } catch (error) {
-            toast.error('Помилка входу. Перевірте дані та спробуйте ще раз.');
+            toast.error(t('auth.loginError'));
             console.error(error);
         } finally {
             setIsLoading(false);
@@ -52,14 +54,14 @@ export const LoginForm: React.FC = () => {
     return (
         <Card className="w-full max-w-md">
             <CardHeader>
-                <CardTitle>Вхід</CardTitle>
-                <CardDescription>Введіть свої дані для входу в систему</CardDescription>
+                <CardTitle>{t('auth.loginTitle')}</CardTitle>
+                <CardDescription>{t('auth.loginSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <GoogleSignInButton disabled={isLoading} />
                 <div className="my-4 flex items-center">
                     <Separator className="flex-1" />
-                    <span className="px-2 text-sm text-muted-foreground">або</span>
+                    <span className="px-2 text-sm text-muted-foreground">{t('auth.or')}</span>
                     <Separator className="flex-1" />
                 </div>
                 <Form {...form}>
@@ -69,7 +71,7 @@ export const LoginForm: React.FC = () => {
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Електронна пошта</FormLabel>
+                                    <FormLabel>{t('auth.email')}</FormLabel>
                                     <FormControl>
                                         <Input type="email" placeholder="your@email.com" disabled={isLoading} {...field} />
                                     </FormControl>
@@ -82,7 +84,7 @@ export const LoginForm: React.FC = () => {
                             name="password"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Пароль</FormLabel>
+                                    <FormLabel>{t('auth.password')}</FormLabel>
                                     <FormControl>
                                         <Input type="password" placeholder="••••••" disabled={isLoading} {...field} />
                                     </FormControl>
@@ -91,14 +93,14 @@ export const LoginForm: React.FC = () => {
                             )}
                         />
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? 'Вхід...' : 'Увійти'}
+                            {isLoading ? t('auth.submittingLogin') : t('auth.submitLogin')}
                         </Button>
                     </form>
                 </Form>
                 <div className="mt-4 text-center text-sm">
-                    Немає акаунту?{' '}
+                    {t('auth.noAccount')}{' '}
                     <Link href={appPaths.signup} className="text-primary hover:underline">
-                        Зареєструватися
+                        {t('auth.signupCta')}
                     </Link>
                 </div>
             </CardContent>

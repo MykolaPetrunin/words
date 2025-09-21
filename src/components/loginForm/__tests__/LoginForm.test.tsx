@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 
 import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
+import I18nProvider from '@/lib/i18n/I18nProvider';
+import ReduxProvider from '@/lib/redux/ReduxProvider';
 
 import { LoginForm } from '../LoginForm';
 
@@ -35,8 +37,14 @@ describe('LoginForm', () => {
         });
     });
 
+    const Providers = ({ children }: { children: React.ReactNode }) => (
+        <ReduxProvider>
+            <I18nProvider initialLocale="uk">{children}</I18nProvider>
+        </ReduxProvider>
+    );
+
     it('should render login form correctly', () => {
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         expect(screen.getByText('Вхід')).toBeInTheDocument();
         expect(screen.getByText('Введіть свої дані для входу в систему')).toBeInTheDocument();
@@ -48,7 +56,7 @@ describe('LoginForm', () => {
 
     it('should show validation errors for empty fields', async () => {
         const user = userEvent.setup();
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         const submitButton = screen.getByRole('button', { name: 'Увійти' });
         await user.click(submitButton);
@@ -63,7 +71,7 @@ describe('LoginForm', () => {
 
     it('should show validation error for short password', async () => {
         const user = userEvent.setup();
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         const emailInput = screen.getByLabelText('Електронна пошта');
         const passwordInput = screen.getByLabelText('Пароль');
@@ -84,7 +92,7 @@ describe('LoginForm', () => {
     it('should successfully submit form with valid data', async () => {
         const user = userEvent.setup();
         mockSignIn.mockResolvedValue(undefined);
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         const emailInput = screen.getByLabelText('Електронна пошта');
         const passwordInput = screen.getByLabelText('Пароль');
@@ -108,7 +116,7 @@ describe('LoginForm', () => {
 
         const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         const emailInput = screen.getByLabelText('Електронна пошта');
         const passwordInput = screen.getByLabelText('Пароль');
@@ -132,7 +140,7 @@ describe('LoginForm', () => {
         const user = userEvent.setup();
         mockSignIn.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         const emailInput = screen.getByLabelText('Електронна пошта');
         const passwordInput = screen.getByLabelText('Пароль');
@@ -155,7 +163,7 @@ describe('LoginForm', () => {
     });
 
     it('should have a link to signup page', () => {
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         const signupLink = screen.getByText('Зареєструватися');
         expect(signupLink).toHaveAttribute('href', appPaths.signup);
@@ -163,7 +171,7 @@ describe('LoginForm', () => {
 
     it('should clear form errors when user starts typing', async () => {
         const user = userEvent.setup();
-        render(<LoginForm />);
+        render(<LoginForm />, { wrapper: Providers });
 
         const submitButton = screen.getByRole('button', { name: 'Увійти' });
         await user.click(submitButton);

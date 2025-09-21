@@ -4,6 +4,7 @@ export interface AppPaths {
     readonly signup: '/signup';
     readonly notFound: '/_not-found';
     readonly dashboard: '/dashboard';
+    readonly account: '/account';
 }
 
 export const appPaths: AppPaths = {
@@ -11,7 +12,8 @@ export const appPaths: AppPaths = {
     login: '/login',
     signup: '/signup',
     notFound: '/_not-found',
-    dashboard: '/dashboard'
+    dashboard: '/dashboard',
+    account: '/account'
 };
 
 export type AppPathValue = AppPaths[keyof AppPaths];

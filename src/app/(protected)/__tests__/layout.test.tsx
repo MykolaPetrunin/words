@@ -3,6 +3,8 @@ import { usePathname } from 'next/navigation';
 import React from 'react';
 
 import { appPaths } from '@/lib/appPaths';
+import I18nProvider from '@/lib/i18n/I18nProvider';
+import ReduxProvider from '@/lib/redux/ReduxProvider';
 
 import ProtectedLayout from '../layout';
 
@@ -19,7 +21,8 @@ jest.mock('@/lib/firebase/firebaseClient', () => ({
 }));
 
 jest.mock('next/navigation', () => ({
-    usePathname: jest.fn()
+    usePathname: jest.fn(),
+    useRouter: () => ({ push: jest.fn(), replace: jest.fn() })
 }));
 
 jest.mock('@/lib/auth/AuthContext', () => ({
@@ -52,9 +55,13 @@ describe('ProtectedLayout', () => {
         (usePathname as jest.Mock).mockReturnValue(appPaths.dashboard);
 
         render(
-            <ProtectedLayout>
-                <div>Test Content</div>
-            </ProtectedLayout>
+            <ReduxProvider>
+                <I18nProvider initialLocale="uk">
+                    <ProtectedLayout>
+                        <div>Test Content</div>
+                    </ProtectedLayout>
+                </I18nProvider>
+            </ReduxProvider>
         );
 
         expect(screen.getByText('Test Content')).toBeInTheDocument();
@@ -65,9 +72,13 @@ describe('ProtectedLayout', () => {
         (usePathname as jest.Mock).mockReturnValue(appPaths.dashboard);
 
         render(
-            <ProtectedLayout>
-                <div>Test Content</div>
-            </ProtectedLayout>
+            <ReduxProvider>
+                <I18nProvider initialLocale="uk">
+                    <ProtectedLayout>
+                        <div>Test Content</div>
+                    </ProtectedLayout>
+                </I18nProvider>
+            </ReduxProvider>
         );
 
         const dashboardLinks = screen.getAllByRole('link', { name: 'Dashboard' });

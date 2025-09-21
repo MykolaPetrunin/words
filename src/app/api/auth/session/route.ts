@@ -1,8 +1,7 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createSessionCookie, getUserProfile, verifyIdToken } from '@/lib/firebase/firebaseAdmin';
-import { upsertUserByFirebaseId } from '@/lib/repositories/userRepository';
+import { getUserByFirebaseId, upsertUserByFirebaseId } from '@/lib/repositories/userRepository';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
@@ -33,8 +32,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const expiresIn = 60 * 60 * 24 * 14 * 1000;
         const sessionCookie = await createSessionCookie(idToken, expiresIn);
 
-        const cookieStore = await cookies();
-        cookieStore.set('session', sessionCookie, {
+        const response = NextResponse.json({ success: true });
+        response.cookies.set('session', sessionCookie, {
             maxAge: expiresIn,
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -42,7 +41,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             path: '/'
         });
 
-        return NextResponse.json({ success: true });
+        const dbUser = await getUserByFirebaseId(decoded.uid);
+        if (dbUser) {
+            response.cookies.set('locale', dbUser.locale, {
+                maxAge: 60 * 60 * 24 * 365,
+                httpOnly: false,
+                sameSite: 'lax',
+                path: '/'
+            });
+        }
+
+        return response;
     } catch (error) {
         console.error('Session creation error:', error);
         return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });

@@ -1,13 +1,7 @@
-import { cookies } from 'next/headers';
-
 import { createSessionCookie, getUserProfile, verifyIdToken } from '@/lib/firebase/firebaseAdmin';
-import { upsertUserByFirebaseId } from '@/lib/repositories/userRepository';
+import { getUserByFirebaseId, upsertUserByFirebaseId } from '@/lib/repositories/userRepository';
 
 import { POST } from '../route';
-
-jest.mock('next/headers', () => ({
-    cookies: jest.fn()
-}));
 
 jest.mock('@/lib/firebase/firebaseAdmin', () => ({
     createSessionCookie: jest.fn(),
@@ -16,8 +10,16 @@ jest.mock('@/lib/firebase/firebaseAdmin', () => ({
 }));
 
 jest.mock('@/lib/repositories/userRepository', () => ({
-    upsertUserByFirebaseId: jest.fn()
+    upsertUserByFirebaseId: jest.fn(),
+    getUserByFirebaseId: jest.fn()
 }));
+
+const createMockNextResponse = (data: unknown, init?: { status?: number }) => {
+    const json = async () => data;
+    const status = init?.status || 200;
+    const cookies = { set: jest.fn() };
+    return { json, status, cookies } as unknown as Response & { cookies: { set: jest.Mock } };
+};
 
 jest.mock('next/server', () => ({
     NextRequest: jest.fn((request) => ({
@@ -25,25 +27,13 @@ jest.mock('next/server', () => ({
         ...request
     })),
     NextResponse: {
-        json: jest.fn((data, init?) => {
-            return new Response(JSON.stringify(data), {
-                status: init?.status || 200,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        })
+        json: jest.fn((data: unknown, init?: { status?: number }) => createMockNextResponse(data, init))
     }
 }));
 
 describe('POST /api/auth/session', () => {
-    const mockCookieStore = {
-        set: jest.fn()
-    };
-
     beforeEach(() => {
         jest.clearAllMocks();
-        (cookies as jest.Mock).mockResolvedValue(mockCookieStore);
     });
 
     it('should create session cookie successfully', async () => {
@@ -57,11 +47,13 @@ describe('POST /api/auth/session', () => {
             json: jest.fn().mockResolvedValue({ idToken: mockIdToken })
         } as unknown as Parameters<typeof POST>[0];
 
+        (getUserByFirebaseId as jest.Mock).mockResolvedValue(null);
+
         const response = await POST(mockRequest);
-        const data = await response.json();
+        const data = await (response as unknown as { json: () => Promise<unknown> }).json();
 
         expect(createSessionCookie).toHaveBeenCalledWith(mockIdToken, 60 * 60 * 24 * 14 * 1000);
-        expect(mockCookieStore.set).toHaveBeenCalledWith('session', mockSessionCookie, {
+        expect((response as unknown as { cookies: { set: jest.Mock } }).cookies.set).toHaveBeenCalledWith('session', mockSessionCookie, {
             maxAge: 60 * 60 * 24 * 14 * 1000,
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -69,7 +61,7 @@ describe('POST /api/auth/session', () => {
             path: '/'
         });
         expect(data).toEqual({ success: true });
-        expect(response.status).toBe(200);
+        expect((response as unknown as { status: number }).status).toBe(200);
     });
 
     it('should return error when idToken is missing', async () => {
@@ -78,12 +70,12 @@ describe('POST /api/auth/session', () => {
         } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
-        const data = await response.json();
+        const data = await (response as unknown as { json: () => Promise<unknown> }).json();
 
         expect(createSessionCookie).not.toHaveBeenCalled();
-        expect(mockCookieStore.set).not.toHaveBeenCalled();
+        expect((response as unknown as { cookies: { set: jest.Mock } }).cookies.set).not.toHaveBeenCalled();
         expect(data).toEqual({ error: 'Missing ID token' });
-        expect(response.status).toBe(400);
+        expect((response as unknown as { status: number }).status).toBe(400);
     });
 
     it('should handle invalid JSON in request body', async () => {
@@ -92,10 +84,10 @@ describe('POST /api/auth/session', () => {
         } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
-        const data = await response.json();
+        const data = await (response as unknown as { json: () => Promise<unknown> }).json();
 
         expect(data).toEqual({ error: 'Failed to create session' });
-        expect(response.status).toBe(500);
+        expect((response as unknown as { status: number }).status).toBe(500);
     });
 
     it('should handle createSessionCookie errors', async () => {
@@ -132,9 +124,9 @@ describe('POST /api/auth/session', () => {
             json: jest.fn().mockResolvedValue({ idToken: mockIdToken })
         } as unknown as Parameters<typeof POST>[0];
 
-        await POST(mockRequest);
+        const response = await POST(mockRequest);
 
-        expect(mockCookieStore.set).toHaveBeenCalledWith('session', mockSessionCookie, {
+        expect((response as unknown as { cookies: { set: jest.Mock } }).cookies.set).toHaveBeenCalledWith('session', mockSessionCookie, {
             maxAge: 60 * 60 * 24 * 14 * 1000,
             httpOnly: true,
             secure: true,
@@ -144,16 +136,39 @@ describe('POST /api/auth/session', () => {
         Object.defineProperty(process.env, 'NODE_ENV', { value: prevNodeEnv, configurable: true });
     });
 
+    it('should set locale cookie when dbUser exists', async () => {
+        (verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'uid5', email: 'l@m.com' });
+        (getUserProfile as jest.Mock).mockResolvedValue({ displayName: 'Ling', email: 'l@m.com' });
+        (createSessionCookie as jest.Mock).mockResolvedValue('cookie');
+        (getUserByFirebaseId as jest.Mock).mockResolvedValue({ locale: 'uk' });
+
+        const mockRequest = {
+            json: jest.fn().mockResolvedValue({ idToken: 'token' })
+        } as unknown as Parameters<typeof POST>[0];
+
+        const response = await POST(mockRequest);
+        const cookiesSet = (response as unknown as { cookies: { set: jest.Mock } }).cookies.set;
+
+        expect(cookiesSet).toHaveBeenCalledWith(
+            'locale',
+            'uk',
+            expect.objectContaining({
+                httpOnly: false,
+                sameSite: 'lax'
+            })
+        );
+    });
+
     it('should handle empty idToken', async () => {
         const mockRequest = {
             json: jest.fn().mockResolvedValue({ idToken: '' })
         } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
-        const data = await response.json();
+        const data = await (response as unknown as { json: () => Promise<unknown> }).json();
 
         expect(data).toEqual({ error: 'Missing ID token' });
-        expect(response.status).toBe(400);
+        expect((response as unknown as { status: number }).status).toBe(400);
     });
 
     it('should handle null idToken', async () => {
@@ -162,10 +177,10 @@ describe('POST /api/auth/session', () => {
         } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
-        const data = await response.json();
+        const data = await (response as unknown as { json: () => Promise<unknown> }).json();
 
         expect(data).toEqual({ error: 'Missing ID token' });
-        expect(response.status).toBe(400);
+        expect((response as unknown as { status: number }).status).toBe(400);
     });
 
     it('should return 401 when decoded token has no uid', async () => {
@@ -175,10 +190,10 @@ describe('POST /api/auth/session', () => {
         } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
-        const data = await response.json();
+        const data = await (response as unknown as { json: () => Promise<unknown> }).json();
 
         expect(data).toEqual({ error: 'Invalid token' });
-        expect(response.status).toBe(401);
+        expect((response as unknown as { status: number }).status).toBe(401);
     });
 
     it('should return 400 when email missing in token and profile', async () => {
@@ -189,10 +204,10 @@ describe('POST /api/auth/session', () => {
         } as unknown as Parameters<typeof POST>[0];
 
         const response = await POST(mockRequest);
-        const data = await response.json();
+        const data = await (response as unknown as { json: () => Promise<unknown> }).json();
 
         expect(data).toEqual({ error: 'Email not found in token' });
-        expect(response.status).toBe(400);
+        expect((response as unknown as { status: number }).status).toBe(400);
     });
 
     it('should parse single-word displayName into firstName only', async () => {

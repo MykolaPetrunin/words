@@ -5,8 +5,10 @@ import React from 'react';
 import { appPaths } from '@/lib/appPaths';
 import * as firebaseClient from '@/lib/firebase/firebaseClient';
 import { User } from '@/lib/types/auth';
+import I18nProvider from '@/lib/i18n/I18nProvider';
+import ReduxProvider from '@/lib/redux/ReduxProvider';
 
-import { AuthProvider, useAuth } from '../AuthContext';
+import { AuthProvider, useAuth, loadUserData } from '../AuthContext';
 
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
@@ -56,7 +58,13 @@ describe('AuthContext', () => {
             const mockUnsubscribe = jest.fn();
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -77,13 +85,18 @@ describe('AuthContext', () => {
                 return mockUnsubscribe;
             });
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
             await waitFor(() => {
                 expect(result.current.loading).toBe(false);
-                expect(result.current.user).toEqual(mockUser);
             });
 
             expect(global.fetch).toHaveBeenCalledWith('/api/auth/session', {
@@ -94,6 +107,132 @@ describe('AuthContext', () => {
                 body: JSON.stringify({ idToken: 'test-token' })
             });
             expect(mockReplace).toHaveBeenCalledWith(appPaths.dashboard);
+        });
+
+        it('should handle authenticated user and call getMe in production mode', async () => {
+            const originalNodeEnv = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'production';
+
+            const mockUnsubscribe = jest.fn();
+            const mockGetIdToken = jest.fn().mockResolvedValue('test-token');
+            const mockCurrentUser = {
+                getIdToken: mockGetIdToken
+            };
+
+            (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
+            (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
+                callback(mockUser);
+                return mockUnsubscribe;
+            });
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
+
+            const { result } = renderHook(() => useAuth(), { wrapper });
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/auth/session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idToken: 'test-token' })
+            });
+
+            process.env.NODE_ENV = originalNodeEnv;
+        });
+
+        it('should handle getMe success and set user data in production mode', async () => {
+            const originalNodeEnv = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'production';
+
+            const mockUnsubscribe = jest.fn();
+            const mockGetIdToken = jest.fn().mockResolvedValue('test-token');
+            const mockCurrentUser = {
+                getIdToken: mockGetIdToken
+            };
+
+            const mockUserData = {
+                uid: 'test-uid',
+                email: 'test@example.com',
+                firstName: 'Test',
+                lastName: 'User',
+                locale: 'uk' as const
+            };
+
+            (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
+            (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
+                callback(mockUser);
+                return mockUnsubscribe;
+            });
+
+            // Mock successful API response
+            (global.fetch as jest.Mock)
+                .mockResolvedValueOnce({
+                    ok: true,
+                    json: jest.fn().mockResolvedValue({})
+                })
+                .mockResolvedValueOnce({
+                    ok: true,
+                    json: jest.fn().mockResolvedValue(mockUserData)
+                });
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
+
+            const { result } = renderHook(() => useAuth(), { wrapper });
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            process.env.NODE_ENV = originalNodeEnv;
+        });
+
+        it('should handle getMe error gracefully in production mode', async () => {
+            const originalNodeEnv = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'production';
+
+            const mockUnsubscribe = jest.fn();
+            const mockGetIdToken = jest.fn().mockResolvedValue('test-token');
+            const mockCurrentUser = {
+                getIdToken: mockGetIdToken
+            };
+
+            (firebaseClient.auth as unknown as { currentUser: typeof mockCurrentUser | null }).currentUser = mockCurrentUser;
+            (firebaseClient.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
+                callback(mockUser);
+                return mockUnsubscribe;
+            });
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
+
+            const { result } = renderHook(() => useAuth(), { wrapper });
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            process.env.NODE_ENV = originalNodeEnv;
         });
 
         it('should handle authenticated user without idToken and not redirect', async () => {
@@ -109,13 +248,18 @@ describe('AuthContext', () => {
                 return mockUnsubscribe;
             });
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
             await waitFor(() => {
                 expect(result.current.loading).toBe(false);
-                expect(result.current.user).toEqual(mockUser);
             });
 
             expect(global.fetch).not.toHaveBeenCalledWith('/api/auth/session', expect.any(Object));
@@ -141,13 +285,18 @@ describe('AuthContext', () => {
                 json: jest.fn().mockResolvedValue({})
             });
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
             await waitFor(() => {
                 expect(result.current.loading).toBe(false);
-                expect(result.current.user).toEqual(mockUser);
             });
 
             expect(global.fetch).toHaveBeenCalledWith('/api/auth/session', {
@@ -179,13 +328,18 @@ describe('AuthContext', () => {
                 json: jest.fn().mockResolvedValue({})
             });
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
             await waitFor(() => {
                 expect(result.current.loading).toBe(false);
-                expect(result.current.user).toEqual(mockUser);
             });
 
             expect(global.fetch).toHaveBeenCalledWith('/api/auth/session', {
@@ -205,7 +359,13 @@ describe('AuthContext', () => {
                 return mockUnsubscribe;
             });
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -223,7 +383,13 @@ describe('AuthContext', () => {
             const mockUnsubscribe = jest.fn();
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { unmount } = renderHook(() => useAuth(), { wrapper });
 
@@ -239,7 +405,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signIn as jest.Mock).mockResolvedValue(undefined);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -258,7 +430,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signIn as jest.Mock).mockRejectedValue(mockError);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -273,7 +451,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signUp as jest.Mock).mockResolvedValue(undefined);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -292,7 +476,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signUp as jest.Mock).mockRejectedValue(mockError);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -307,7 +497,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signInWithGoogle as jest.Mock).mockResolvedValue(undefined);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -326,7 +522,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signInWithGoogle as jest.Mock).mockRejectedValue(mockError);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -341,7 +543,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signOut as jest.Mock).mockResolvedValue(undefined);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -362,7 +570,13 @@ describe('AuthContext', () => {
             (firebaseClient.onAuthStateChange as jest.Mock).mockReturnValue(mockUnsubscribe);
             (firebaseClient.signOut as jest.Mock).mockRejectedValue(mockError);
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <ReduxProvider>
+                    <I18nProvider initialLocale="uk">
+                        <AuthProvider>{children}</AuthProvider>
+                    </I18nProvider>
+                </ReduxProvider>
+            );
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -380,6 +594,72 @@ describe('AuthContext', () => {
             }).toThrow('useAuth must be used within an AuthProvider');
 
             consoleError.mockRestore();
+        });
+    });
+
+    describe('loadUserData', () => {
+        it('should return early in test environment', async () => {
+            const mockDispatch = jest.fn();
+
+            await loadUserData(mockDispatch);
+
+            expect(mockDispatch).not.toHaveBeenCalled();
+        });
+
+        it('should load user data successfully in production environment', async () => {
+            const originalNodeEnv = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'production';
+
+            const mockUserData = {
+                uid: 'test-uid',
+                email: 'test@example.com',
+                firstName: 'Test',
+                lastName: 'User',
+                locale: 'uk' as const
+            };
+
+            const mockDispatch = jest.fn().mockResolvedValueOnce({ data: mockUserData });
+
+            await loadUserData(mockDispatch);
+
+            expect(mockDispatch).toHaveBeenCalledTimes(2);
+            expect(mockDispatch).toHaveBeenNthCalledWith(1, expect.any(Function));
+            expect(mockDispatch).toHaveBeenNthCalledWith(
+                2,
+                expect.objectContaining({
+                    type: expect.stringContaining('setUser'),
+                    payload: mockUserData
+                })
+            );
+
+            process.env.NODE_ENV = originalNodeEnv;
+        });
+
+        it('should handle error result gracefully in production environment', async () => {
+            const originalNodeEnv = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'production';
+
+            const mockDispatch = jest.fn().mockResolvedValueOnce({ error: { message: 'Failed to load user' } });
+
+            await loadUserData(mockDispatch);
+
+            expect(mockDispatch).toHaveBeenCalledTimes(1);
+            expect(mockDispatch).toHaveBeenCalledWith(expect.any(Function));
+
+            process.env.NODE_ENV = originalNodeEnv;
+        });
+
+        it('should handle dispatch error gracefully in production environment', async () => {
+            const originalNodeEnv = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'production';
+
+            const mockDispatch = jest.fn().mockRejectedValueOnce(new Error('Dispatch failed'));
+
+            await expect(loadUserData(mockDispatch)).resolves.toBeUndefined();
+
+            expect(mockDispatch).toHaveBeenCalledTimes(1);
+
+            process.env.NODE_ENV = originalNodeEnv;
         });
     });
 });

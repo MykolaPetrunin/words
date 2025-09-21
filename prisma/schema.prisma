@@ -7,12 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserLocale {
+  uk
+  en
+
+  @@map("user_locale")
+}
+
 model User {
   id         String   @id @default(cuid())
   firebaseId String   @unique @map("firebase_id")
   email      String   @unique
   firstName  String   @map("first_name")
   lastName   String   @map("last_name")
+  locale     UserLocale @default(uk) @map("locale")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 

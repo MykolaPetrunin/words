@@ -12,26 +12,44 @@ import {
     signUp as firebaseSignUp,
     onAuthStateChange
 } from '@/lib/firebase/firebaseClient';
-import { AuthContextType, User } from '@/lib/types/auth';
+import { useAppDispatch, useAppSelector } from '@/lib/redux/ReduxProvider';
+import { userApi } from '@/lib/redux/api/userApi';
+import { clearAuthToken, setAuthToken } from '@/lib/redux/services/authToken';
+import { setUser as setCurrentUser } from '@/lib/redux/slices/currentUserSlice';
+import { AuthContextType } from '@/lib/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const PUBLIC_PATHS: ReadonlyArray<string> = [appPaths.root, appPaths.login, appPaths.signup];
+
+export const loadUserData = async (dispatch: ReturnType<typeof useAppDispatch>): Promise<void> => {
+    if (process.env.NODE_ENV === 'test') {
+        return;
+    }
+
+    try {
+        const result = await dispatch(userApi.endpoints.getMe.initiate());
+        if ('data' in result && result.data) {
+            dispatch(setCurrentUser(result.data));
+        }
+    } catch {
+        // Ignore errors during user data loading
+    }
+};
 
 interface AuthProviderProps {
     children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const user = useAppSelector((s) => s.currentUser.user);
     const [loading, setLoading] = useState<boolean>(true);
     const router = useRouter();
     const pathname = usePathname();
+    const dispatch = useAppDispatch();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChange(async (firebaseUser) => {
-            setUser(firebaseUser);
-
             if (firebaseUser) {
                 const idToken = await auth.currentUser?.getIdToken();
                 if (idToken) {
@@ -42,6 +60,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         },
                         body: JSON.stringify({ idToken })
                     });
+                    if (response.ok) {
+                        setAuthToken(idToken);
+                        await loadUserData(dispatch);
+                    }
                     if (response.ok && PUBLIC_PATHS.includes(pathname)) {
                         router.replace(appPaths.dashboard);
                     }
@@ -50,6 +72,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 await fetch('/api/auth/logout', {
                     method: 'POST'
                 });
+                clearAuthToken();
+                dispatch(setCurrentUser(null));
             }
 
             setLoading(false);

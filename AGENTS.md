@@ -79,3 +79,19 @@ Notes:
 - Keep Prisma models in PascalCase and fields in camelCase; map to DB with `@@map` and `@map`
 - Prefer plural table names (e.g., `users`)
 - Avoid reserved words as table names
+
+## Internationalization (i18n)
+
+- All user-facing strings must come from the i18n system
+- Use global `I18nProvider` in `app/layout.tsx`
+- Use `useI18n()` hook to translate: `t('namespace.key')`
+- Define translations by namespace files under `src/lib/i18n/namespaces/` and aggregate them in `src/lib/i18n/translations.ts`
+- Prefer namespace-per-feature (e.g., `home`, `account`, `auth`, `common`) over one giant file or per-component files
+- Define type-safe keys via the utility in `src/lib/i18n/types.ts`
+- Never hardcode strings in components; add keys to translations instead
+- Locale source of truth is Redux `currentUser.user.locale`; fallback from cookie in `layout.tsx`
+
+## Imports Order
+
+- Group imports: React/Next, external libs, internal `@/` (UI, hooks, lib/types), then relative
+- Sort alphabetically within each group

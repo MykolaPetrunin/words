@@ -5,8 +5,10 @@ export interface User {
     photoURL: string | null;
 }
 
+import type { ApiUser } from '@/lib/types/user';
+
 export interface AuthContextType {
-    user: User | null;
+    user: ApiUser | null;
     loading: boolean;
     signIn: (email: string, password: string) => Promise<void>;
     signUp: (email: string, password: string) => Promise<void>;

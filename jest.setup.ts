@@ -1,6 +1,17 @@
 import '@testing-library/jest-dom';
 import 'whatwg-fetch';
 
+// Mock Response.clone() for RTK Query
+global.Response = class extends Response {
+    clone() {
+        return new Response(this.body, {
+            status: this.status,
+            statusText: this.statusText,
+            headers: this.headers
+        });
+    }
+};
+
 const originalError = console.error;
 const originalWarn = console.warn;
 
@@ -14,7 +25,8 @@ beforeAll(() => {
                 args[0].includes('Error signing out:') ||
                 args[0].includes('Google sign in error:') ||
                 args[0].includes('Session creation error:') ||
-                args[0].includes('objectsApi getObjects error'))
+                args[0].includes('objectsApi getObjects error') ||
+                args[0].includes('An unhandled error occurred processing a request for the endpoint'))
         ) {
             return;
         }

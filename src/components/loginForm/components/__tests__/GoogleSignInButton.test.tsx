@@ -1,8 +1,10 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/lib/auth/AuthContext';
+import I18nProvider from '@/lib/i18n/I18nProvider';
+import ReduxProvider from '@/lib/redux/ReduxProvider';
 
 import { GoogleSignInButton } from '../GoogleSignInButton';
 
@@ -30,15 +32,21 @@ describe('GoogleSignInButton', () => {
         console.error = jest.fn() as jest.MockedFunction<typeof console.error>;
     });
 
+    const Providers = ({ children }: { children: React.ReactNode }) => (
+        <ReduxProvider>
+            <I18nProvider initialLocale="uk">{children}</I18nProvider>
+        </ReduxProvider>
+    );
+
     it('should render with correct text', () => {
-        render(<GoogleSignInButton />);
+        render(<GoogleSignInButton />, { wrapper: Providers });
 
         expect(screen.getByText('Увійти через Google')).toBeInTheDocument();
         expect(screen.getByRole('button')).toBeInTheDocument();
     });
 
     it('should render as disabled when disabled prop is true', () => {
-        render(<GoogleSignInButton disabled={true} />);
+        render(<GoogleSignInButton disabled={true} />, { wrapper: Providers });
 
         expect(screen.getByRole('button')).toBeDisabled();
     });
@@ -46,7 +54,7 @@ describe('GoogleSignInButton', () => {
     it('should call signInWithGoogle when clicked', async () => {
         mockSignInWithGoogle.mockResolvedValue(undefined);
 
-        render(<GoogleSignInButton />);
+        render(<GoogleSignInButton />, { wrapper: Providers });
 
         fireEvent.click(screen.getByRole('button'));
 
@@ -56,11 +64,11 @@ describe('GoogleSignInButton', () => {
     it('should show loading state while signing in', async () => {
         mockSignInWithGoogle.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
-        render(<GoogleSignInButton />);
+        render(<GoogleSignInButton />, { wrapper: Providers });
 
         fireEvent.click(screen.getByRole('button'));
 
-        expect(screen.getByText('Вхід через Google...')).toBeInTheDocument();
+        expect(screen.getByText('Увійти через Google...')).toBeInTheDocument();
         expect(screen.getByRole('button')).toBeDisabled();
 
         await waitFor(() => {
@@ -71,7 +79,7 @@ describe('GoogleSignInButton', () => {
     it('should show success toast on successful sign in', async () => {
         mockSignInWithGoogle.mockResolvedValue(undefined);
 
-        render(<GoogleSignInButton />);
+        render(<GoogleSignInButton />, { wrapper: Providers });
 
         fireEvent.click(screen.getByRole('button'));
 
@@ -84,7 +92,7 @@ describe('GoogleSignInButton', () => {
         const error = new Error('Sign in failed');
         mockSignInWithGoogle.mockRejectedValue(error);
 
-        render(<GoogleSignInButton />);
+        render(<GoogleSignInButton />, { wrapper: Providers });
 
         fireEvent.click(screen.getByRole('button'));
 
@@ -95,7 +103,7 @@ describe('GoogleSignInButton', () => {
     });
 
     it('should not be disabled when loading is false and disabled prop is false', () => {
-        render(<GoogleSignInButton disabled={false} />);
+        render(<GoogleSignInButton disabled={false} />, { wrapper: Providers });
 
         expect(screen.getByRole('button')).not.toBeDisabled();
     });
@@ -103,7 +111,7 @@ describe('GoogleSignInButton', () => {
     it('should be disabled when both loading and disabled prop are true', async () => {
         mockSignInWithGoogle.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
-        render(<GoogleSignInButton disabled={true} />);
+        render(<GoogleSignInButton disabled={true} />, { wrapper: Providers });
 
         fireEvent.click(screen.getByRole('button'));
 

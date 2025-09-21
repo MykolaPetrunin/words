@@ -1,0 +1,41 @@
+export const uk = {
+    goToDashboard: 'Перейти до Dashboard',
+    login: 'Увійти',
+    signup: 'Зареєструватися',
+    heroTitle: 'Вивчайте слова легко та ефективно',
+    heroSubtitle: 'Сучасна платформа для вивчення нових слів з використанням передових технологій та персоналізованого підходу до навчання',
+    ctaStartFree: 'Почати безкоштовно',
+    ctaLogin: 'Увійти в акаунт',
+    whyTitle: 'Чому обирають Words Next?',
+    featureFast: 'Швидке навчання',
+    featureDict: 'Великий словник',
+    featureSecure: 'Безпека даних',
+    featureFastDesc: 'Наші алгоритми адаптуються під ваш темп навчання та допомагають засвоювати матеріал максимально ефективно',
+    featureDictDesc: 'База постійно оновлюється новими словами та виразами, щоб ви завжди мали актуальний матеріал',
+    featureSecureDesc: 'Ми використовуємо Firebase Authentication для забезпечення максимального захисту вашого акаунту',
+    readyTitle: 'Готові почати навчання?',
+    readyDesc: 'Приєднуйтесь до тисяч користувачів, які вже покращують свій словниковий запас',
+    createFree: 'Створити безкоштовний акаунт',
+    footerRights: 'Всі права захищені.'
+} as const;
+
+export const en = {
+    goToDashboard: 'Go to Dashboard',
+    login: 'Log in',
+    signup: 'Sign up',
+    heroTitle: 'Learn words easily and efficiently',
+    heroSubtitle: 'A modern platform for learning new words using advanced technologies and a personalized approach to learning',
+    ctaStartFree: 'Start for free',
+    ctaLogin: 'Log into account',
+    whyTitle: 'Why choose Words Next?',
+    featureFast: 'Fast learning',
+    featureDict: 'Large dictionary',
+    featureSecure: 'Data security',
+    featureFastDesc: 'Our algorithms adapt to your pace and help you learn as efficiently as possible',
+    featureDictDesc: 'The database is constantly updated with new words and phrases so you always have fresh material',
+    featureSecureDesc: 'We use Firebase Authentication to ensure maximum account protection',
+    readyTitle: 'Ready to start learning?',
+    readyDesc: 'Join thousands of users who are already improving their vocabulary',
+    createFree: 'Create a free account',
+    footerRights: 'All rights reserved.'
+} as const;

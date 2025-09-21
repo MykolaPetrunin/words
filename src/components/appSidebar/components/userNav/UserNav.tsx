@@ -1,6 +1,8 @@
 'use client';
 
 import { BadgeCheck, ChevronsUpDown, LogOut } from 'lucide-react';
+import type { Route } from 'next';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,20 +16,27 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import { useI18n } from '@/hooks/useI18n';
+import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useAppSelector } from '@/lib/redux/ReduxProvider';
 
 export function UserNav(): React.ReactElement | null {
     const { isMobile } = useSidebar();
     const { user, signOut } = useAuth();
+    const reduxUser = useAppSelector((s) => s.currentUser.user);
+    const router = useRouter();
+    const t = useI18n();
 
     if (!user) {
         return null;
     }
 
-    const primaryText = user.displayName ?? user.email ?? '';
-    const secondaryText = user.email && user.email !== primaryText ? user.email : '';
-    const avatarUrl = user.photoURL ?? '';
-    const initialsSource = user.displayName ?? user.email ?? '';
+    const dbEmail = reduxUser?.email ?? user.email;
+    const primaryText = `${reduxUser?.firstName ?? ''} ${reduxUser?.lastName ?? ''}`.trim() || dbEmail || '';
+    const secondaryText = dbEmail && dbEmail !== primaryText ? dbEmail : '';
+    const avatarUrl = '';
+    const initialsSource = primaryText || dbEmail || '';
     const initials =
         initialsSource
             .trim()
@@ -79,15 +88,15 @@ export function UserNav(): React.ReactElement | null {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer" onSelect={() => router.push(appPaths.account as Route)}>
                                 <BadgeCheck />
-                                Account
+                                {t('account.title')}
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onSelect={handleSignOut}>
                             <LogOut />
-                            Вийти
+                            {t('auth.logout')}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

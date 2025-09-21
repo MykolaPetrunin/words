@@ -11,9 +11,10 @@ export function clearAuthToken(): void {
     authToken = null;
 }
 
-export const getBaseQuery = (): BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> =>
+export const getBaseQuery = (options?: { baseUrl?: string; includeCredentials?: boolean }): BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> =>
     fetchBaseQuery({
-        baseUrl: 'https://api.restful-api.dev',
+        baseUrl: options?.baseUrl ?? 'https://api.restful-api.dev',
+        credentials: options?.includeCredentials ? 'include' : 'same-origin',
         prepareHeaders: (headers: Headers) => {
             if (authToken) headers.set('authorization', `Bearer ${authToken}`);
             return headers;
