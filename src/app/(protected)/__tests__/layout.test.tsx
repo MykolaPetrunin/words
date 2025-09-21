@@ -65,7 +65,7 @@ describe('ProtectedLayout', () => {
         );
 
         expect(screen.getByText('Test Content')).toBeInTheDocument();
-        expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Панель керування').length).toBeGreaterThan(0);
     });
 
     it('should include dashboard link', () => {
@@ -81,7 +81,7 @@ describe('ProtectedLayout', () => {
             </ReduxProvider>
         );
 
-        const dashboardLinks = screen.getAllByRole('link', { name: 'Dashboard' });
+        const dashboardLinks = screen.getAllByRole('link', { name: 'Панель керування' });
         const hasDashboardHref = dashboardLinks.some((a) => a.getAttribute('href') === appPaths.dashboard);
         expect(hasDashboardHref).toBe(true);
     });
