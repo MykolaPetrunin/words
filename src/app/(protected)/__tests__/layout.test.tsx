@@ -3,8 +3,6 @@ import { usePathname } from 'next/navigation';
 import React from 'react';
 
 import { appPaths } from '@/lib/appPaths';
-import I18nProvider from '@/lib/i18n/I18nProvider';
-import ReduxProvider from '@/lib/redux/ReduxProvider';
 
 import ProtectedLayout from '../layout';
 
@@ -36,6 +34,32 @@ jest.mock('@/lib/auth/AuthContext', () => ({
     })
 }));
 
+jest.mock('@/lib/redux/ReduxProvider', () => {
+    const actual = jest.requireActual('@/lib/redux/ReduxProvider');
+    return {
+        ...actual,
+        useAppSelector: () => ({
+            id: '1',
+            firebaseId: 'firebase-1',
+            email: 'test@example.com',
+            firstName: 'Test',
+            lastName: 'User',
+            locale: 'uk',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        }),
+        default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+    };
+});
+
+jest.mock('@/lib/i18n/I18nProvider', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}));
+
+jest.mock('@/hooks/useI18n', () => ({
+    useI18n: () => (key: string) => key
+}));
+
 jest.mock('next/link', () => {
     const MockedLink = ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => (
         <a href={href} className={className}>
@@ -55,33 +79,25 @@ describe('ProtectedLayout', () => {
         (usePathname as jest.Mock).mockReturnValue(appPaths.dashboard);
 
         render(
-            <ReduxProvider>
-                <I18nProvider initialLocale="uk">
-                    <ProtectedLayout>
-                        <div>Test Content</div>
-                    </ProtectedLayout>
-                </I18nProvider>
-            </ReduxProvider>
+            <ProtectedLayout>
+                <div>Test Content</div>
+            </ProtectedLayout>
         );
 
         expect(screen.getByText('Test Content')).toBeInTheDocument();
-        expect(screen.getAllByText('Панель керування').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('common.dashboard').length).toBeGreaterThan(0);
     });
 
     it('should include dashboard link', () => {
         (usePathname as jest.Mock).mockReturnValue(appPaths.dashboard);
 
         render(
-            <ReduxProvider>
-                <I18nProvider initialLocale="uk">
-                    <ProtectedLayout>
-                        <div>Test Content</div>
-                    </ProtectedLayout>
-                </I18nProvider>
-            </ReduxProvider>
+            <ProtectedLayout>
+                <div>Test Content</div>
+            </ProtectedLayout>
         );
 
-        const dashboardLinks = screen.getAllByRole('link', { name: 'Панель керування' });
+        const dashboardLinks = screen.getAllByRole('link', { name: 'common.dashboard' });
         const hasDashboardHref = dashboardLinks.some((a) => a.getAttribute('href') === appPaths.dashboard);
         expect(hasDashboardHref).toBe(true);
     });

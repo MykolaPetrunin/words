@@ -16,6 +16,7 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/hooks/useI18n';
 import { appPaths } from '@/lib/appPaths';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -23,10 +24,28 @@ import { useAppSelector } from '@/lib/redux/ReduxProvider';
 
 export function UserNav(): React.ReactElement | null {
     const { isMobile } = useSidebar();
-    const { user, signOut } = useAuth();
+    const { user, loading, signOut } = useAuth();
     const reduxUser = useAppSelector((s) => s.currentUser.user);
     const router = useRouter();
     const t = useI18n();
+
+    // Показуємо skeleton під час завантаження auth або якщо користувач є, але дані з БД ще не завантажені
+    if (loading || (user && !reduxUser)) {
+        return (
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton size="lg">
+                        <Skeleton className="h-8 w-8 rounded-lg" />
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                            <Skeleton className="h-4 w-24 mb-1" />
+                            <Skeleton className="h-3 w-32" />
+                        </div>
+                        <Skeleton className="ml-auto h-4 w-4" />
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        );
+    }
 
     if (!user) {
         return null;

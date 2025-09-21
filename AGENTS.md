@@ -43,7 +43,12 @@ Always reference `package.json` for available dependencies and versions before s
     - Code must be self-documenting through proper naming
     - Use TypeScript utility types (`Partial<T>`, `Pick<T>`, `Omit<T>`)
 
-5. **File Optimization**
+5. **Loading States**
+    - Every route needs `loading.tsx` with skeleton
+    - Components show skeleton during `loading || (user && !reduxUser)`
+    - Skeleton dimensions match real content
+
+6. **File Optimization**
     - Keep this file concise and focused
     - Remove unnecessary examples or explanations
     - Focus only on essential coding rules

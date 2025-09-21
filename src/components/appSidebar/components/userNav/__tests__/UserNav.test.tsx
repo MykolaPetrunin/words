@@ -4,13 +4,30 @@ import { useRouter } from 'next/navigation';
 
 import { appPaths } from '@/lib/appPaths';
 import { useAuth as useAuthOriginal } from '@/lib/auth/AuthContext';
-import I18nProvider from '@/lib/i18n/I18nProvider';
-import ReduxProvider from '@/lib/redux/ReduxProvider';
+// import I18nProvider from '@/lib/i18n/I18nProvider';
+import { useAppSelector } from '@/lib/redux/ReduxProvider';
 
 import { UserNav } from '../UserNav';
 
 jest.mock('@/lib/auth/AuthContext', () => ({
     useAuth: jest.fn()
+}));
+
+jest.mock('@/lib/redux/ReduxProvider', () => {
+    const actual = jest.requireActual('@/lib/redux/ReduxProvider');
+    return {
+        ...actual,
+        useAppSelector: jest.fn(),
+        default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+    };
+});
+
+jest.mock('@/lib/i18n/I18nProvider', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}));
+
+jest.mock('@/hooks/useI18n', () => ({
+    useI18n: () => (key: string) => key
 }));
 
 jest.mock('next/navigation', () => ({
@@ -85,12 +102,9 @@ jest.mock('@/components/ui/button', () => ({
 
 describe('UserNav', () => {
     const mockedUseAuth = useAuthOriginal as unknown as jest.MockedFunction<typeof useAuthOriginal>;
+    const mockedUseAppSelector = useAppSelector as jest.MockedFunction<typeof useAppSelector>;
 
-    const Providers = ({ children }: { children: React.ReactNode }) => (
-        <ReduxProvider>
-            <I18nProvider initialLocale="uk">{children}</I18nProvider>
-        </ReduxProvider>
-    );
+    const Providers = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
 
     test('returns null when user is null', () => {
         (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
@@ -102,37 +116,40 @@ describe('UserNav', () => {
             signInWithGoogle: jest.fn(),
             signOut: jest.fn()
         });
+        mockedUseAppSelector.mockReturnValue(null);
 
         const { container } = render(<UserNav />, { wrapper: Providers });
-        expect(container.firstChild).toBeNull();
+        expect(container.firstChild?.textContent).toBe('');
     });
 
     test('calls signOut and logs error when signOut rejects', async () => {
         const mockSignOut = jest.fn().mockRejectedValue(new Error('Sign out failed'));
         (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
         __isMobile = false;
+        const mockUser = {
+            id: '1',
+            firebaseId: 'firebase-1',
+            email: 'jane@example.com',
+            firstName: 'Jane',
+            lastName: 'Roe',
+            locale: 'uk',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        };
         mockedUseAuth.mockReturnValue({
-            user: {
-                id: '1',
-                firebaseId: 'firebase-1',
-                email: 'jane@example.com',
-                firstName: 'Jane',
-                lastName: 'Roe',
-                locale: 'uk',
-                createdAt: '2024-01-01T00:00:00.000Z',
-                updatedAt: '2024-01-01T00:00:00.000Z'
-            },
+            user: mockUser,
             loading: false,
             signIn: jest.fn(),
             signUp: jest.fn(),
             signInWithGoogle: jest.fn(),
             signOut: mockSignOut
         });
+        mockedUseAppSelector.mockReturnValue(mockUser);
 
         const errorSpy = jest.spyOn(console, 'error');
 
         render(<UserNav />, { wrapper: Providers });
-        const exitButton = screen.getByText('Вийти').closest('button')!;
+        const exitButton = screen.getByText('auth.logout').closest('button')!;
 
         fireEvent.mouseDown(exitButton);
 
@@ -146,23 +163,25 @@ describe('UserNav', () => {
     test('renders without secondaryText when email equals primaryText and shows initials fallback U', () => {
         (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
         __isMobile = false;
+        const mockUser = {
+            id: '1',
+            firebaseId: 'firebase-1',
+            email: 'user@example.com',
+            firstName: '',
+            lastName: '',
+            locale: 'uk',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        };
         mockedUseAuth.mockReturnValue({
-            user: {
-                id: '1',
-                firebaseId: 'firebase-1',
-                email: 'user@example.com',
-                firstName: '',
-                lastName: '',
-                locale: 'uk',
-                createdAt: '2024-01-01T00:00:00.000Z',
-                updatedAt: '2024-01-01T00:00:00.000Z'
-            },
+            user: mockUser,
             loading: false,
             signIn: jest.fn(),
             signUp: jest.fn(),
             signInWithGoogle: jest.fn(),
             signOut: jest.fn()
         });
+        mockedUseAppSelector.mockReturnValue(mockUser);
 
         const { container } = render(<UserNav />, { wrapper: Providers });
         expect(container.querySelector('.text-xs')).toBeNull();
@@ -172,23 +191,25 @@ describe('UserNav', () => {
     test('uses bottom side on mobile', () => {
         (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
         __isMobile = true;
+        const mockUser = {
+            id: '1',
+            firebaseId: 'firebase-1',
+            email: 'jane@example.com',
+            firstName: 'Jane',
+            lastName: 'Roe',
+            locale: 'uk',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        };
         mockedUseAuth.mockReturnValue({
-            user: {
-                id: '1',
-                firebaseId: 'firebase-1',
-                email: 'jane@example.com',
-                firstName: 'Jane',
-                lastName: 'Roe',
-                locale: 'uk',
-                createdAt: '2024-01-01T00:00:00.000Z',
-                updatedAt: '2024-01-01T00:00:00.000Z'
-            },
+            user: mockUser,
             loading: false,
             signIn: jest.fn(),
             signUp: jest.fn(),
             signInWithGoogle: jest.fn(),
             signOut: jest.fn()
         });
+        mockedUseAppSelector.mockReturnValue(mockUser);
 
         const { container } = render(<UserNav />, { wrapper: Providers });
         expect(container.querySelector('[data-side="bottom"]')).toBeInTheDocument();
@@ -198,27 +219,29 @@ describe('UserNav', () => {
         const push = jest.fn();
         (useRouter as jest.Mock).mockReturnValue({ push });
         __isMobile = false;
+        const mockUser = {
+            id: '1',
+            firebaseId: 'firebase-1',
+            email: 'jane@example.com',
+            firstName: 'Jane',
+            lastName: 'Roe',
+            locale: 'uk',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        };
         mockedUseAuth.mockReturnValue({
-            user: {
-                id: '1',
-                firebaseId: 'firebase-1',
-                email: 'jane@example.com',
-                firstName: 'Jane',
-                lastName: 'Roe',
-                locale: 'uk',
-                createdAt: '2024-01-01T00:00:00.000Z',
-                updatedAt: '2024-01-01T00:00:00.000Z'
-            },
+            user: mockUser,
             loading: false,
             signIn: jest.fn(),
             signUp: jest.fn(),
             signInWithGoogle: jest.fn(),
             signOut: jest.fn()
         });
+        mockedUseAppSelector.mockReturnValue(mockUser);
 
         render(<UserNav />, { wrapper: Providers });
 
-        const accountBtn = screen.getByText('Акаунт').closest('button')!;
+        const accountBtn = screen.getByText('account.title').closest('button')!;
         fireEvent.mouseDown(accountBtn);
 
         expect(push).toHaveBeenCalledWith(appPaths.account);
