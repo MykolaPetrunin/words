@@ -56,8 +56,8 @@ async function main(): Promise<void> {
     const subjects = [
         {
             id: 'frontend',
-            nameUk: 'Frontend розробка',
-            nameEn: 'Frontend Development',
+            nameUk: 'Front-End розробник',
+            nameEn: 'Front-End Developer',
             descriptionUk: 'Створення користувацьких інтерфейсів та клієнтської частини веб-додатків',
             descriptionEn: 'Creating user interfaces and client-side web applications',
             isActive: true
@@ -101,6 +101,59 @@ async function main(): Promise<void> {
             create: subject
         });
         console.log(`✅ Subject "${subject.nameEn}" seeded`);
+    }
+
+    // Seed books
+    console.log('📖 Seeding books...');
+
+    const books = [
+        {
+            id: 'javascript-frontend',
+            titleUk: 'Javascript для Front-End розробника',
+            titleEn: 'Javascript for Front-End Developer',
+            descriptionUk: 'Повний курс JavaScript для frontend розробки з практичними прикладами та завданнями',
+            descriptionEn: 'Complete JavaScript course for frontend development with practical examples and tasks',
+            isActive: true
+        }
+    ];
+
+    for (const book of books) {
+        await prisma.book.upsert({
+            where: { id: book.id },
+            update: {
+                titleUk: book.titleUk,
+                titleEn: book.titleEn,
+                descriptionUk: book.descriptionUk,
+                descriptionEn: book.descriptionEn,
+                isActive: book.isActive
+            },
+            create: book
+        });
+        console.log(`✅ Book "${book.titleEn}" seeded`);
+    }
+
+    // Seed book-subject relations
+    console.log('🔗 Seeding book-subject relations...');
+
+    const bookSubjectRelations = [
+        {
+            bookId: 'javascript-frontend',
+            subjectId: 'frontend'
+        }
+    ];
+
+    for (const relation of bookSubjectRelations) {
+        await prisma.bookSubject.upsert({
+            where: {
+                bookId_subjectId: {
+                    bookId: relation.bookId,
+                    subjectId: relation.subjectId
+                }
+            },
+            update: {},
+            create: relation
+        });
+        console.log(`✅ Book-Subject relation "${relation.bookId}" - "${relation.subjectId}" seeded`);
     }
 
     console.log('🎉 Seed completed!');
