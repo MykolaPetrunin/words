@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation';
 import React from 'react';
 
 import BooksGrid from '@/components/booksGrid/BooksGrid';
+import { getServerSession } from '@/lib/auth/serverAuth';
 import { getBooksBySubjectId } from '@/lib/repositories/bookRepository';
 import { getSubjectById } from '@/lib/repositories/subjectRepository';
+import { getUserByFirebaseId } from '@/lib/repositories/userRepository';
 
 interface SubjectPageProps {
     params: Promise<{
@@ -20,7 +22,9 @@ export default async function SubjectPage({ params }: SubjectPageProps): Promise
         notFound();
     }
 
-    const books = await getBooksBySubjectId(id);
+    const session = await getServerSession();
+    const user = session ? await getUserByFirebaseId(session.uid) : null;
+    const books = await getBooksBySubjectId(id, user?.id);
 
     return <BooksGrid books={books} subject={subject} />;
 }

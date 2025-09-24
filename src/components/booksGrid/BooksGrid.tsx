@@ -4,7 +4,6 @@ import React from 'react';
 
 import type { BooksGridProps } from '@/components/booksGrid/types';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
-import type { DbBook } from '@/lib/repositories/bookRepository';
 import type { UserLocale } from '@/lib/types/user';
 
 import BookTile from './components/BookTile';
@@ -21,8 +20,8 @@ export default function BooksGrid({ books, subject }: BooksGridProps): React.Rea
                 <div>
                     <h2 className="text-xl font-semibold mb-3">{subjectName}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        {books.map((book: DbBook) => (
-                            <BookTile key={book.id} id={book.id} title={locale === 'uk' ? book.titleUk : book.titleEn} />
+                        {books.map((book) => (
+                            <BookTile key={book.id} id={book.id} title={locale === 'uk' ? book.titleUk : book.titleEn} isLearning={book.isLearning} />
                         ))}
                     </div>
                 </div>

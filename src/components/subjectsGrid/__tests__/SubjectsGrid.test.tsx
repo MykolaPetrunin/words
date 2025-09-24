@@ -24,7 +24,7 @@ describe('SubjectsGrid (Client Component)', () => {
         expect(screen.getByText('Фізика')).toBeInTheDocument();
 
         const links = screen.getAllByRole('link');
-        expect(links[0]).toHaveAttribute('href', '/subject/1');
-        expect(links[1]).toHaveAttribute('href', '/subject/2');
+        expect(links[0]).toHaveAttribute('href', '/subjects/1');
+        expect(links[1]).toHaveAttribute('href', '/subjects/2');
     });
 });

@@ -10,12 +10,20 @@ jest.mock('next/navigation', () => ({
     notFound: jest.fn()
 }));
 
+jest.mock('@/lib/auth/serverAuth', () => ({
+    getServerSession: jest.fn().mockResolvedValue({ uid: 'firebase-user-id', email: 'test@test.com' })
+}));
+
 jest.mock('@/lib/repositories/subjectRepository', () => ({
     getSubjectById: jest.fn()
 }));
 
 jest.mock('@/lib/repositories/bookRepository', () => ({
     getBooksBySubjectId: jest.fn()
+}));
+
+jest.mock('@/lib/repositories/userRepository', () => ({
+    getUserByFirebaseId: jest.fn().mockResolvedValue({ id: 'user1', firebaseId: 'firebase-user-id', email: 'test@test.com' })
 }));
 
 jest.mock('@/components/booksGrid/BooksGrid', () => ({

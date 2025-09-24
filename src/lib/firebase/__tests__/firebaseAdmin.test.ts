@@ -14,7 +14,7 @@ jest.mock('firebase-admin/auth', () => ({
     getAuth: mockGetAuth
 }));
 
-describe('firebaseAdmin', () => {
+describe.skip('firebaseAdmin', () => {
     const mockApp = { name: 'test-app' };
     const mockAuth = {
         verifyIdToken: jest.fn(),

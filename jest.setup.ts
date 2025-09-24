@@ -1,6 +1,26 @@
 import '@testing-library/jest-dom';
 import 'whatwg-fetch';
 
+// Mock firebaseAdmin
+jest.mock('./src/lib/firebase/firebaseAdmin', () => ({
+    verifyIdToken: jest.fn().mockResolvedValue({ uid: 'test-uid', email: 'test@example.com', emailVerified: true }),
+    createSessionCookie: jest.fn().mockResolvedValue('mock-session-cookie'),
+    verifySessionCookie: jest.fn().mockResolvedValue({ uid: 'test-uid', email: 'test@example.com', emailVerified: true }),
+    getUserProfile: jest.fn().mockResolvedValue({ displayName: 'Test User', email: 'test@example.com' })
+}));
+
+// Mock NextResponse
+jest.mock('next/server', () => ({
+    NextResponse: {
+        json: (body: unknown, init?: ResponseInit) => {
+            const response = new Response(JSON.stringify(body), init);
+            return Object.assign(response, {
+                json: async () => body
+            });
+        }
+    }
+}));
+
 // Mock Response.clone() for RTK Query
 global.Response = class extends Response {
     clone() {
