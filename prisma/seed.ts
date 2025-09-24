@@ -77,30 +77,6 @@ async function main(): Promise<void> {
             descriptionUk: 'Створення користувацьких інтерфейсів та клієнтської частини веб-додатків',
             descriptionEn: 'Creating user interfaces and client-side web applications',
             isActive: true
-        },
-        {
-            id: generateId('subject-backend'),
-            nameUk: 'Backend розробка',
-            nameEn: 'Backend Development',
-            descriptionUk: 'Серверна розробка, API, бази даних та архітектура',
-            descriptionEn: 'Server-side development, APIs, databases and architecture',
-            isActive: true
-        },
-        {
-            id: generateId('subject-devops'),
-            nameUk: 'DevOps',
-            nameEn: 'DevOps',
-            descriptionUk: 'Автоматизація розгортання, CI/CD, моніторинг та інфраструктура',
-            descriptionEn: 'Deployment automation, CI/CD, monitoring and infrastructure',
-            isActive: true
-        },
-        {
-            id: generateId('subject-algorithms'),
-            nameUk: 'Алгоритми та структури даних',
-            nameEn: 'Algorithms and Data Structures',
-            descriptionUk: 'Основи алгоритмів, структури даних та складність обчислень',
-            descriptionEn: 'Fundamentals of algorithms, data structures and computational complexity',
-            isActive: true
         }
     ];
 

@@ -1,7 +1,9 @@
-'use client';
-
 import React from 'react';
 
-export default function DashboardPage(): React.ReactElement {
-    return <div>DashboardPage</div>;
+import SubjectsGrid from '@/components/subjectsGrid/SubjectsGrid';
+import { getAllActiveSubjects } from '@/lib/repositories/subjectRepository';
+
+export default async function DashboardPage(): Promise<React.ReactElement> {
+    const subjects = await getAllActiveSubjects();
+    return <SubjectsGrid subjects={subjects} />;
 }
