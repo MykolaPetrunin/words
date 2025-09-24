@@ -1,5 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 
+import prisma from '@/lib/prisma';
+
 jest.mock('@/lib/prisma', () => {
     const subject = {
         findMany: jest.fn()
@@ -7,7 +9,6 @@ jest.mock('@/lib/prisma', () => {
     const prisma: Partial<PrismaClient> = { subject } as unknown as PrismaClient;
     return prisma;
 });
-import prisma from '@/lib/prisma';
 
 import { getAllActiveSubjects } from '../subjectRepository';
 
