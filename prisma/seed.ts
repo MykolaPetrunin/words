@@ -3,8 +3,10 @@ import { createHash } from 'crypto';
 
 import { PrismaClient } from '@prisma/client';
 
-import { seedJavaScriptBoxingUnboxing } from './seeds/javascript-boxing-unboxing';
-import { seedJavaScriptPrimitivesObjects } from './seeds/javascript-primitives-objects';
+import { seedJavaScriptBoxingUnboxing } from './seeds/tests/javascript-boxing-unboxing';
+import { tests as implicitTypeCastingTests } from './seeds/tests/javascript-implicit-type-casting';
+import { seedJavaScriptPrimitivesObjects } from './seeds/tests/javascript-primitives-objects';
+import { seedQuestions } from './seeds/utils';
 
 const prisma = new PrismaClient();
 
@@ -17,9 +19,15 @@ async function main(): Promise<void> {
 
     console.log('📚 Seeding levels...');
 
+    const levelIds = {
+        junior: generateId('level-junior'),
+        middle: generateId('level-middle'),
+        senior: generateId('level-senior')
+    };
+
     const levels = [
         {
-            id: generateId('level-junior'),
+            id: levelIds.junior,
             key: 'junior',
             nameUk: 'Junior',
             nameEn: 'Junior',
@@ -27,7 +35,7 @@ async function main(): Promise<void> {
             orderIndex: 0
         },
         {
-            id: generateId('level-middle'),
+            id: levelIds.middle,
             key: 'middle',
             nameUk: 'Middle',
             nameEn: 'Middle',
@@ -35,7 +43,7 @@ async function main(): Promise<void> {
             orderIndex: 1
         },
         {
-            id: generateId('level-senior'),
+            id: levelIds.senior,
             key: 'senior',
             nameUk: 'Senior',
             nameEn: 'Senior',
@@ -138,6 +146,16 @@ async function main(): Promise<void> {
 
     await seedJavaScriptPrimitivesObjects(prisma);
     await seedJavaScriptBoxingUnboxing(prisma);
+
+    const bookId = generateId('book-javascript-frontend');
+    await seedQuestions({
+        prisma,
+        questions: implicitTypeCastingTests,
+        levelId: levelIds.middle,
+        bookId,
+        startOrderIndex: 10,
+        topicName: 'JavaScript Implicit Type Casting questions'
+    });
     console.log('🎉 Seed completed!');
 }
 
