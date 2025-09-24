@@ -1,5 +1,6 @@
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+
 import { FlatCompat } from '@eslint/eslintrc';
 import typescriptParser from '@typescript-eslint/parser';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
@@ -44,7 +45,15 @@ const eslintConfig = [
                 'error',
                 {
                     groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-                    'newlines-between': 'always'
+                    'newlines-between': 'always',
+                    pathGroups: [
+                        {
+                            pattern: '@/**',
+                            group: 'internal',
+                            position: 'after'
+                        }
+                    ],
+                    pathGroupsExcludedImportTypes: ['builtin']
                 }
             ],
             'react/jsx-no-target-blank': 'off',

@@ -2,11 +2,12 @@ import { LoggerConfig } from './types';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isTest = process.env.NODE_ENV === 'test';
+const isPrettyEnabled = process.env.LOG_PRETTY === 'true';
 
 export const defaultConfig: LoggerConfig = {
     level: (process.env.LOG_LEVEL as LoggerConfig['level']) || (isDevelopment ? 'debug' : 'info'),
     name: process.env.LOGGER_NAME || 'words-next',
-    prettyPrint: isDevelopment && !isTest,
+    prettyPrint: isDevelopment && !isTest && isPrettyEnabled,
     redact: ['password', 'token', 'idToken', 'secret', 'key', 'authorization']
 };
 

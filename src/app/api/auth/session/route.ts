@@ -13,6 +13,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
 
         const decoded = await verifyIdToken(idToken);
+
         if (!decoded.uid) {
             return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         }
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         return response;
     } catch (error) {
+        console.error('Session creation failed', error);
         serverLogger.error('Session creation failed', error as Error, { endpoint: '/api/auth/session' });
         return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
     }
