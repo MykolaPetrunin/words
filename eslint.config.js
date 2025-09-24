@@ -2,8 +2,8 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { FlatCompat } from '@eslint/eslintrc';
-import typescriptParser from '@typescript-eslint/parser';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
 import prettierPlugin from 'eslint-plugin-prettier';
 import importPlugin from 'eslint-plugin-import';
 
