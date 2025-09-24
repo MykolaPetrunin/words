@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 
 import SubjectsGrid from '../SubjectsGrid';
 
@@ -12,7 +11,7 @@ jest.mock('@/lib/redux/ReduxProvider', () => ({
 }));
 
 describe('SubjectsGrid (Client Component)', () => {
-    it('renders subject tiles with localized names', () => {
+    it('renders subject tiles with localized names and links', () => {
         const subjects = [
             { id: '1', nameUk: 'Математика', nameEn: 'Math', descriptionUk: null, descriptionEn: null, isActive: true, createdAt: new Date(), updatedAt: new Date() },
             { id: '2', nameUk: 'Фізика', nameEn: 'Physics', descriptionUk: null, descriptionEn: null, isActive: true, createdAt: new Date(), updatedAt: new Date() }
@@ -23,5 +22,9 @@ describe('SubjectsGrid (Client Component)', () => {
         expect(screen.getByText('dashboard.subjects')).toBeInTheDocument();
         expect(screen.getByText('Математика')).toBeInTheDocument();
         expect(screen.getByText('Фізика')).toBeInTheDocument();
+
+        const links = screen.getAllByRole('link');
+        expect(links[0]).toHaveAttribute('href', '/subject/1');
+        expect(links[1]).toHaveAttribute('href', '/subject/2');
     });
 });

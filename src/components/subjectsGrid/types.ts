@@ -5,5 +5,6 @@ export interface SubjectsGridProps {
 }
 
 export interface SubjectTileProps {
+    id: string;
     name: string;
 }

@@ -19,6 +19,16 @@ export async function getAllActiveSubjects(): Promise<DbSubject[]> {
     return rows.map(mapToDbSubject);
 }
 
+export async function getSubjectById(id: string): Promise<DbSubject | null> {
+    const subject = await prisma.subject.findFirst({
+        where: {
+            id,
+            isActive: true
+        }
+    });
+    return subject ? mapToDbSubject(subject) : null;
+}
+
 const mapToDbSubject = (s: unknown): DbSubject => {
     const base = s as DbSubject;
     return {

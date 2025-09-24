@@ -22,7 +22,7 @@ export default function SubjectsGrid({ subjects }: SubjectsGridProps): React.Rea
                     <h2 className="text-xl font-semibold mb-3">{t('dashboard.subjects')}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         {subjects.map((s: DbSubject) => (
-                            <SubjectTile key={s.id} name={locale === 'uk' ? s.nameUk : s.nameEn} />
+                            <SubjectTile key={s.id} id={s.id} name={locale === 'uk' ? s.nameUk : s.nameEn} />
                         ))}
                     </div>
                 </div>
