@@ -3,9 +3,9 @@ import { createHash } from 'crypto';
 
 import { PrismaClient } from '@prisma/client';
 
-import { seedJavaScriptBoxingUnboxing } from './seeds/tests/javascript-boxing-unboxing';
+import { tests as boxingUnboxingTests } from './seeds/tests/javascript-boxing-unboxing';
 import { tests as implicitTypeCastingTests } from './seeds/tests/javascript-implicit-type-casting';
-import { seedJavaScriptPrimitivesObjects } from './seeds/tests/javascript-primitives-objects';
+import { tests as primitivesObjectsTests } from './seeds/tests/javascript-primitives-objects';
 import { seedQuestions } from './seeds/utils';
 
 const prisma = new PrismaClient();
@@ -133,7 +133,7 @@ async function main(): Promise<void> {
 
     const bookSubjectRelations = [
         {
-            bookId: generateId('book-javascript-frontend'),
+            bookId: books[0].id,
             subjectId: generateId('subject-frontend')
         }
     ];
@@ -144,10 +144,26 @@ async function main(): Promise<void> {
     });
     console.log(`✅ ${bookSubjectRelations.length} book-subject relations seeded`);
 
-    await seedJavaScriptPrimitivesObjects(prisma);
-    await seedJavaScriptBoxingUnboxing(prisma);
+    const bookId = books[0].id;
 
-    const bookId = generateId('book-javascript-frontend');
+    await seedQuestions({
+        prisma,
+        questions: primitivesObjectsTests,
+        levelId: levelIds.junior,
+        bookId,
+        startOrderIndex: 1,
+        topicName: 'JavaScript Primitives and Objects questions'
+    });
+
+    await seedQuestions({
+        prisma,
+        questions: boxingUnboxingTests,
+        levelId: levelIds.middle,
+        bookId,
+        startOrderIndex: 2,
+        topicName: 'JavaScript Boxing/Unboxing questions'
+    });
+
     await seedQuestions({
         prisma,
         questions: implicitTypeCastingTests,

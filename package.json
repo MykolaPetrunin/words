@@ -25,7 +25,8 @@
         "db:migrate:deploy": "prisma migrate deploy",
         "db:seed": "tsx prisma/seed.ts",
         "db:studio": "prisma studio",
-        "db:reset": "prisma migrate reset"
+        "db:reset": "prisma migrate reset",
+        "db:reseed": "prisma migrate reset --force"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.2.2",
