@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { verifySessionCookie } from '@/lib/firebase/firebaseAdmin';
+import { serverLogger } from '@/lib/logger';
 
 export async function GET(): Promise<NextResponse> {
     const cookieStore = await cookies();
@@ -14,7 +15,8 @@ export async function GET(): Promise<NextResponse> {
     try {
         await verifySessionCookie(session);
         return NextResponse.json({ valid: true });
-    } catch {
+    } catch (error) {
+        serverLogger.error('Session verify failed', error as Error, { endpoint: '/api/auth/verify' });
         cookieStore.set('session', '', {
             maxAge: 0,
             path: '/'

@@ -1,4 +1,4 @@
-import { LayoutDashboard, LucideIcon } from 'lucide-react';
+import { BookOpen, LayoutDashboard, LucideIcon } from 'lucide-react';
 
 import { appPaths } from '@/lib/appPaths';
 import type { I18nKey } from '@/lib/i18n/types';
@@ -16,5 +16,11 @@ export const menuItemsConfig: MenuItemConfig[] = [
         href: appPaths.dashboard,
         textKey: 'common.dashboard',
         index: 0
+    },
+    {
+        icon: BookOpen,
+        href: appPaths.subjects,
+        textKey: 'common.subjects',
+        index: 1
     }
 ];
