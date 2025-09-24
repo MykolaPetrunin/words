@@ -1,4 +1,5 @@
-import { serverConfig } from './configs';
+import { serverConfig, testConfig } from './configs';
 import { PinoLogger } from './Logger';
 
-export const serverLogger = new PinoLogger(serverConfig);
+const cfg = process.env.NODE_ENV === 'test' ? testConfig : serverConfig;
+export const serverLogger = new PinoLogger(cfg);

@@ -21,6 +21,108 @@ jest.mock('next/server', () => ({
     }
 }));
 
+// Suppress console errors and warnings in tests
+const originalError = console.error;
+const originalWarn = console.warn;
+const originalLog = console.log; // eslint-disable-line no-console
+
+beforeAll(() => {
+    console.error = jest.fn((...args) => {
+        const toText = (value: unknown): string => {
+            if (value instanceof Error) return `${value.name}: ${value.message}`;
+            if (typeof value === 'string') return value;
+            if (value && typeof value === 'object') {
+                // Prefer message/stack when present
+                const anyVal = value as { message?: unknown; stack?: unknown };
+                if (typeof anyVal.message === 'string') return anyVal.message;
+                if (typeof anyVal.stack === 'string') return anyVal.stack;
+                try {
+                    return JSON.stringify(value);
+                } catch {
+                    return String(value);
+                }
+            }
+            return String(value);
+        };
+
+        const combined = args.map(toText).join(' ');
+
+        // Suppress specific warnings/errors
+        const suppressedPatterns = [
+            'was not wrapped in act(',
+            'An unhandled error occurred processing a request for the endpoint',
+            'response.clone is not a function',
+            'Firebase: Error',
+            'Failed to start learning book',
+            'Failed to stop learning book',
+            'Database error',
+            'NEXT_REDIRECT',
+            'Book not found',
+            'Session creation failed',
+            'Session verify failed',
+            'objectsApi getObjects error'
+        ];
+
+        if (suppressedPatterns.some((pattern) => combined.includes(pattern))) {
+            return;
+        }
+
+        originalError.apply(console, args);
+    });
+
+    console.warn = jest.fn((...args) => {
+        const combined = args
+            .map((a) => {
+                if (typeof a === 'string') return a;
+                if (a && typeof a === 'object' && 'message' in (a as Record<string, unknown>) && typeof (a as Record<string, unknown>).message === 'string') {
+                    return (a as Record<string, unknown>).message as string;
+                }
+                try {
+                    return JSON.stringify(a);
+                } catch {
+                    return String(a);
+                }
+            })
+            .join(' ');
+
+        // Suppress specific warnings
+        const suppressedPatterns = [
+            'validateDOMNesting',
+            'React does not recognize',
+            'componentWillReceiveProps',
+            'componentWillMount',
+            'componentWillUpdate',
+            'act(...) warning'
+        ];
+
+        if (suppressedPatterns.some((pattern) => combined.includes(pattern))) {
+            return;
+        }
+
+        originalWarn.apply(console, args);
+    });
+
+    // eslint-disable-next-line no-console
+    console.log = jest.fn((...args) => {
+        const logMessage = args[0]?.toString() || '';
+
+        // Suppress test output noise
+        const suppressedPatterns = ['words-next-server', 'timestamp', 'environment'];
+
+        if (suppressedPatterns.some((pattern) => logMessage.includes(pattern))) {
+            return;
+        }
+
+        originalLog.apply(console, args);
+    });
+});
+
+afterAll(() => {
+    console.error = originalError;
+    console.warn = originalWarn;
+    console.log = originalLog; // eslint-disable-line no-console
+});
+
 // Mock Response.clone() for RTK Query
 global.Response = class extends Response {
     clone() {
@@ -31,41 +133,6 @@ global.Response = class extends Response {
         });
     }
 };
-
-const originalError = console.error;
-const originalWarn = console.warn;
-
-beforeAll(() => {
-    jest.spyOn(console, 'error').mockImplementation((...args) => {
-        if (
-            typeof args[0] === 'string' &&
-            (args[0].includes('Sign in error:') ||
-                args[0].includes('Sign up error:') ||
-                args[0].includes('Sign out error:') ||
-                args[0].includes('Error signing out:') ||
-                args[0].includes('Google sign in error:') ||
-                args[0].includes('Session creation error:') ||
-                args[0].includes('objectsApi getObjects error') ||
-                args[0].includes('An unhandled error occurred processing a request for the endpoint') ||
-                (typeof args[0] === 'object' && args[0] && 'level' in args[0]))
-        ) {
-            return;
-        }
-        originalError.call(console, ...args);
-    });
-
-    jest.spyOn(console, 'warn').mockImplementation((...args) => {
-        if (typeof args[0] === 'string' && args[0].includes('Warning:')) {
-            return;
-        }
-        originalWarn.call(console, ...args);
-    });
-});
-
-afterAll(() => {
-    console.error = originalError;
-    console.warn = originalWarn;
-});
 
 if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
     Object.defineProperty(window, 'matchMedia', {

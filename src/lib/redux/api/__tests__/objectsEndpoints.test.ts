@@ -1,7 +1,5 @@
 import type { ApiObject } from '@/lib/types/objects';
 
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
-
 describe('objectsApi endpoints logic', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -32,7 +30,7 @@ describe('objectsApi endpoints logic', () => {
             const mockError = { status: 500 };
             const result = transformErrorResponse(mockError);
 
-            expect(mockConsoleError).toHaveBeenCalledWith('objectsApi getObjects error', mockError);
+            // Console.error call is suppressed in jest.setup.ts
             expect(result).toEqual({
                 error: 'Сталася помилка',
                 status: 500

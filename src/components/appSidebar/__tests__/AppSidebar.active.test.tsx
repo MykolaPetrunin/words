@@ -3,6 +3,7 @@ import React from 'react';
 
 import { AppSidebar } from '@/components/appSidebar/AppSidebar';
 import { appPaths } from '@/lib/appPaths';
+import { useAppSelector } from '@/lib/redux/ReduxProvider';
 
 jest.mock('next/navigation', () => ({
     usePathname: () => appPaths.subjects
@@ -49,5 +50,20 @@ describe('AppSidebar active state', () => {
         render(<AppSidebar />);
         const activeEl = screen.getByText('common.subjects').closest('[data-active="true"]');
         expect(activeEl).toBeTruthy();
+    });
+
+    it('renders skeletons when redux user is missing while auth user exists', () => {
+        (useAppSelector as jest.Mock).mockReturnValueOnce(null);
+
+        render(<AppSidebar />);
+
+        const skeletons = document.querySelectorAll('[data-slot="skeleton"]');
+        expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it('shows SidebarTrigger in footer when not loading', () => {
+        render(<AppSidebar />);
+        // Our mock SidebarTrigger renders a button
+        expect(screen.getByRole('button')).toBeInTheDocument();
     });
 });

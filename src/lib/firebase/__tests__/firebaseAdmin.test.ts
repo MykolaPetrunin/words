@@ -14,7 +14,11 @@ jest.mock('firebase-admin/auth', () => ({
     getAuth: mockGetAuth
 }));
 
-describe.skip('firebaseAdmin', () => {
+// Ensure we test the real module, not the global mock from jest.setup
+jest.unmock('../firebaseAdmin');
+jest.unmock('@/lib/firebase/firebaseAdmin');
+
+describe('firebaseAdmin', () => {
     const mockApp = { name: 'test-app' };
     const mockAuth = {
         verifyIdToken: jest.fn(),

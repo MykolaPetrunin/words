@@ -21,3 +21,8 @@ export const clientConfig: LoggerConfig = {
     name: 'words-next-client',
     level: isTest ? 'fatal' : defaultConfig.level
 };
+
+export const testConfig: LoggerConfig = {
+    ...defaultConfig,
+    level: 'fatal'
+};

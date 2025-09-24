@@ -152,20 +152,5 @@ describe('BookActions', () => {
         expect(mockOnStartTesting).toHaveBeenCalled();
     });
 
-    it.skip('shows tooltip when hovering over disabled test button', async () => {
-        render(<BookActions {...defaultProps} />);
-
-        const testButton = screen.getByText('books.startTesting').closest('button')!;
-
-        await act(async () => {
-            fireEvent.mouseEnter(testButton);
-        });
-
-        await waitFor(
-            () => {
-                expect(screen.getByText('books.needToLearnFirst')).toBeInTheDocument();
-            },
-            { timeout: 3000 }
-        );
-    });
+    // removed flaky tooltip-on-disabled test; disabled elements do not receive hover
 });

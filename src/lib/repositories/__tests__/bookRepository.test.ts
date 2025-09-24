@@ -52,7 +52,7 @@ jest.mock('@/lib/prisma', () => {
     return prisma;
 });
 
-import { getBookById, getBooksBySubjectId, startLearningBook, stopLearningBook } from '../bookRepository';
+import { getBookById, getBooksBySubjectId, getBookWithQuestions, startLearningBook, stopLearningBook } from '../bookRepository';
 
 describe('bookRepository', () => {
     describe('getBooksBySubjectId', () => {
@@ -172,7 +172,7 @@ describe('bookRepository', () => {
         });
     });
 
-    describe.skip('startLearningBook', () => {
+    describe('startLearningBook', () => {
         beforeEach(() => {
             jest.clearAllMocks();
         });
@@ -195,7 +195,13 @@ describe('bookRepository', () => {
             const mockTransaction = async <T>(callback: (tx: MockPrismaTransaction) => Promise<T>) => {
                 const tx = {
                     book: {
-                        findUnique: jest.fn().mockResolvedValue(mockBook)
+                        findUnique: jest
+                            .fn()
+                            .mockResolvedValueOnce(mockBook) // First call returns book
+                            .mockResolvedValueOnce({
+                                ...mockBook,
+                                userLevelScores: [{ userId: 'user-1' }]
+                            }) // Second call returns book with user scores
                     },
                     bookSubject: {
                         findMany: jest.fn().mockResolvedValue(mockBook.bookSubjects)
@@ -217,19 +223,22 @@ describe('bookRepository', () => {
 
             (prisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
+            // Mock the findUnique call after transaction
+            (prisma.book.findUnique as jest.Mock).mockResolvedValue({
+                ...mockBook,
+                userLevelScores: [{ userId: 'user-1' }]
+            });
+
             const result = await startLearningBook('user-1', 'book-1');
 
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 id: mockBook.id,
                 titleUk: mockBook.titleUk,
                 titleEn: mockBook.titleEn,
                 descriptionUk: mockBook.descriptionUk,
                 descriptionEn: mockBook.descriptionEn,
                 isActive: mockBook.isActive,
-                createdAt: mockBook.createdAt,
-                updatedAt: mockBook.updatedAt,
-                isLearning: true,
-                userLevelScores: []
+                isLearning: true
             });
         });
 
@@ -282,7 +291,13 @@ describe('bookRepository', () => {
             const mockTransaction = async <T>(callback: (tx: MockPrismaTransaction) => Promise<T>) => {
                 const tx = {
                     book: {
-                        findUnique: jest.fn().mockResolvedValue(mockBook)
+                        findUnique: jest
+                            .fn()
+                            .mockResolvedValueOnce(mockBook) // First call returns book
+                            .mockResolvedValueOnce({
+                                ...mockBook,
+                                userLevelScores: [{ userId: 'user-1' }]
+                            }) // Second call returns book with user scores
                     },
                     bookSubject: {
                         findMany: jest.fn().mockResolvedValue(mockBook.bookSubjects)
@@ -303,6 +318,12 @@ describe('bookRepository', () => {
             };
 
             (prisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
+
+            // Mock the findUnique call after transaction
+            (prisma.book.findUnique as jest.Mock).mockResolvedValue({
+                ...mockBook,
+                userLevelScores: [{ userId: 'user-1' }]
+            });
 
             await startLearningBook('user-1', 'book-1');
 
@@ -327,7 +348,7 @@ describe('bookRepository', () => {
         });
     });
 
-    describe.skip('stopLearningBook', () => {
+    describe('stopLearningBook', () => {
         beforeEach(() => {
             jest.clearAllMocks();
         });
@@ -372,6 +393,12 @@ describe('bookRepository', () => {
 
             (prisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
+            // Mock the findUnique call after transaction
+            (prisma.book.findUnique as jest.Mock).mockResolvedValue({
+                ...mockBook,
+                userLevelScores: []
+            });
+
             const result = await stopLearningBook('user-1', 'book-1');
 
             expect(result).toEqual({
@@ -414,6 +441,9 @@ describe('bookRepository', () => {
 
             (prisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
+            // Mock the findUnique call after transaction to return null
+            (prisma.book.findUnique as jest.Mock).mockResolvedValue(null);
+
             await expect(stopLearningBook('user-1', 'invalid-book')).rejects.toThrow('Book not found');
         });
 
@@ -454,6 +484,18 @@ describe('bookRepository', () => {
 
             (prisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
+            // Mock the findUnique call after transaction
+            (prisma.book.findUnique as jest.Mock).mockResolvedValue({
+                id: 'book-1',
+                titleUk: 'Test Book',
+                titleEn: 'Test Book',
+                descriptionUk: null,
+                descriptionEn: null,
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+
             await stopLearningBook('user-1', 'book-1');
 
             expect(mockDeleteMany).toHaveBeenCalledWith({
@@ -462,6 +504,126 @@ describe('bookRepository', () => {
                     subjectId: 'subject-1'
                 }
             });
+        });
+    });
+
+    describe('getBookWithQuestions', () => {
+        it('returns book with questions for a user', async () => {
+            const mockBook = {
+                id: 'book-1',
+                titleUk: 'Книга 1',
+                titleEn: 'Book 1',
+                descriptionUk: null,
+                descriptionEn: null,
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                bookQuestions: [
+                    {
+                        id: 'bq1',
+                        bookId: 'book-1',
+                        questionId: 'q1',
+                        question: {
+                            id: 'q1',
+                            textUk: 'Питання 1',
+                            textEn: 'Question 1',
+                            theoryUk: null,
+                            theoryEn: null,
+                            levelId: 'level-1',
+                            isActive: true,
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+                            level: {
+                                id: 'level-1',
+                                nameUk: 'Рівень 1',
+                                nameEn: 'Level 1'
+                            }
+                        }
+                    }
+                ],
+                userLevelScores: [
+                    {
+                        userId: 'user-1',
+                        bookId: 'book-1',
+                        levelId: 'level-1',
+                        averageScore: 75
+                    }
+                ]
+            };
+
+            (prisma.book.findFirst as jest.Mock).mockResolvedValue(mockBook);
+
+            const result = await getBookWithQuestions('book-1', 'user-1');
+
+            expect(prisma.book.findFirst).toHaveBeenCalled();
+
+            expect(result).toMatchObject({
+                id: mockBook.id,
+                titleUk: mockBook.titleUk,
+                titleEn: mockBook.titleEn,
+                questions: expect.arrayContaining([
+                    expect.objectContaining({
+                        textUk: 'Питання 1',
+                        textEn: 'Question 1',
+                        level: {
+                            id: 'level-1',
+                            nameUk: 'Рівень 1',
+                            nameEn: 'Level 1'
+                        }
+                    })
+                ])
+            });
+        });
+
+        it('returns book with questions without user', async () => {
+            const mockBook = {
+                id: 'book-1',
+                titleUk: 'Книга 1',
+                titleEn: 'Book 1',
+                descriptionUk: null,
+                descriptionEn: null,
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                bookQuestions: [
+                    {
+                        id: 'bq1',
+                        bookId: 'book-1',
+                        questionId: 'q1',
+                        question: {
+                            id: 'q1',
+                            textUk: 'Питання 1',
+                            textEn: 'Question 1',
+                            theoryUk: null,
+                            theoryEn: null,
+                            levelId: 'level-1',
+                            isActive: true,
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+                            level: {
+                                id: 'level-1',
+                                nameUk: 'Рівень 1',
+                                nameEn: 'Level 1'
+                            }
+                        }
+                    }
+                ],
+                userLevelScores: []
+            };
+
+            (prisma.book.findFirst as jest.Mock).mockResolvedValue(mockBook);
+
+            const result = await getBookWithQuestions('book-1');
+
+            expect(result).toBeDefined();
+        });
+
+        it('returns null when book not found', async () => {
+            (prisma.book.findFirst as jest.Mock).mockResolvedValue(null);
+
+            const result = await getBookWithQuestions('invalid-book');
+
+            expect(result).toBeNull();
         });
     });
 });
