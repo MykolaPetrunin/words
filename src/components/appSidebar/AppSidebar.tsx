@@ -2,6 +2,7 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { UserNav } from '@/components/appSidebar/components/userNav/UserNav';
 import { menuItemsConfig } from '@/components/appSidebar/configs';
@@ -25,6 +26,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { loading, user } = useAuth();
     const reduxUser = useAppSelector((s) => s.currentUser.user);
     const t = useI18n();
+    const pathname = usePathname();
 
     const isUserLoading = loading || (user && !reduxUser);
 
@@ -50,9 +52,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <>
                             {menuItemsConfig.map((item) => {
                                 const Icon = item.icon;
+                                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                                 return (
                                     <SidebarMenuItem key={item.index}>
-                                        <SidebarMenuSubButton asChild>
+                                        <SidebarMenuSubButton asChild isActive={active}>
                                             <Link href={item.href as Route}>
                                                 <Icon />
                                                 {t(item.textKey)}
