@@ -77,6 +77,8 @@ export interface DbBookWithQuestions extends DbBookWithLearningStatus {
         id: string;
         textUk: string;
         textEn: string;
+        theoryUk: string | null;
+        theoryEn: string | null;
         level: {
             id: string;
             nameUk: string;
@@ -147,6 +149,8 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
             id: bq.question.id,
             textUk: bq.question.textUk,
             textEn: bq.question.textEn,
+            theoryUk: bq.question.theoryUk,
+            theoryEn: bq.question.theoryEn,
             level: {
                 id: bq.question.level.id,
                 nameUk: bq.question.level.nameUk,

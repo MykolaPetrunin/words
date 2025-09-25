@@ -16,7 +16,9 @@ const config = {
     },
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
-        '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        '^react-markdown$': '<rootDir>/__mocks__/react-markdown.tsx',
+        '^remark-gfm$': '<rootDir>/__mocks__/remark-gfm.ts'
     },
     testPathIgnorePatterns: ['/node_modules/', '/.next/'],
     collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/**/__tests__/**', '!src/**/*.test.{ts,tsx}', '!src/**/*.spec.{ts,tsx}'],

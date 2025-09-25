@@ -12,6 +12,8 @@ describe('BookQuestionsList', () => {
         id: 'q1',
         textUk: 'Питання UA',
         textEn: 'Question EN',
+        theoryUk: null,
+        theoryEn: null,
         level: { id: 'l1', nameUk: 'Рівень UA', nameEn: 'Level EN' }
     });
 

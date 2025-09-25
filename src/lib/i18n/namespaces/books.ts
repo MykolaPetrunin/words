@@ -13,7 +13,9 @@ export const uk = {
     questionsList: 'Список питань',
     level: 'Рівень',
     testingComingSoon: 'Щоб почати тестування, потрібно спочатку почати вивчати книгу',
-    questionProgress: 'Прогрес вивчення питання'
+    questionProgress: 'Прогрес вивчення питання',
+    viewTheory: 'Переглянути теорію',
+    questionTheory: 'Теорія питання'
 } as const;
 
 export const en = {
@@ -31,5 +33,7 @@ export const en = {
     questionsList: 'Questions list',
     level: 'Level',
     testingComingSoon: 'To start testing, you need to start learning the book first',
-    questionProgress: 'Question learning progress'
+    questionProgress: 'Question learning progress',
+    viewTheory: 'View theory',
+    questionTheory: 'Question theory'
 } as const;
