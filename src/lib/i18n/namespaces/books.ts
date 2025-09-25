@@ -12,7 +12,8 @@ export const uk = {
     stopping: 'Прибираємо...',
     questionsList: 'Список питань',
     level: 'Рівень',
-    testingComingSoon: 'Тестування скоро буде доступне'
+    testingComingSoon: 'Щоб почати тестування, потрібно спочатку почати вивчати книгу',
+    questionProgress: 'Прогрес вивчення питання'
 } as const;
 
 export const en = {
@@ -29,5 +30,6 @@ export const en = {
     stopping: 'Removing...',
     questionsList: 'Questions list',
     level: 'Level',
-    testingComingSoon: 'Testing will be available soon'
+    testingComingSoon: 'To start testing, you need to start learning the book first',
+    questionProgress: 'Question learning progress'
 } as const;

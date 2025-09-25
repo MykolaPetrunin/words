@@ -82,6 +82,7 @@ export interface DbBookWithQuestions extends DbBookWithLearningStatus {
             nameUk: string;
             nameEn: string;
         };
+        userScore?: number;
     }[];
 }
 
@@ -96,7 +97,14 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
                 include: {
                     question: {
                         include: {
-                            level: true
+                            level: true,
+                            userScores: userId
+                                ? {
+                                      where: {
+                                          userId
+                                      }
+                                  }
+                                : false
                         }
                     }
                 },
@@ -143,7 +151,8 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
                 id: bq.question.level.id,
                 nameUk: bq.question.level.nameUk,
                 nameEn: bq.question.level.nameEn
-            }
+            },
+            userScore: userId && bq.question.userScores && bq.question.userScores.length > 0 ? bq.question.userScores[0].score : undefined
         }))
     };
 }
