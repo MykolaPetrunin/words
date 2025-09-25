@@ -55,7 +55,6 @@ describe('BookPageClient', () => {
         expect(screen.getByText('Тестова книга')).toBeInTheDocument();
         expect(screen.getByText('books.startLearning')).toBeInTheDocument();
         expect(screen.getByText('books.startTesting')).toBeInTheDocument();
-        expect(screen.getByText('books.questionsList')).toBeInTheDocument();
     });
 
     it('renders book information in English locale', () => {
@@ -264,6 +263,5 @@ describe('BookPageClient', () => {
 
         // Should render page without error even with no description
         expect(screen.getByText('Тестова книга')).toBeInTheDocument();
-        expect(screen.getByText('books.questionsList')).toBeInTheDocument();
     });
 });

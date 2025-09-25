@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 import BookActions from '@/components/bookActions/BookActions';
+import BookQuestionsList from '@/components/bookQuestionsList/BookQuestionsList';
 import { useI18n } from '@/hooks/useI18n';
 import { clientLogger } from '@/lib/logger/clientLogger';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
@@ -93,29 +94,7 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
                     />
                 </div>
 
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">{t('books.questionsList')}</h2>
-                    <div className="space-y-2">
-                        {book.questions.map((question, index) => {
-                            const questionText = locale === 'uk' ? question.textUk : question.textEn;
-                            const levelName = locale === 'uk' ? question.level.nameUk : question.level.nameEn;
-
-                            return (
-                                <div key={question.id} className="rounded-lg border p-4 hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-start gap-3">
-                                        <span className="text-sm text-muted-foreground font-medium">{index + 1}.</span>
-                                        <div className="flex-1">
-                                            <p className="text-sm">{questionText}</p>
-                                            <span className="text-xs text-muted-foreground mt-1 inline-block">
-                                                {t('books.level')}: {levelName}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                <BookQuestionsList questions={book.questions} locale={locale} />
             </div>
         </div>
     );
