@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import BookActions from '@/components/bookActions/BookActions';
 import BookQuestionsList from '@/components/bookQuestionsList/BookQuestionsList';
+import TestingModal from '@/components/testingModal/TestingModal';
 import { useI18n } from '@/hooks/useI18n';
 import { clientLogger } from '@/lib/logger/clientLogger';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
-import type { DbBookWithQuestions } from '@/lib/repositories/bookRepository';
+import type { DbBookQuestion, DbBookWithQuestions } from '@/lib/repositories/bookRepository';
 import type { UserLocale } from '@/lib/types/user';
 
 interface BookPageClientProps {
@@ -20,6 +21,7 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
     const user = useAppSelector((s) => s.currentUser.user);
     const locale: UserLocale = user?.locale === 'en' ? 'en' : 'uk';
     const t = useI18n();
+    const [testQuestions, setTestQuestions] = useState<DbBookQuestion[]>([]);
 
     const bookTitle = locale === 'uk' ? book.titleUk : book.titleEn;
 
@@ -76,26 +78,52 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
         await handleLearningAction('stop');
     };
 
-    const handleStartTesting = (): void => {
-        // TODO: Navigate to testing page
+    const _sortedQuestions = useMemo<DbBookQuestion[]>(() => {
+        return book.questions.sort((a, b) => {
+            const scoreA = a.userScore ?? 0;
+            const scoreB = b.userScore ?? 0;
+
+            if (scoreA !== scoreB) {
+                return scoreA - scoreB;
+            }
+
+            const levelA = a.level.id;
+            const levelB = b.level.id;
+
+            return levelA.localeCompare(levelB);
+        });
+    }, [book.questions]);
+
+    const handleStartTesting = useCallback((): void => {
+        if (!user) {
+            toast.error(t('common.unauthorized'));
+            return;
+        }
+
         toast.info(t('books.testingComingSoon'));
-    };
+    }, [user, t]);
 
     return (
-        <div className="container mx-auto p-6">
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-bold">{bookTitle}</h1>
-                    <BookActions
-                        isLearning={book.isLearning}
-                        onStartLearning={handleStartLearning}
-                        onStopLearning={handleStopLearning}
-                        onStartTesting={handleStartTesting}
-                    />
-                </div>
+        <>
+            <div className="container mx-auto p-6">
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-3xl font-bold">{bookTitle}</h1>
+                        <BookActions
+                            isLearning={book.isLearning}
+                            onStartLearning={handleStartLearning}
+                            onStopLearning={handleStopLearning}
+                            onStartTesting={handleStartTesting}
+                        />
+                    </div>
 
-                <BookQuestionsList questions={book.questions} locale={locale} />
+                    <BookQuestionsList questions={book.questions} locale={locale} />
+                </div>
             </div>
-        </div>
+
+            {testQuestions.length > 0 && (
+                <TestingModal isOpen={testQuestions.length > 0} onClose={() => setTestQuestions([])} questions={testQuestions.values()} locale={locale} />
+            )}
+        </>
     );
 }

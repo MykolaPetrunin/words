@@ -72,20 +72,22 @@ export async function getBookById(id: string): Promise<DbBook | null> {
     });
 }
 
-export interface DbBookWithQuestions extends DbBookWithLearningStatus {
-    questions: {
+export interface DbBookQuestion {
+    id: string;
+    textUk: string;
+    textEn: string;
+    theoryUk: string | null;
+    theoryEn: string | null;
+    level: {
         id: string;
-        textUk: string;
-        textEn: string;
-        theoryUk: string | null;
-        theoryEn: string | null;
-        level: {
-            id: string;
-            nameUk: string;
-            nameEn: string;
-        };
-        userScore?: number;
-    }[];
+        nameUk: string;
+        nameEn: string;
+    };
+    userScore?: number;
+}
+
+export interface DbBookWithQuestions extends DbBookWithLearningStatus {
+    questions: DbBookQuestion[];
 }
 
 export async function getBookWithQuestions(bookId: string, userId?: string): Promise<DbBookWithQuestions | null> {

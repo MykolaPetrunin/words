@@ -15,7 +15,11 @@ export const uk = {
     testingComingSoon: 'Щоб почати тестування, потрібно спочатку почати вивчати книгу',
     questionProgress: 'Прогрес вивчення питання',
     viewTheory: 'Переглянути теорію',
-    questionTheory: 'Теорія питання'
+    questionTheory: 'Теорія питання',
+    testingTitle: 'Тестові питання',
+    answerQuestion: 'Відповісти на питання',
+    nextQuestion: 'Наступне питання',
+    selectAllCorrect: 'Відмітьте всі правильні варіанти'
 } as const;
 
 export const en = {
@@ -35,5 +39,9 @@ export const en = {
     testingComingSoon: 'To start testing, you need to start learning the book first',
     questionProgress: 'Question learning progress',
     viewTheory: 'View theory',
-    questionTheory: 'Question theory'
+    questionTheory: 'Question theory',
+    testingTitle: 'Test questions',
+    answerQuestion: 'Answer question',
+    nextQuestion: 'Next question',
+    selectAllCorrect: 'Select all correct options'
 } as const;
