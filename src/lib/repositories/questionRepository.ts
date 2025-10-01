@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 
-export type PublicAnswer = Pick<DbAnswer, 'id' | 'textUk' | 'textEn' | 'orderIndex' | 'theoryUk' | 'theoryEn'>;
+export type PublicAnswer = Pick<DbAnswer, 'id' | 'textUk' | 'textEn' | 'orderIndex' | 'theoryUk' | 'theoryEn' | 'isCorrect'>;
 
 export interface DbAnswer {
     id: string;
@@ -31,5 +31,5 @@ export async function getAnswersByQuestionId(questionId: string): Promise<DbAnsw
 
 export async function getPublicAnswersByQuestionId(questionId: string): Promise<PublicAnswer[]> {
     const answers = await getAnswersByQuestionId(questionId);
-    return answers.map(({ id, textUk, textEn, orderIndex, theoryUk, theoryEn }) => ({ id, textUk, textEn, orderIndex, theoryUk, theoryEn }));
+    return answers.map(({ id, textUk, textEn, orderIndex, theoryUk, theoryEn, isCorrect }) => ({ id, textUk, textEn, orderIndex, theoryUk, theoryEn, isCorrect }));
 }

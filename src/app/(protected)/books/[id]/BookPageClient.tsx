@@ -5,11 +5,13 @@ import { toast } from 'sonner';
 
 import BookActions from '@/components/bookActions/BookActions';
 import BookQuestionsList from '@/components/bookQuestionsList/BookQuestionsList';
+import QuestionsListSkeleton from '@/components/bookQuestionsList/components/QuestionsListSkeleton';
 import TestingModal from '@/components/testingModal/TestingModal';
 import { useI18n } from '@/hooks/useI18n';
 import { clientLogger } from '@/lib/logger/clientLogger';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
 import type { DbBookQuestion, DbBookWithQuestions } from '@/lib/repositories/bookRepository';
+import { getBookWithQuestions } from '@/lib/repositories/bookRepository';
 import type { UserLocale } from '@/lib/types/user';
 
 interface BookPageClientProps {
@@ -18,6 +20,7 @@ interface BookPageClientProps {
 
 export default function BookPageClient({ book: initialBook }: BookPageClientProps): React.ReactElement {
     const [book, setBook] = useState<DbBookWithQuestions>(initialBook);
+    const [isBookSyncing, setIsBookSyncing] = useState<boolean>(false);
     const user = useAppSelector((s) => s.currentUser.user);
 
     const locale: UserLocale = user?.locale === 'en' ? 'en' : 'uk';
@@ -106,6 +109,38 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
         setTestQuestions(shuffledQuestions);
     }, [sortedQuestions, user, t]);
 
+    const handleTestingModalClose = useCallback(async (): Promise<void> => {
+        setTestQuestions([]);
+
+        if (!user) {
+            return;
+        }
+
+        setIsBookSyncing(true);
+
+        try {
+            const updatedBook = await getBookWithQuestions(book.id, user.id);
+
+            if (updatedBook) {
+                setBook(updatedBook);
+            } else {
+                clientLogger.error('Failed to sync book - book not found', new Error('Book not found'), {
+                    bookId: book.id,
+                    userId: user.id
+                });
+                toast.error(t('books.errorSyncingBook'));
+            }
+        } catch (error) {
+            clientLogger.error('Failed to sync book after testing', error as Error, {
+                bookId: book.id,
+                userId: user.id
+            });
+            toast.error(t('common.networkError'));
+        } finally {
+            setIsBookSyncing(false);
+        }
+    }, [book.id, user, t]);
+
     return (
         <>
             <div className="container mx-auto p-6">
@@ -120,12 +155,16 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
                         />
                     </div>
 
-                    <BookQuestionsList questions={sortedQuestions} locale={locale} />
+                    {isBookSyncing ? (
+                        <QuestionsListSkeleton questionsCount={sortedQuestions.length} />
+                    ) : (
+                        <BookQuestionsList questions={sortedQuestions} locale={locale} />
+                    )}
                 </div>
             </div>
 
             {testQuestions.length > 0 && (
-                <TestingModal isOpen={testQuestions.length > 0} onClose={() => setTestQuestions([])} questions={testQuestions.values()} locale={locale} />
+                <TestingModal isOpen={testQuestions.length > 0} onClose={handleTestingModalClose} questions={testQuestions.values()} locale={locale} />
             )}
         </>
     );

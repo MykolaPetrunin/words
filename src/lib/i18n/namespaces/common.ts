@@ -4,7 +4,8 @@ export const uk = {
     dashboard: 'Панель керування',
     subjects: 'Предмети',
     networkError: "Помилка з'єднання. Перевірте інтернет та спробуйте ще раз",
-    unauthorized: 'Необхідно увійти в систему'
+    unauthorized: 'Необхідно увійти в систему',
+    error: 'Сталася помилка. Спробуйте ще раз.'
 } as const;
 
 export const en = {
@@ -13,5 +14,6 @@ export const en = {
     dashboard: 'Dashboard',
     subjects: 'Subjects',
     networkError: 'Connection error. Please check your internet and try again',
-    unauthorized: 'Please sign in to continue'
+    unauthorized: 'Please sign in to continue',
+    error: 'An error occurred. Please try again.'
 } as const;

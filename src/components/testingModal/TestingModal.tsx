@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 import { Prose } from '@/components/prose/Prose';
 import AnswerCard from '@/components/testingModal/components/AnswerCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useI18n } from '@/hooks/useI18n';
+import { clientLogger } from '@/lib/logger';
 import type { DbBookQuestion } from '@/lib/repositories/bookRepository';
 import type { PublicAnswer } from '@/lib/repositories/questionRepository';
 import { fetchQuestionAnswers } from '@/lib/repositories/questions.server';
@@ -28,6 +30,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
         return next.done ? null : next.value;
     });
     const [theory, setTheory] = useState<string | null>(null);
+    const [isAnswered, setIsAnswered] = useState<boolean>(false);
 
     const [isPending, startTransition] = useTransition();
     const [selectedAnswerIds, setSelectedAnswerIds] = useState<Set<string>>(new Set());
@@ -38,9 +41,42 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
         return locale === 'uk' ? currentQuestion.textUk : currentQuestion.textEn;
     }, [currentQuestion, locale]);
 
-    const handleAnswerClick = (): void => {
-        console.info('handleAnswerClick');
-    };
+    const handleAnswerClick = useCallback((): void => {
+        if (!currentQuestion) return;
+
+        // Determine if answer is correct on client side
+        const correctAnswerIds = answers.filter((answer) => answer.isCorrect).map((answer) => answer.id);
+        const selectedSet = new Set(selectedAnswerIds);
+        const correctSet = new Set(correctAnswerIds);
+
+        // Answer is correct if all correct answers are selected and no incorrect ones
+        const isCorrect =
+            correctAnswerIds.every((id) => selectedSet.has(id)) && selectedAnswerIds.size > 0 && Array.from(selectedAnswerIds).every((id) => correctSet.has(id));
+
+        startTransition(async () => {
+            try {
+                const response = await fetch(`/api/questions/${currentQuestion.id}/answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        isCorrect
+                    })
+                });
+
+                if (response.ok) {
+                    setIsAnswered(true);
+                } else {
+                    clientLogger.error('Failed to submit answer - server error', new Error(`HTTP ${response.status}`));
+                    toast.error(t('common.error'));
+                }
+            } catch (error) {
+                clientLogger.error('Failed to submit answer', error as Error);
+                toast.error(t('common.error'));
+            }
+        });
+    }, [currentQuestion, selectedAnswerIds, answers]);
 
     const nextQuestion = useCallback((): void => {
         const next = iteratorRef.current.next();
@@ -51,6 +87,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
         setSelectedAnswerIds(new Set());
         setAnswers([]);
         setCurrentQuestion(next.value);
+        setIsAnswered(false);
     }, [onClose]);
 
     const toggleAnswer = (id: string): void => {
@@ -101,6 +138,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                                                     selected={selectedAnswerIds.has(a.id)}
                                                     onToggle={toggleAnswer}
                                                     showTheory={(t) => setTheory(t)}
+                                                    answered={isAnswered}
                                                 />
                                             ))}
                                         </div>

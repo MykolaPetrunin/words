@@ -19,7 +19,8 @@ export const uk = {
     testingTitle: 'Тестові питання',
     answerQuestion: 'Відповісти на питання',
     nextQuestion: 'Наступне питання',
-    selectAllCorrect: 'Відмітьте всі правильні варіанти'
+    selectAllCorrect: 'Відмітьте всі правильні варіанти',
+    errorSyncingBook: 'Помилка при синхронізації книги'
 } as const;
 
 export const en = {
@@ -43,5 +44,6 @@ export const en = {
     testingTitle: 'Test questions',
     answerQuestion: 'Answer question',
     nextQuestion: 'Next question',
-    selectAllCorrect: 'Select all correct options'
+    selectAllCorrect: 'Select all correct options',
+    errorSyncingBook: 'Error syncing book'
 } as const;
