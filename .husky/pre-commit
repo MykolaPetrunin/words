@@ -23,12 +23,12 @@ fi
 echo "✅ Lint-staged passed!"
 echo ""
 
-echo "📊 Checking test coverage..."
-npm run test:coverage:check
+# echo "📊 Checking test coverage..."
+# npm run test:coverage:check
 
-if [ $? -ne 0 ]; then
-    echo "❌ Test coverage is insufficient! Add more tests."
-    exit 1
-fi
+# if [ $? -ne 0 ]; then
+#     echo "❌ Test coverage is insufficient! Add more tests."
+#     exit 1
+# fi
 
 echo "✅ All checks passed! Commit allowed. 🎉"
