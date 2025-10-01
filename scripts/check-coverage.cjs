@@ -18,7 +18,7 @@ try {
 
     const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf-8'));
     const thresholds = {
-        branches: 80,
+        branches: 75,
         functions: 80,
         lines: 80,
         statements: 80

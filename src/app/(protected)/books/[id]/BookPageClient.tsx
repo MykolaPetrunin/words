@@ -19,6 +19,7 @@ interface BookPageClientProps {
 export default function BookPageClient({ book: initialBook }: BookPageClientProps): React.ReactElement {
     const [book, setBook] = useState<DbBookWithQuestions>(initialBook);
     const user = useAppSelector((s) => s.currentUser.user);
+
     const locale: UserLocale = user?.locale === 'en' ? 'en' : 'uk';
     const t = useI18n();
     const [testQuestions, setTestQuestions] = useState<DbBookQuestion[]>([]);

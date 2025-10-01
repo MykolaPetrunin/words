@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
+import { Prose } from '@/components/prose/Prose';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useI18n } from '@/hooks/useI18n';
 
@@ -24,8 +23,8 @@ export default function TheoryModal({ isOpen, onClose, theory, questionText }: T
                     <DialogTitle className="text-xl font-semibold">{t('books.questionTheory')}</DialogTitle>
                     <p className="text-sm text-muted-foreground mt-2">{questionText}</p>
                 </DialogHeader>
-                <div className="flex-1 overflow-y-auto prose dark:prose-invert prose-sm max-w-none p-4">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{theory}</ReactMarkdown>
+                <div className="flex-1 overflow-y-auto max-w-none p-4">
+                    <Prose isMD>{theory}</Prose>
                 </div>
             </DialogContent>
         </Dialog>

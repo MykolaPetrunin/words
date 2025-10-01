@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
+import { Prose } from '@/components/prose/Prose';
 import AnswerCard from '@/components/testingModal/components/AnswerCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -80,7 +79,9 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
             <Dialog open={isOpen} onOpenChange={theory ? () => setTheory(null) : onClose}>
                 <DialogContent className="w-[90vw] h-[90vh] max-w-none flex flex-col">
                     {theory ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{theory}</ReactMarkdown>
+                        <div className="flex-1 overflow-y-auto max-w-none p-4">
+                            <Prose isMD>{theory}</Prose>
+                        </div>
                     ) : (
                         <>
                             <DialogHeader>
