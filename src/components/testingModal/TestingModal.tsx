@@ -66,7 +66,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
             setAnswers([]);
             if (!currentQuestion) return;
             const data = await fetchQuestionAnswers(currentQuestion.id);
-            setAnswers(data);
+            setAnswers(data.sort(() => Math.random() - 0.5));
         });
     }, [currentQuestion]);
 

@@ -79,7 +79,7 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
         await handleLearningAction('stop');
     };
 
-    const _sortedQuestions = useMemo<DbBookQuestion[]>(() => {
+    const sortedQuestions = useMemo<DbBookQuestion[]>(() => {
         return book.questions.sort((a, b) => {
             const scoreA = a.userScore ?? 0;
             const scoreB = b.userScore ?? 0;
@@ -101,8 +101,10 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
             return;
         }
 
-        toast.info(t('books.testingComingSoon'));
-    }, [user, t]);
+        const shuffledQuestions = [...sortedQuestions.slice(0, user.questionsPerSession)].sort(() => Math.random() - 0.5);
+
+        setTestQuestions(shuffledQuestions);
+    }, [sortedQuestions, user, t]);
 
     return (
         <>
@@ -118,7 +120,7 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
                         />
                     </div>
 
-                    <BookQuestionsList questions={book.questions} locale={locale} />
+                    <BookQuestionsList questions={sortedQuestions} locale={locale} />
                 </div>
             </div>
 
