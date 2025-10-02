@@ -4,7 +4,6 @@ import { cookies } from 'next/headers';
 
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/lib/auth/AuthContext';
-import I18nProvider from '@/lib/i18n/I18nProvider';
 import ReduxProvider from '@/lib/redux/ReduxProvider';
 import ThemeProvider from '@/lib/theme/ThemeProvider';
 import './globals.css';
@@ -25,12 +24,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <body className={inter.className}>
                 <ThemeProvider>
                     <ReduxProvider>
-                        <I18nProvider initialLocale={initialLocale}>
-                            <AuthProvider>
-                                {children}
-                                <Toaster />
-                            </AuthProvider>
-                        </I18nProvider>
+                        <AuthProvider>
+                            {children}
+                            <Toaster />
+                        </AuthProvider>
                     </ReduxProvider>
                 </ThemeProvider>
             </body>

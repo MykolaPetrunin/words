@@ -13,7 +13,8 @@ import SubjectTile from './components/SubjectTile';
 export default function SubjectsGrid({ subjects }: SubjectsGridProps): React.ReactElement {
     const t = useI18n();
     const user = useAppSelector((s) => s.currentUser.user);
-    const locale: UserLocale = user?.locale === 'en' ? 'en' : 'uk';
+
+    const locale: UserLocale = user?.locale ?? 'en';
 
     return (
         <div className="p-6">
