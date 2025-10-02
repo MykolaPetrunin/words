@@ -10,10 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/hooks/useI18n';
-import { loadUserData } from '@/lib/auth/AuthContext';
 import { useAppDispatch } from '@/lib/redux/ReduxProvider';
 import { useUpdateMeMutation } from '@/lib/redux/api/userApi';
-import { setUserLocale } from '@/lib/redux/slices/currentUserSlice';
+import { setUser } from '@/lib/redux/slices/currentUserSlice';
 
 const accountFormSchema = z.object({
     firstName: z.string().min(1, 'First name is required'),
@@ -51,12 +50,9 @@ export default function AccountForm({ initialData, email }: AccountFormProps): R
 
     const onSubmit = async (data: AccountFormData): Promise<void> => {
         try {
-            await updateMe(data).unwrap();
-            await loadUserData(dispatch);
+            const newUser = await updateMe(data).unwrap();
 
-            if (data.locale !== currentInitialData.locale) {
-                dispatch(setUserLocale(data.locale));
-            }
+            dispatch(setUser(newUser));
 
             setCurrentInitialData(data);
             reset(data);

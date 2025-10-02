@@ -21,7 +21,7 @@ export default function ClientProtectedLayout({ children, initialUser }: ClientP
     const { loading } = useAuth();
 
     useEffect(() => {
-        if (initialUser && (!currentUser || currentUser.id !== initialUser.id || currentUser.updatedAt !== initialUser.updatedAt)) {
+        if (initialUser && (!currentUser || currentUser.id !== initialUser.id)) {
             dispatch(setUser(initialUser));
         }
         if (!initialUser && currentUser) {

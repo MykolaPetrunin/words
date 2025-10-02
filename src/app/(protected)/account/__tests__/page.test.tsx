@@ -2,14 +2,12 @@ import { redirect } from 'next/navigation';
 
 import AccountPage from '@/app/(protected)/account/page';
 
-// Mock redirect
 jest.mock('next/navigation', () => ({
     redirect: jest.fn(() => {
         throw new Error('NEXT_REDIRECT');
     })
 }));
 
-// Мокаємо серверні модулі
 jest.mock('@/lib/auth/serverAuth', () => ({
     requireAuth: jest.fn(() => Promise.resolve({ uid: 'test-uid' }))
 }));
@@ -59,7 +57,6 @@ describe('AccountPage (Server Component)', () => {
 
         const accountPage = AccountPage();
 
-        // Перевіряємо, що компонент повертає Promise (async function)
         expect(accountPage).toBeInstanceOf(Promise);
 
         const result = await accountPage;
@@ -71,7 +68,6 @@ describe('AccountPage (Server Component)', () => {
         const { getUserByFirebaseId } = jest.requireMock('@/lib/repositories/userRepository');
         getUserByFirebaseId.mockResolvedValueOnce(null);
 
-        // redirect throws an error to stop execution in Next.js
         await expect(AccountPage()).rejects.toThrow();
 
         expect(redirect).toHaveBeenCalledWith('/login');
