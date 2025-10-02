@@ -12,7 +12,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     const initialUser = await getUserFromDB();
 
     return (
-        <ReduxProvider>
+        <ReduxProvider initialUser={initialUser}>
             <AuthProvider>
                 <I18nProvider initialLocale={initialUser?.locale || 'en'}>
                     <ClientProtectedLayout initialUser={initialUser}>{children}</ClientProtectedLayout>

@@ -3,6 +3,8 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider, TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
+import type { ApiUser } from '@/lib/types/user';
+
 import { objectsApi } from './api/objectsApi';
 import { userApi } from './api/userApi';
 import { apiErrorListener } from './middlewares/apiErrorListener';
@@ -25,6 +27,15 @@ export const store = configureStore({
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().prepend(apiErrorListener.middleware).concat(objectsApi.middleware, userApi.middleware)
 });
 
-export default function ReduxProvider({ children }: { children: React.ReactNode }) {
+interface ReduxProviderProps {
+    children: React.ReactNode;
+    initialUser?: ApiUser | null;
+}
+
+export default function ReduxProvider({ children, initialUser }: ReduxProviderProps) {
+    if (initialUser !== undefined) {
+        store.dispatch({ type: 'currentUser/setUser', payload: initialUser });
+    }
+
     return <Provider store={store}>{children}</Provider>;
 }
