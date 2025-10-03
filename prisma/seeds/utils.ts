@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 
 import { PrismaClient } from '@prisma/client';
 
-import { QuestionMock } from './types';
+import { TopicMock } from './types';
 
 function generateId(content: string): string {
     return createHash('sha256').update(content).digest('hex').substring(0, 16);
@@ -11,7 +11,7 @@ function generateId(content: string): string {
 
 interface SeedQuestionsParams {
     prisma: PrismaClient;
-    questions: QuestionMock[];
+    questions: TopicMock;
     levelId: string;
     bookId: string;
     startOrderIndex?: number;
@@ -23,7 +23,22 @@ export async function seedQuestions({ prisma, questions, levelId, bookId, startO
 
     let questionOrderIndex = startOrderIndex;
 
-    for (const testQuestion of questions) {
+    const topicId = generateId(`topic-${questions.titleEN}`);
+
+    await prisma.topic.upsert({
+        where: { id: topicId },
+        update: {
+            titleUk: questions.titleUK,
+            titleEn: questions.titleEN
+        },
+        create: {
+            id: topicId,
+            titleUk: questions.titleUK,
+            titleEn: questions.titleEN
+        }
+    });
+
+    for (const testQuestion of questions.questions) {
         const questionId = generateId(`question-${topicName}-${testQuestion.textEN.substring(0, 50)}`);
         // Create question
         const question = await prisma.question.upsert({
@@ -34,6 +49,7 @@ export async function seedQuestions({ prisma, questions, levelId, bookId, startO
                 theoryUk: testQuestion.theoryUK,
                 theoryEn: testQuestion.theoryEN,
                 isActive: true,
+                topicId,
                 levelId
             },
             create: {
@@ -43,6 +59,7 @@ export async function seedQuestions({ prisma, questions, levelId, bookId, startO
                 theoryUk: testQuestion.theoryUK,
                 theoryEn: testQuestion.theoryEN,
                 isActive: true,
+                topicId,
                 levelId
             }
         });
@@ -89,7 +106,7 @@ export async function seedQuestions({ prisma, questions, levelId, bookId, startO
         questionOrderIndex++;
     }
 
-    console.log(`✅ ${questions.length} ${topicName} seeded`);
+    console.log(`✅ ${questions.questions.length} ${topicName} seeded`);
 }
 
 export { generateId };

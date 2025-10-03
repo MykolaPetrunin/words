@@ -14,3 +14,9 @@ export interface QuestionMock {
     answers: AnswerMock[];
     level: 'junior' | 'middle' | 'senior';
 }
+
+export interface TopicMock {
+    titleUK: string;
+    titleEN: string;
+    questions: QuestionMock[];
+}
