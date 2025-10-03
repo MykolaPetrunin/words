@@ -14,6 +14,7 @@ const serialize = (user: NonNullable<Awaited<ReturnType<typeof getUserByFirebase
         lastName: user.lastName,
         questionsPerSession: user.questionsPerSession,
         locale: user.locale,
+        role: user.role,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString()
     };
@@ -34,6 +35,13 @@ export async function GET(): Promise<NextResponse> {
         const response = NextResponse.json(serialize(dbUser));
         response.headers.set('Content-Language', dbUser.locale);
         response.headers.set('Vary', 'Accept-Language, X-Locale');
+        response.cookies.set('role', dbUser.role, {
+            maxAge: 60 * 60 * 24 * 14,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/'
+        });
         return response;
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -73,6 +81,13 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
             response.headers.set('Content-Language', newLocale);
         }
         response.headers.set('Vary', 'Accept-Language, X-Locale');
+        response.cookies.set('role', updated.role, {
+            maxAge: 60 * 60 * 24 * 14,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/'
+        });
         return response;
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 });

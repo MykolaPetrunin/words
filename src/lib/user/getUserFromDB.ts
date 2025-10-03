@@ -17,6 +17,7 @@ export const getUserFromDB = async (): Promise<ApiUser | null> => {
                 lastName: dbUser.lastName,
                 questionsPerSession: dbUser.questionsPerSession,
                 locale: dbUser.locale,
+                role: dbUser.role,
                 createdAt: dbUser.createdAt.toISOString(),
                 updatedAt: dbUser.updatedAt.toISOString()
             };

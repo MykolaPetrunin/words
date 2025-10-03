@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
 
 import { getUserByFirebaseId, updateUser } from '@/lib/repositories/userRepository';
+import { UserRole } from '@/lib/types/user';
 
 import { GET, PATCH } from '../route';
 
@@ -74,6 +75,7 @@ describe('users/me route', () => {
             firstName: 'John',
             lastName: 'Doe',
             locale: 'uk',
+            role: UserRole.Admin,
             createdAt: new Date('2024-01-01'),
             updatedAt: new Date('2024-01-02')
         });
@@ -109,6 +111,7 @@ describe('users/me route', () => {
             firstName: 'John',
             lastName: 'Doe',
             locale: 'en',
+            role: UserRole.Admin,
             createdAt: new Date('2024-01-01'),
             updatedAt: new Date('2024-01-02')
         });
@@ -130,6 +133,7 @@ describe('users/me route', () => {
             firstName: 'Jane',
             lastName: 'Roe',
             locale: 'uk',
+            role: UserRole.User,
             createdAt: new Date('2024-01-01'),
             updatedAt: new Date('2024-01-02')
         });

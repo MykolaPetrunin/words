@@ -44,10 +44,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         });
 
         const dbUser = await getUserByFirebaseId(decoded.uid);
+        console.info('Session creation route: dbUser:', dbUser);
         if (dbUser) {
             response.cookies.set('locale', dbUser.locale, {
                 maxAge: 60 * 60 * 24 * 365,
                 httpOnly: false,
+                sameSite: 'lax',
+                path: '/'
+            });
+            response.cookies.set('role', dbUser.role, {
+                maxAge: expiresIn,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
                 path: '/'
             });

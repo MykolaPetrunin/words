@@ -1,13 +1,15 @@
-import { BookOpen, LayoutDashboard, LucideIcon } from 'lucide-react';
+import { BookOpen, ClipboardList, LayoutDashboard, LucideIcon } from 'lucide-react';
 
 import { appPaths } from '@/lib/appPaths';
 import type { I18nKey } from '@/lib/i18n/types';
+import { UserRole } from '@/lib/types/user';
 
 export interface MenuItemConfig {
     icon: LucideIcon;
     href: string;
     textKey: I18nKey;
     index: number;
+    roles?: readonly UserRole[];
 }
 
 export const menuItemsConfig: MenuItemConfig[] = [
@@ -22,5 +24,12 @@ export const menuItemsConfig: MenuItemConfig[] = [
         href: appPaths.subjects,
         textKey: 'common.subjects',
         index: 1
+    },
+    {
+        icon: ClipboardList,
+        href: appPaths.admin,
+        textKey: 'common.adminPanel',
+        index: 2,
+        roles: [UserRole.Admin]
     }
 ];

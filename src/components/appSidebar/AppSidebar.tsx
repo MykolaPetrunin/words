@@ -29,6 +29,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname();
 
     const isUserLoading = loading || (user && !reduxUser);
+    const visibleMenuItems = menuItemsConfig.filter((item) => {
+        if (!item.roles) {
+            return true;
+        }
+        if (!reduxUser) {
+            return false;
+        }
+        return item.roles.includes(reduxUser.role);
+    });
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -50,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </>
                     ) : (
                         <>
-                            {menuItemsConfig.map((item) => {
+                            {visibleMenuItems.map((item) => {
                                 const Icon = item.icon;
                                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                                 return (

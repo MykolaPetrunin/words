@@ -3,6 +3,7 @@ export const uk = {
     cancel: 'Скасувати',
     dashboard: 'Панель керування',
     subjects: 'Предмети',
+    adminPanel: 'Адмін панель',
     networkError: "Помилка з'єднання. Перевірте інтернет та спробуйте ще раз",
     unauthorized: 'Необхідно увійти в систему',
     error: 'Сталася помилка. Спробуйте ще раз.'
@@ -13,6 +14,7 @@ export const en = {
     cancel: 'Cancel',
     dashboard: 'Dashboard',
     subjects: 'Subjects',
+    adminPanel: 'Admin Panel',
     networkError: 'Connection error. Please check your internet and try again',
     unauthorized: 'Please sign in to continue',
     error: 'An error occurred. Please try again.'

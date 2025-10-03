@@ -33,8 +33,8 @@ export const loadUserData = async (dispatch: ReturnType<typeof useAppDispatch>):
         if ('data' in result && result.data) {
             dispatch(setCurrentUser(result.data));
         }
-    } catch {
-        // Ignore errors during user data loading
+    } catch (error) {
+        clientLogger.error('Failed to load user data', error as Error);
     }
 };
 

@@ -7,6 +7,7 @@ export interface AppPaths {
     readonly account: '/account';
     readonly subjects: '/subjects';
     readonly books: '/books';
+    readonly admin: '/admin';
     readonly apiSubjects: '/api/subjects';
 }
 
@@ -19,6 +20,7 @@ export const appPaths: AppPaths = {
     account: '/account',
     subjects: '/subjects',
     books: '/books',
+    admin: '/admin',
     apiSubjects: '/api/subjects'
 };
 

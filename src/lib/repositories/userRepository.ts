@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import type { UserLocale } from '@/lib/types/user';
+import { UserRole } from '@/lib/types/user';
 
 export interface UpsertUserInput {
     firebaseId: string;
@@ -16,6 +17,7 @@ export interface DbUser {
     lastName: string;
     questionsPerSession: number;
     locale: UserLocale;
+    role: UserRole;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -71,11 +73,14 @@ const mapToDbUser = (u: unknown): DbUser => {
         firstName: string;
         lastName: string;
         questionsPerSession: number;
+        role: string;
         createdAt: Date;
         updatedAt: Date;
     } & Record<string, unknown>;
     const rawLocale = base['locale'];
     const locale: UserLocale = rawLocale === 'en' ? 'en' : 'uk';
+    const rawRole = base['role'];
+    const role: UserRole = rawRole === UserRole.Admin ? UserRole.Admin : UserRole.User;
     return {
         id: base.id,
         firebaseId: base.firebaseId,
@@ -84,6 +89,7 @@ const mapToDbUser = (u: unknown): DbUser => {
         lastName: base.lastName,
         questionsPerSession: base.questionsPerSession,
         locale,
+        role,
         createdAt: base.createdAt,
         updatedAt: base.updatedAt
     };

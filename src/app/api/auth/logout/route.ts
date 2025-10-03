@@ -10,6 +10,10 @@ export async function POST(): Promise<NextResponse> {
             maxAge: 0,
             path: '/'
         });
+        cookieStore.set('role', '', {
+            maxAge: 0,
+            path: '/'
+        });
         return NextResponse.json({ success: true });
     } catch (error) {
         serverLogger.error('Logout failed', error as Error, { endpoint: '/api/auth/logout' });

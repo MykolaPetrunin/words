@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { appPaths, AppPathValue } from '@/lib/appPaths';
+import { UserRole } from '@/lib/types/user';
 
 const publicPaths: readonly AppPathValue[] = [appPaths.root, appPaths.login, appPaths.signup, appPaths.notFound] as const;
 
@@ -18,6 +19,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
     if (session && isPublicPath && path !== appPaths.root) {
         return NextResponse.redirect(new URL(appPaths.dashboard, request.url));
+    }
+
+    if (path.startsWith(appPaths.admin)) {
+        const role = request.cookies.get('role')?.value;
+        console.info('Middleware: role:', role);
+        if (role !== UserRole.Admin) {
+            return NextResponse.rewrite(new URL(appPaths.notFound, request.url));
+        }
     }
 
     return NextResponse.next();
