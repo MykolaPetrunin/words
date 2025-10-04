@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { RotateCcw } from 'lucide-react';
 import React, { useCallback, useMemo, useTransition } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
 import * as z from 'zod';
 
 import FilterSelect from '@/components/filterSelect/FilterSelect';
@@ -12,10 +11,7 @@ import type { FilterSelectOption } from '@/components/filterSelect/types';
 import { Button } from '@/components/ui/button';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useI18n } from '@/hooks/useI18n';
-import { clientLogger } from '@/lib/logger';
-import type { QuestionFiltersTree, QuestionListItem } from '@/lib/repositories/questionRepository';
-
-import { fetchAdminQuestions } from '../actions';
+import type { QuestionFiltersTree } from '@/lib/repositories/questionRepository';
 
 const filtersSchema = z.object({
     subjectId: z.string().min(1).optional(),
@@ -33,17 +29,18 @@ const defaultFilters: FiltersFormValues = {
 
 interface AdminFiltersProps {
     filters: QuestionFiltersTree;
-    onFiltersChange: (values: FiltersFormValues, questions: QuestionListItem[]) => void;
+    value: FiltersFormValues;
+    onChange: (values: FiltersFormValues) => void;
     isPending: boolean;
 }
 
-export default function AdminFilters({ filters, onFiltersChange, isPending }: AdminFiltersProps): React.ReactElement {
+export default function AdminFilters({ filters, value, onChange, isPending }: AdminFiltersProps): React.ReactElement {
     const t = useI18n();
     const [isTransitionPending, startTransition] = useTransition();
 
     const form = useForm<FiltersFormValues>({
         resolver: zodResolver(filtersSchema),
-        defaultValues: defaultFilters
+        defaultValues: value
     });
 
     const watchedFilters = useWatch({ control: form.control });
@@ -88,40 +85,17 @@ export default function AdminFilters({ filters, onFiltersChange, isPending }: Ad
         return [];
     }, [filters, watchedFilters.bookId]);
 
-    const handleSuccess = useCallback(
-        (values: FiltersFormValues, items: QuestionListItem[]) => {
-            onFiltersChange(values, items);
-            form.reset(values);
-        },
-        [form, onFiltersChange]
-    );
-
     const submitFilters = useCallback(
-        async (values: FiltersFormValues) => {
-            try {
-                const payload = {
-                    subjectIds: values.subjectId ? [values.subjectId] : undefined,
-                    bookIds: values.bookId ? [values.bookId] : undefined,
-                    topicIds: values.topicId ? [values.topicId] : undefined
-                };
-                const items = await fetchAdminQuestions(payload);
-                handleSuccess(values, items);
-            } catch (error) {
-                clientLogger.error('Admin questions filters submission failed', error as Error, {
-                    subjectId: values.subjectId,
-                    bookId: values.bookId,
-                    topicId: values.topicId
-                });
-                toast.error(t('questions.filtersError'));
-            }
+        (values: FiltersFormValues) => {
+            onChange(values);
         },
-        [handleSuccess, t]
+        [onChange]
     );
 
     const submitWithTransition = useCallback(
         (values: FiltersFormValues) => {
             startTransition(() => {
-                void submitFilters(values);
+                submitFilters(values);
             });
         },
         [startTransition, submitFilters]
@@ -157,7 +131,7 @@ export default function AdminFilters({ filters, onFiltersChange, isPending }: Ad
     const resetFilters = useCallback(() => {
         form.reset(defaultFilters);
         startTransition(() => {
-            void submitFilters(defaultFilters);
+            submitFilters(defaultFilters);
         });
     }, [form, startTransition, submitFilters]);
 
