@@ -19,7 +19,6 @@ const filterOptions = (options: readonly FilterSelectOption[], search: string): 
 };
 
 export default function FilterSelect({
-    label,
     placeholder,
     value,
     options,
@@ -72,7 +71,6 @@ export default function FilterSelect({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" sideOffset={4} className="w-[280px] p-0" style={{ width: 'var(--radix-dropdown-menu-trigger-width)' }}>
-                <div className="border-b px-3 py-2 text-sm font-medium">{label}</div>
                 <div className="px-3 py-2">
                     <Input value={search} onChange={handleSearchChange} placeholder={searchPlaceholder} />
                 </div>

@@ -4,7 +4,6 @@ export interface FilterSelectOption {
 }
 
 export interface FilterSelectProps {
-    label: string;
     placeholder: string;
     value?: string;
     options: readonly FilterSelectOption[];

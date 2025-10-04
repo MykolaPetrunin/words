@@ -76,7 +76,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                 toast.error(t('common.error'));
             }
         });
-    }, [currentQuestion, selectedAnswerIds, answers]);
+    }, [currentQuestion, answers, selectedAnswerIds, t]);
 
     const nextQuestion = useCallback((): void => {
         const next = iteratorRef.current.next();
