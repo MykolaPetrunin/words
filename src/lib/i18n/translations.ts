@@ -5,6 +5,7 @@ import { en as booksEn, uk as booksUk } from './namespaces/books';
 import { en as commonEn, uk as commonUk } from './namespaces/common';
 import { en as dashboardEn, uk as dashboardUk } from './namespaces/dashboard';
 import { en as homeEn, uk as homeUk } from './namespaces/home';
+import { en as questionsEn, uk as questionsUk } from './namespaces/questions';
 import { en as subjectsEn, uk as subjectsUk } from './namespaces/subjects';
 import { en as testingEn, uk as testingUk } from './namespaces/testing';
 
@@ -18,7 +19,8 @@ export const translations = {
         books: booksUk,
         subjects: subjectsUk,
         testing: testingUk,
-        admin: adminUk
+        admin: adminUk,
+        questions: questionsUk
     },
     en: {
         common: commonEn,
@@ -29,7 +31,8 @@ export const translations = {
         books: booksEn,
         subjects: subjectsEn,
         testing: testingEn,
-        admin: adminEn
+        admin: adminEn,
+        questions: questionsEn
     }
 } as const;
 

@@ -23,7 +23,6 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
     if (path.startsWith(appPaths.admin)) {
         const role = request.cookies.get('role')?.value;
-        console.info('Middleware: role:', role);
         if (role !== UserRole.Admin) {
             return NextResponse.rewrite(new URL(appPaths.notFound, request.url));
         }
