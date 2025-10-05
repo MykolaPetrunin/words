@@ -12,16 +12,25 @@ function generateId(content: string): string {
 interface SeedQuestionsParams {
     prisma: PrismaClient;
     questions: TopicMock;
-    levelId: string;
+    levelIds: {
+        junior: string;
+        middle: string;
+        senior: string;
+    };
     bookId: string;
-    startOrderIndex?: number;
     topicName?: string;
 }
 
-export async function seedQuestions({ prisma, questions, levelId, bookId, startOrderIndex = 1, topicName = 'Questions' }: SeedQuestionsParams): Promise<void> {
+export async function seedQuestions({ prisma, questions, levelIds, bookId, topicName = 'Questions' }: SeedQuestionsParams): Promise<void> {
     console.log(`❓ Seeding ${topicName}...`);
 
-    let questionOrderIndex = startOrderIndex;
+    // Get the highest order index for this book
+    const lastQuestion = await prisma.bookQuestion.findFirst({
+        where: { bookId },
+        orderBy: { orderIndex: 'desc' }
+    });
+
+    let questionOrderIndex = lastQuestion ? lastQuestion.orderIndex + 1 : 1;
 
     const topicId = generateId(`topic-${questions.titleEN}`);
 
@@ -50,7 +59,7 @@ export async function seedQuestions({ prisma, questions, levelId, bookId, startO
                 theoryEn: testQuestion.theoryEN,
                 isActive: true,
                 topicId,
-                levelId
+                levelId: levelIds[testQuestion.level]
             },
             create: {
                 id: questionId,
@@ -60,7 +69,7 @@ export async function seedQuestions({ prisma, questions, levelId, bookId, startO
                 theoryEn: testQuestion.theoryEN,
                 isActive: true,
                 topicId,
-                levelId
+                levelId: levelIds[testQuestion.level]
             }
         });
 

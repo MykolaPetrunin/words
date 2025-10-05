@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import { tests as boxingUnboxingTests } from './seeds/tests/javascript-boxing-unboxing';
 import { tests as implicitTypeCastingTests } from './seeds/tests/javascript-implicit-type-casting';
 import { tests as primitivesObjectsTests } from './seeds/tests/javascript-primitives-objects';
+import { tests as symbolTests } from './seeds/tests/javascript-symbol';
 import { seedQuestions } from './seeds/utils';
 
 const prisma = new PrismaClient();
@@ -125,28 +126,33 @@ async function main(): Promise<void> {
     await seedQuestions({
         prisma,
         questions: primitivesObjectsTests,
-        levelId: levelIds.junior,
+        levelIds,
         bookId,
-        startOrderIndex: 1,
         topicName: 'JavaScript Primitives and Objects questions'
     });
 
     await seedQuestions({
         prisma,
         questions: boxingUnboxingTests,
-        levelId: levelIds.middle,
+        levelIds,
         bookId,
-        startOrderIndex: 2,
         topicName: 'JavaScript Boxing/Unboxing questions'
     });
 
     await seedQuestions({
         prisma,
         questions: implicitTypeCastingTests,
-        levelId: levelIds.middle,
+        levelIds,
         bookId,
-        startOrderIndex: 10,
         topicName: 'JavaScript Implicit Type Casting questions'
+    });
+
+    await seedQuestions({
+        prisma,
+        questions: symbolTests,
+        levelIds,
+        bookId,
+        topicName: 'JavaScript Symbol questions'
     });
     console.log('🎉 Seed completed!');
 }

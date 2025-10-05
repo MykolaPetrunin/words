@@ -5,895 +5,616 @@ export const tests: TopicMock = {
     titleEN: 'Implicit Type Casting',
     questions: [
         {
-            textUK: 'Як `NaN` і `Infinity` поводяться у неявних приведеннях і арифметичних операціях?',
-            textEN: 'How do `NaN` and `Infinity` behave in implicit coercion and arithmetic operations?',
+            textUK: 'Що таке неявне (implicit) приведення типів у JavaScript?',
+            textEN: 'What is implicit type coercion in JavaScript?',
             theoryUK:
-                "### Теорія: `NaN` і `Infinity`\n\n**`NaN` (Not-a-Number)** з’являється, коли числове перетворення або обчислення неможливе:\n- Будь-яка арифметична операція з `NaN` → `NaN` (`NaN + 1`, `NaN * 5`).\n- Порівняння з `NaN` завжди `false`, навіть `NaN == NaN` і `NaN === NaN` → `false`.\n- `ToBoolean(NaN)` → `false` (falsy).\n\n**`Infinity` / `-Infinity`** виникає при переповненні або діленні на нуль:\n- `1 / 0` → `Infinity`, `-1 / 0` → `-Infinity`.\n- `Infinity ± finite` → `Infinity` / `-Infinity` відповідно.\n- `Infinity * 0` та `Infinity - Infinity` → `NaN` (виникає невизначеність).\n- `ToBoolean(Infinity)` → `true` (будь-яке ненульове число truthy).\n\n**Неявні приведення (коерції):**\n- Рядок у **числових** операторах (крім `+` з рядком) перетворюється через `Number()`:\n  - `Number('Infinity')` → `Infinity`, `Number('  ')` → `0`, `Number('abc')` → `NaN`.\n- Оператор `+` має дві семантики: якщо один операнд — рядок (або стає рядком під час `ToPrimitive`), відбувається **конкатенація**:\n  - `Infinity + '1'` → `'Infinity1'` (рядок), тоді як `'Infinity' - 1` → `Infinity` (числова операція).\n\n> Коротко: `NaN` «заражає» арифметику, `Infinity` поводиться як нескінченність у більшості операцій, але у виразах на кшталт `Infinity * 0` чи `Infinity - Infinity` результат — `NaN`.",
+                "### Коротко\n**Неявне приведення типів** — це автоматичне перетворення значень рушієм JS, коли контекст вимагає інший тип (наприклад, оператор або конструкція мови очікують число, рядок або булеве значення).\n\n### Як це працює\nJS має стандартизовані абстрактні операції:\n- **ToPrimitive** (з підказкою *number* або *string*) — якщо значення не є примітивом, рушій викликає послідовно `@@toPrimitive`, `valueOf()` або `toString()`.\n- **ToNumber**, **ToString**, **ToBoolean** — перетворення примітивів до потрібного типу залежно від контексту.\n\n### Типові приклади\n```js\n1 + '2'       // '12'  (число → рядок)\n'5' * '2'     // 10    (рядки → числа)\nif ('') { }   // '' → false (ToBoolean)\n[] == ''      // true  (абстрактна рівність з коерцією)\n```\n\n### Проблемні моменти\n- Коерція **виконується під час виконання (runtime)**.\n- Вона **відрізняється від явного приведення**, яке виконується викликом функцій (`Number()`, `String()` тощо).\n- Неявна коерція може бути **джерелом неочікуваних результатів**, особливо з оператором `==`.",
             theoryEN:
-                "### Theory: `NaN` and `Infinity`\n\n**`NaN` (Not-a-Number)** appears when numeric conversion or computation fails:\n- Any arithmetic with `NaN` → `NaN` (`NaN + 1`, `NaN * 5`).\n- Comparisons with `NaN` are always `false`, even `NaN == NaN` and `NaN === NaN` → `false`.\n- `ToBoolean(NaN)` → `false` (falsy).\n\n**`Infinity` / `-Infinity`** arises from overflow or division by zero:\n- `1 / 0` → `Infinity`, `-1 / 0` → `-Infinity`.\n- `Infinity ± finite` → `Infinity` / `-Infinity` accordingly.\n- `Infinity * 0` and `Infinity - Infinity` → `NaN` (indeterminate).\n- `ToBoolean(Infinity)` → `true` (any non-zero number is truthy).\n\n**Implicit coercion:**\n- Strings in **numeric** operators (except `+` with a string) are converted via `Number()`:\n  - `Number('Infinity')` → `Infinity`, `Number('  ')` → `0`, `Number('abc')` → `NaN`.\n- The `+` operator is dual: if either operand is (or becomes) a string, we get **concatenation**:\n  - `Infinity + '1'` → `'Infinity1'` (string), whereas `'Infinity' - 1` → `Infinity` (numeric).\n\n> In short: `NaN` contaminates arithmetic, `Infinity` behaves like mathematical infinity except in edge cases like `Infinity * 0` or `Infinity - Infinity`, which become `NaN`.",
-            level: 'middle',
+                "### Summary\n**Implicit type coercion** is the automatic conversion of values by the JS engine when the context expects another type (for example, an operator or language construct expects a number, string, or boolean).\n\n### How it works\nJavaScript uses abstract operations:\n- **ToPrimitive** (with hint *number* or *string*). For objects, the engine calls `@@toPrimitive`, then `valueOf()`, then `toString()`.\n- **ToNumber**, **ToString**, and **ToBoolean** — conversions between primitive types depending on the context.\n\n### Typical examples\n```js\n1 + '2'       // '12'\n'5' * '2'     // 10\nif ('') { }   // '' → false\n[] == ''      // true\n```\n\n### Key notes\n- Coercion happens **at runtime**.\n- It differs from **explicit coercion** (using functions like `Number()`, `String()`).\n- Implicit coercion can sometimes lead to **unexpected results**, especially with the `==` operator.",
             answers: [
                 {
-                    textUK: "`'abc' * 2` → `NaN`.",
-                    textEN: "`'abc' * 2` → `NaN`.",
-                    theoryUK: '✅ Рядок, що не перетворюється в число, дає `NaN` у числовій операції.',
-                    theoryEN: '✅ A non-numeric string converts to `NaN` in numeric operations.',
+                    textUK: 'Автоматичне перетворення типів під час виконання JS, коли контекст цього потребує.',
+                    textEN: 'Automatic type conversion at runtime when the context requires it.',
+                    theoryUK: 'Це правильна відповідь — саме так визначається неявне приведення типів у JavaScript.',
+                    theoryEN: 'Correct — this is exactly what implicit type coercion means in JavaScript.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`'Infinity' - 1` → `Infinity`.",
-                    textEN: "`'Infinity' - 1` → `Infinity`.",
-                    theoryUK: '✅ Рядок перетворюється в `Infinity`, віднімання з нескінченності лишає `Infinity`.',
-                    theoryEN: '✅ String coerces to `Infinity`; subtracting 1 still yields `Infinity`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`1 / 0` → `Infinity`.',
-                    textEN: '`1 / 0` → `Infinity`.',
-                    theoryUK: '✅ Ділення на нуль у JS дає `Infinity`.',
-                    theoryEN: '✅ Division by zero in JS yields `Infinity`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`-1 / 0` → `-Infinity`.',
-                    textEN: '`-1 / 0` → `-Infinity`.',
-                    theoryUK: '✅ Знак зберігається при діленні на нуль.',
-                    theoryEN: '✅ The sign is preserved when dividing by zero.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Infinity * 0` → `0`.',
-                    textEN: '`Infinity * 0` → `0`.',
-                    theoryUK: '❌ Це невизначеність → результат `NaN`.',
-                    theoryEN: '❌ This is indeterminate → result is `NaN`.',
+                    textUK: 'Ручне перетворення типу за допомогою функцій, таких як Number() або String().',
+                    textEN: 'Manual conversion using functions like Number() or String().',
+                    theoryUK: 'Це **явне** приведення типів, не неявне. Тут програміст сам ініціює перетворення.',
+                    theoryEN: 'This is **explicit** type coercion, not implicit — the programmer initiates it manually.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`NaN == NaN` → `true`.',
-                    textEN: '`NaN == NaN` → `true`.',
-                    theoryUK: '❌ `NaN` не дорівнює навіть самому собі.',
-                    theoryEN: '❌ `NaN` is not equal to itself.',
+                    textUK: 'Процес оптимізації коду під час компіляції.',
+                    textEN: 'A process of code optimization during compilation.',
+                    theoryUK: 'JS не компілює код як типізовані мови. Неявна коерція відбувається під час виконання, а не компіляції.',
+                    theoryEN: 'JavaScript does not compile code like statically typed languages — coercion happens at runtime, not compile time.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`Number('  ')` → `0`.",
-                    textEN: "`Number('  ')` → `0`.",
-                    theoryUK: '✅ Пробіли обрізаються, порожній рядок → `0`.',
-                    theoryEN: '✅ Whitespace trims to empty; empty string → `0`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`+undefined` → `0`.',
-                    textEN: '`+undefined` → `0`.',
-                    theoryUK: '❌ `Number(undefined)` → `NaN`, отже унарний `+` дає `NaN`.',
-                    theoryEN: '❌ `Number(undefined)` → `NaN`, so unary `+` yields `NaN`.',
-                    isCorrect: false
-                },
-                {
-                    textUK: "`Infinity + '1'` → `'Infinity1'`.",
-                    textEN: "`Infinity + '1'` → `'Infinity1'`.",
-                    theoryUK: '✅ `+` з рядком виконує конкатенацію.',
-                    theoryEN: '✅ `+` with a string performs concatenation.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Infinity - Infinity` → `Infinity`.',
-                    textEN: '`Infinity - Infinity` → `Infinity`.',
-                    theoryUK: '❌ Різниця двох нескінченностей невизначена → `NaN`.',
-                    theoryEN: '❌ Subtracting two infinities is indeterminate → `NaN`.',
+                    textUK: 'Автоматичне приведення значень лише до рядків.',
+                    textEN: 'Automatic conversion only to strings.',
+                    theoryUK: 'Неявна коерція може бути до числа, булевого або рядка, не лише до рядка.',
+                    theoryEN: 'Implicit coercion can convert to number, boolean, or string — not only strings.',
                     isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Чому `isNaN` і `Number.isNaN` дають різні результати для одних і тих самих значень?',
-            textEN: 'Why do `isNaN` and `Number.isNaN` produce different results for the same values?',
+            textUK: 'Яка різниця між явним і неявним приведенням типів у JavaScript?',
+            textEN: 'What is the difference between explicit and implicit type coercion in JavaScript?',
             theoryUK:
-                "### Теорія: `isNaN` vs `Number.isNaN`\n\n- **`isNaN(value)`** спочатку **коерцює** `value` до числа (`Number(value)`), а потім перевіряє, чи це `NaN`.\n  - Приклад: `isNaN('foo')` → `true` (бо `Number('foo')` → `NaN`).\n  - `isNaN('')` → `false` (бо `Number('')` → `0`).\n  - `isNaN(undefined)` → `true` (бо `Number(undefined)` → `NaN`).\n\n- **`Number.isNaN(value)`** **нічого не коерцює** і повертає `true` **лише** коли `value` — саме числове значення `NaN`.\n  - `Number.isNaN('foo')` → `false` (рядок, не `NaN`).\n  - `Number.isNaN(NaN)` → `true`.\n  - `Number.isNaN(undefined)` → `false`.\n  - `Number.isNaN(new Number(NaN))` → `false` (це об’єкт, не примітив `NaN`).\n\n> Висновок: `isNaN` — «широка» перевірка з коерцією; `Number.isNaN` — «строга» без коерції.",
+                "### Основна різниця\n- **Явне приведення (explicit)** — програміст сам викликає функцію для зміни типу: `Number('5')`, `String(10)`, `Boolean(0)`.\n- **Неявне приведення (implicit)** — рушій JS автоматично перетворює тип, коли цього вимагає контекст (оператор, умова тощо).\n\n### Приклади\n```js\nNumber('5')   // явне\n'5' * 2       // неявне\n```\n\n### Чому важливо розрізняти\n- Явне приведення **передбачуване** та контрольоване програмістом.\n- Неявне може викликати **неочікувані ефекти**, особливо при порівнянні `==`, оскільки відбувається автоматична коерція типів.\n- Для уникнення помилок часто радять використовувати `===` замість `==`.",
             theoryEN:
-                "### Theory: `isNaN` vs `Number.isNaN`\n\n- **`isNaN(value)`** first **coerces** `value` to a number (`Number(value)`), then checks if it is `NaN`.\n  - Example: `isNaN('foo')` → `true` (since `Number('foo')` → `NaN`).\n  - `isNaN('')` → `false` (`Number('')` → `0`).\n  - `isNaN(undefined)` → `true` (`Number(undefined)` → `NaN`).\n\n- **`Number.isNaN(value)`** performs **no coercion** and returns `true` **only** when `value` is the numeric `NaN` itself.\n  - `Number.isNaN('foo')` → `false` (a string, not `NaN`).\n  - `Number.isNaN(NaN)` → `true`.\n  - `Number.isNaN(undefined)` → `false`.\n  - `Number.isNaN(new Number(NaN))` → `false` (wrapper object, not the primitive `NaN`).\n\n> Bottom line: `isNaN` is a *broad* coercing check; `Number.isNaN` is a *strict* non-coercing check.",
-            level: 'middle',
+                "### Main difference\n- **Explicit coercion**: the programmer intentionally converts a value, e.g. `Number('5')`, `String(10)`, `Boolean(0)`.\n- **Implicit coercion**: the JS engine automatically converts a value when the context demands it (e.g., operators, logical expressions).\n\n### Examples\n```js\nNumber('5')   // explicit\n'5' * 2       // implicit\n```\n\n### Why it matters\n- Explicit coercion is **predictable** and under developer control.\n- Implicit coercion may lead to **unexpected results**, especially with the `==` operator.\n- To avoid pitfalls, developers often prefer `===` for strict comparisons.",
             answers: [
                 {
-                    textUK: "`isNaN('foo') === true`.",
-                    textEN: "`isNaN('foo') === true`.",
-                    theoryUK: '✅ Рядок коерцюється до `NaN`, тому `true`.',
-                    theoryEN: '✅ String coerces to `NaN`, hence `true`.',
+                    textUK: 'Явне — це ручне приведення, неявне — автоматичне.',
+                    textEN: 'Explicit is manual, implicit is automatic.',
+                    theoryUK: 'Саме так — різниця полягає у тому, хто ініціює перетворення: програміст або рушій.',
+                    theoryEN: 'Exactly — the difference lies in who triggers the conversion: the programmer or the engine.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`Number.isNaN('foo') === true`.",
-                    textEN: "`Number.isNaN('foo') === true`.",
-                    theoryUK: '❌ Без коерції це просто рядок, не `NaN`.',
-                    theoryEN: "❌ Without coercion it's a string, not `NaN`.",
+                    textUK: 'Явне — це автоматичне, неявне — ручне.',
+                    textEN: 'Explicit is automatic, implicit is manual.',
+                    theoryUK: 'Навпаки: явне — ручне, неявне — автоматичне.',
+                    theoryEN: 'The opposite: explicit is manual, implicit is automatic.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`isNaN('') === true`.",
-                    textEN: "`isNaN('') === true`.",
-                    theoryUK: "❌ `Number('')` → `0`, отже `false`.",
-                    theoryEN: "❌ `Number('')` → `0`, so `false`.",
+                    textUK: 'Явне приведення можливе лише для чисел.',
+                    textEN: 'Explicit coercion is only possible for numbers.',
+                    theoryUK: 'Явне приведення можна робити для будь-яких типів: чисел, рядків, булевих тощо.',
+                    theoryEN: 'Explicit coercion can be done for any types, not just numbers.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`Number.isNaN('') === false`.",
-                    textEN: "`Number.isNaN('') === false`.",
-                    theoryUK: '✅ Без коерції порожній рядок не є `NaN`.',
-                    theoryEN: '✅ Without coercion an empty string is not `NaN`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`isNaN(undefined) === true`.',
-                    textEN: '`isNaN(undefined) === true`.',
-                    theoryUK: '✅ `Number(undefined)` → `NaN`, отже `true`.',
-                    theoryEN: '✅ `Number(undefined)` → `NaN`, therefore `true`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Number.isNaN(undefined) === true`.',
-                    textEN: '`Number.isNaN(undefined) === true`.',
-                    theoryUK: '❌ `undefined` — не `NaN` без коерції.',
-                    theoryEN: '❌ `undefined` is not `NaN` without coercion.',
-                    isCorrect: false
-                },
-                {
-                    textUK: '`isNaN(NaN) === true`.',
-                    textEN: '`isNaN(NaN) === true`.',
-                    theoryUK: '✅ Очевидно: `NaN` є `NaN`.',
-                    theoryEN: '✅ Obvious: `NaN` is `NaN`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Number.isNaN(NaN) === true`.',
-                    textEN: '`Number.isNaN(NaN) === true`.',
-                    theoryUK: '✅ Строга перевірка повертає `true` тільки для самого `NaN`.',
-                    theoryEN: '✅ Strict check returns `true` only for the `NaN` value.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`isNaN('  ') === false`.",
-                    textEN: "`isNaN('  ') === false`.",
-                    theoryUK: '✅ Пробіли → `0`, отже не `NaN`.',
-                    theoryEN: '✅ Whitespace → `0`, thus not `NaN`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Number.isNaN(new Number(NaN)) === true`.',
-                    textEN: '`Number.isNaN(new Number(NaN)) === true`.',
-                    theoryUK: '❌ Це об’єкт-обгортка, не примітив `NaN`.',
-                    theoryEN: "❌ That's a wrapper object, not the primitive `NaN`.",
+                    textUK: 'Різниці немає — це синоніми.',
+                    textEN: 'There is no difference — they are synonyms.',
+                    theoryUK: 'Це різні поняття — явне та неявне приведення працюють по-різному.',
+                    theoryEN: 'They are different concepts — explicit and implicit coercion behave differently.',
                     isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Як працює оператор `+` при змішуванні типів (рядки, числа, об’єкти, масиви, Date, Symbol)?',
-            textEN: 'How does the `+` operator work when mixing types (strings, numbers, objects, arrays, Date, Symbol)?',
+            textUK: 'В яких ситуаціях JavaScript виконує неявне приведення типів?',
+            textEN: 'In which situations does JavaScript perform implicit type coercion?',
             theoryUK:
-                '### Теорія: подвійна семантика `+`\nОператор `+` має **два режими**:\n1) **Конкатенація рядків** — якщо хоча б один операнд є рядком **або** перетворюється на рядок під час `ToPrimitive` (підказка `default`). У цьому разі інший операнд теж приводиться до рядка, і відбувається конкатенація.\n2) **Числове додавання** — якщо обидва операнди не рядки, вони приводяться до числа (`ToNumber`) після `ToPrimitive`.\n\n**Порядок для об’єктів:** `obj[Symbol.toPrimitive]` → `valueOf()` → `toString()`. Для `Date` історично у `+` перевага — **рядок**; у відносних порівняннях (`<`/`>`) — **число** (timestamp). `Symbol` **не можна** неявно перетворювати до рядка або числа — це призводить до `TypeError`.',
+                "### Основні ситуації неявного приведення типів\n1. **Арифметичні операції** — `+`, `-`, `*`, `/`, `%`, коли операнди різних типів. При цьому `+` може означати або додавання чисел, або конкатенацію рядків.\n2. **Рядкове додавання** — якщо один з операндів `+` є рядком, інший також перетворюється до рядка.\n3. **Порівняння (`==`, `<`, `>`)** — коли типи різні, відбувається перетворення для коректного порівняння.\n4. **Логічні контексти** — у виразах `if`, `while`, а також у логічних операторах `||`, `&&`, `??`. Використовується операція **ToBoolean**, що визначає істинність значення.\n5. **Шаблонні рядки** — коли нестрокові значення вставляються у шаблон, вони автоматично конвертуються до рядка.\n\n### Приклади\n```js\n1 + '2'         // '12'\n'5' - 1         // 4\nif ('') {}      // '' → false\ntrue == 1       // true\n`${123}`        // '123'\n```",
             theoryEN:
-                '### Theory: dual semantics of `+`\nThe `+` operator has **two modes**:\n1) **String concatenation** — if at least one operand is a string **or** becomes a string during `ToPrimitive` (hint `default`). The other operand is coerced to string and concatenated.\n2) **Numeric addition** — otherwise both operands are coerced to numbers (`ToNumber`) after `ToPrimitive`.\n\n**Object order:** `obj[Symbol.toPrimitive]` → `valueOf()` → `toString()`. `Date` tends to produce a **string** with `+`, while in relational comparisons it becomes a **number** (timestamp). `Symbol` cannot be implicitly converted to string/number — attempting so throws `TypeError`.',
-            level: 'middle',
+                "### Main cases of implicit coercion\n1. **Arithmetic operations** — `+`, `-`, `*`, `/`, `%` with mixed operand types. Note that `+` may mean addition or string concatenation.\n2. **String concatenation** — if one operand is a string, the other is converted to string as well.\n3. **Comparisons (`==`, `<`, `>`)** — when operands have different types, coercion is performed for comparison.\n4. **Logical contexts** — `if`, `while`, `||`, `&&`, `??`. The **ToBoolean** operation determines whether a value is truthy or falsy.\n5. **Template literals** — non-string values inside template literals are automatically converted to strings.\n\n### Examples\n```js\n1 + '2'       // '12'\n'5' - 1       // 4\nif ('') {}    // '' → false\ntrue == 1     // true\n`${123}`      // '123'\n```",
             answers: [
                 {
-                    textUK: "`'5' + 2` → `'52'` (конкатенація).",
-                    textEN: "`'5' + 2` → `'52'` (concatenation).",
-                    theoryUK: '✅ Рядок змушує `+` працювати як конкатенацію.',
-                    theoryEN: '✅ A string operand makes `+` perform concatenation.',
+                    textUK: 'У виразах з різними типами операндів, логічних умовах, порівняннях і шаблонних рядках.',
+                    textEN: 'In expressions with mixed operand types, logical conditions, comparisons, and template literals.',
+                    theoryUK: 'Так — у цих контекстах рушій JS виконує автоматичне приведення типів.',
+                    theoryEN: 'Correct — in these contexts the JS engine performs implicit type coercion.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`2 + '5'` → `7`.",
-                    textEN: "`2 + '5'` → `7`.",
-                    theoryUK: "❌ Через рядок відбувається конкатенація → `'25'`, не додавання.",
-                    theoryEN: "❌ Presence of a string causes concatenation → `'25'`, not addition.",
+                    textUK: 'Лише при виклику функцій.',
+                    textEN: 'Only when calling functions.',
+                    theoryUK: 'Ні, коерція може відбуватись у будь-яких виразах, не лише у функціях.',
+                    theoryEN: 'No — coercion can occur in many contexts, not just function calls.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`[] + 1` → `'1'`.",
-                    textEN: "`[] + 1` → `'1'`.",
-                    theoryUK: "✅ `[]` → `''` через `toString()`, далі `'') + 1` → `'1'`.",
-                    theoryEN: "✅ `[]` → `''` via `toString()`, then concatenation yields `'1'`.",
-                    isCorrect: true
-                },
-                {
-                    textUK: "`[1] + 1` → `'11'`.",
-                    textEN: "`[1] + 1` → `'11'`.",
-                    theoryUK: "✅ `[1].toString()` → `'1'`; з `+` та рядком маємо конкатенацію.",
-                    theoryEN: "✅ `[1].toString()` → `'1'`; with `+` and a string we get concatenation.",
-                    isCorrect: true
-                },
-                {
-                    textUK: '`({ valueOf: () => 2 }) + 3` → `5`.',
-                    textEN: '`({ valueOf: () => 2 }) + 3` → `5`.',
-                    theoryUK: '✅ `valueOf()` дав число 2, отже числове додавання.',
-                    theoryEN: '✅ `valueOf()` returned 2, so numeric addition occurs.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`new Date(0) + 1` → `'Thu, 01 Jan 1970 ...1'` (рядок).",
-                    textEN: "`new Date(0) + 1` → `'Thu, 01 Jan 1970 ...1'` (string).",
-                    theoryUK: '✅ У `+` `Date` має рядкову упередженість, тож відбувається конкатенація.',
-                    theoryEN: '✅ With `+`, `Date` prefers string conversion, so concatenation happens.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Number(new Date(0)) + 1` → `1`.',
-                    textEN: '`Number(new Date(0)) + 1` → `1`.',
-                    theoryUK: '✅ Явне перетворення дає 0 (timestamp), 0 + 1 = 1.',
-                    theoryEN: '✅ Explicit conversion gives 0 (timestamp), 0 + 1 = 1.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`Symbol('x') + ''` → `'Symbol(x)'`.",
-                    textEN: "`Symbol('x') + ''` → `'Symbol(x)'`.",
-                    theoryUK: '❌ Неявне перетворення `Symbol` до рядка заборонено → `TypeError`.',
-                    theoryEN: '❌ Implicit string coercion of `Symbol` is forbidden → `TypeError`.',
+                    textUK: "Тільки у строгому режимі 'use strict'.",
+                    textEN: "Only in 'use strict' mode.",
+                    theoryUK: 'Режим strict не впливає на механізм приведення типів.',
+                    theoryEN: 'Strict mode does not affect type coercion behavior.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`({ toString: () => 'A' }) + 'B'` → `'AB'`.",
-                    textEN: "`({ toString: () => 'A' }) + 'B'` → `'AB'`.",
-                    theoryUK: "✅ Після `ToPrimitive` маємо `'A'`, далі конкатенація з `'B'`.",
-                    theoryEN: "✅ After `ToPrimitive` we get `'A'`, then concatenation with `'B'`.",
-                    isCorrect: true
-                },
-                {
-                    textUK: "`({ [Symbol.toPrimitive]: () => 10 }) + '5'` → `'105'`.",
-                    textEN: "`({ [Symbol.toPrimitive]: () => 10 }) + '5'` → `'105'`.",
-                    theoryUK: "✅ Хоч об'єкт дає число 10, але через наявність рядка результат — рядок.",
-                    theoryEN: '✅ Even though the object yields 10, the string operand forces concatenation.',
-                    isCorrect: true
+                    textUK: 'Лише під час компіляції коду.',
+                    textEN: 'Only during code compilation.',
+                    theoryUK: 'JS не компілюється традиційно — неявна коерція відбувається під час виконання.',
+                    theoryEN: 'JavaScript does not compile traditionally — coercion happens at runtime.',
+                    isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Як числові оператори (`-`, `*`, `/`, `%`, унарний `+`) виконують неявне приведення для рядків, null, undefined, масивів, Symbol?',
-            textEN: 'How do numeric operators (`-`, `*`, `/`, `%`, unary `+`) perform implicit coercion for strings, null, undefined, arrays, Symbol?',
+            textUK: 'Що поверне вираз +"123" у JavaScript?',
+            textEN: 'What does the expression +"123" return in JavaScript?',
             theoryUK:
-                "### Теорія: числові оператори прагнуть до числа\nДля `-`, `*`, `/`, `%`, унарного `+` операнди проходять `ToPrimitive`, потім `ToNumber`.\n- `null` → `0`; `true` → `1`; `false` → `0`.\n- `''` та рядок із самих пробілів → `0`; `'123'` → `123`; `'abc'` → `NaN`.\n- Масив: `[\"2\"]` → `'2'` → `2`; `[1,2]` → `'1,2'` → `NaN`.\n- `undefined` → `NaN` (будь-яка арифметика з `NaN` → `NaN`).\n- `Symbol` у `ToNumber` → `TypeError`.\nВідмінність від `+`: тут **немає** рядкової конкатенації — завжди числова коерція.",
+                'У JavaScript унарний плюс (`+value`) намагається **привести операнд до числа**. Якщо `value` — рядок, JS спробує його розпарсити як число. Якщо це можливо — отримаємо числове значення. Якщо ні — `NaN`. Наприклад:\n```js\n+"123" // 123\n+true // 1\n+false // 0\n+null // 0\n+undefined // NaN\n```',
             theoryEN:
-                "### Theory: numeric operators aim for numbers\nFor `-`, `*`, `/`, `%`, unary `+`, operands undergo `ToPrimitive`, then `ToNumber`.\n- `null` → `0`; `true` → `1`; `false` → `0`.\n- `''` and whitespace-only strings → `0`; `'123'` → `123`; `'abc'` → `NaN`.\n- Arrays: `[\"2\"]` → `'2'` → `2`; `[1,2]` → `'1,2'` → `NaN`.\n- `undefined` → `NaN` (any arithmetic with `NaN` → `NaN`).\n- `Symbol` during `ToNumber` → `TypeError`.\nUnlike `+`, there is **no** string concatenation — it's always numeric coercion.",
-            level: 'middle',
+                'In JavaScript, the unary plus (`+value`) attempts to **convert the operand to a number**. If `value` is a string, JS tries to parse it as a number. If successful — a numeric value is returned; otherwise, `NaN`. For example:\n```js\n+"123" // 123\n+true // 1\n+false // 0\n+null // 0\n+undefined // NaN\n```',
             answers: [
                 {
-                    textUK: "`'6' - '2'` → `4`.",
-                    textEN: "`'6' - '2'` → `4`.",
-                    theoryUK: '✅ Обидва рядки перетворені на числа.',
-                    theoryEN: '✅ Both strings are converted to numbers.',
+                    textUK: '123 (тип number)',
+                    textEN: '123 (type number)',
+                    theoryUK: '✅ Правильна відповідь. Унарний плюс перетворює рядок "123" у число 123.',
+                    theoryEN: '✅ Correct. Unary plus converts the string "123" into the number 123.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`null * 5` → `0`.',
-                    textEN: '`null * 5` → `0`.',
-                    theoryUK: '✅ `null` → `0`, 0 × 5 = 0.',
-                    theoryEN: '✅ `null` → `0`, 0 × 5 = 0.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`undefined + 1` → `NaN` (у числовому сенсі).',
-                    textEN: '`undefined + 1` → `NaN` (in numeric sense).',
-                    theoryUK: '✅ `undefined` → `NaN`, а `NaN + 1` → `NaN`.',
-                    theoryEN: '✅ `undefined` → `NaN`, and `NaN + 1` → `NaN`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`+'\\n\\t'` → `0`.",
-                    textEN: "`+'\\n\\t'` → `0`.",
-                    theoryUK: '✅ Рядок із пробільних символів → порожній → 0.',
-                    theoryEN: '✅ Whitespace-only string becomes 0.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`[1,2] * 2` → `2`.',
-                    textEN: '`[1,2] * 2` → `2`.',
-                    theoryUK: "❌ `[1,2]` → `'1,2'` → `NaN`, тож результат `NaN`.",
-                    theoryEN: "❌ `[1,2]` → `'1,2'` → `NaN`, so the result is `NaN`.",
+                    textUK: '"123" (тип string)',
+                    textEN: '"123" (type string)',
+                    theoryUK: '❌ Невірно. Рядок не залишається рядком, бо унарний плюс викликає Number(value).',
+                    theoryEN: '❌ Incorrect. The string does not remain a string — unary plus calls Number(value).',
                     isCorrect: false
                 },
                 {
-                    textUK: "`['2'] - 1` → `1`.",
-                    textEN: "`['2'] - 1` → `1`.",
-                    theoryUK: "✅ `['2']` → `'2'` → 2; 2 − 1 = 1.",
-                    theoryEN: "✅ `['2']` → `'2'` → 2; 2 − 1 = 1.",
-                    isCorrect: true
-                },
-                {
-                    textUK: "`+Symbol('x')` → `0`.",
-                    textEN: "`+Symbol('x')` → `0`.",
-                    theoryUK: '❌ `ToNumber(Symbol)` заборонено → `TypeError`.',
-                    theoryEN: '❌ `ToNumber(Symbol)` is forbidden → `TypeError`.',
+                    textUK: 'NaN',
+                    textEN: 'NaN',
+                    theoryUK: '❌ Невірно. NaN буде лише тоді, якщо рядок не можна конвертувати, наприклад +"abc".',
+                    theoryEN: '❌ Incorrect. NaN appears only when the string cannot be converted, e.g. +"abc".',
                     isCorrect: false
                 },
                 {
-                    textUK: "`'abc' / 2` → `NaN`.",
-                    textEN: "`'abc' / 2` → `NaN`.",
-                    theoryUK: '✅ Нечисловий рядок перетворюється на `NaN`.',
-                    theoryEN: '✅ Non-numeric string converts to `NaN`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`true % 2` → `1`.',
-                    textEN: '`true % 2` → `1`.',
-                    theoryUK: '✅ `true` → `1`, 1 % 2 = 1.',
-                    theoryEN: '✅ `true` → `1`, 1 % 2 = 1.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`+''` → `NaN`.",
-                    textEN: "`+''` → `NaN`.",
-                    theoryUK: '❌ Порожній рядок стає `0`, не `NaN`.',
-                    theoryEN: '❌ Empty string coerces to `0`, not `NaN`.',
+                    textUK: 'undefined',
+                    textEN: 'undefined',
+                    theoryUK: '❌ Невірно. Унарний плюс ніколи не повертає undefined.',
+                    theoryEN: '❌ Incorrect. Unary plus never returns undefined.',
                     isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Які базові правила абстрактної рівності `==` і які в ній типові пастки (null/undefined, рядки з числами, boolean, об’єкти/масиви, NaN)?',
-            textEN: 'What are the basic `==` abstract equality rules and its common pitfalls (null/undefined, strings vs numbers, booleans, objects/arrays, NaN)?',
+            textUK: "Різниця між `'5' - 2` і `'5' + 2`: що насправді відбувається?",
+            textEN: "The difference between `'5' - 2` and `'5' + 2`: what actually happens?",
             theoryUK:
-                '### Теорія: абстрактна рівність `==`\n- Якщо типи однакові → порівняння як у `===` (окрім `NaN`).\n- `null` і `undefined` рівні **лише** один одному.\n- `boolean` перед порівнянням перетворюється на число (`true`→1, `false`→0).\n- `string` з `number` → рядок перетворюється на число.\n- `object` з примітивом → об’єкт через `ToPrimitive` (потім порівняння).\n- `NaN` ніколи не дорівнює нічому, навіть самому собі.',
+                "### Ключова ідея\nОператори в JavaScript мають різні правила приведення типів.\n\n- **Оператор `+` (addition/concatenation)**:\n  1. Обидва операнди спершу проходять `ToPrimitive` з підказкою *default*.\n  2. Якщо **хоча б один результат є типу `string`**, відбувається **конкатенація рядків** (нечислова операція): другий операнд приводиться до рядка (`ToString`).\n  3. Якщо **обидва не рядки**, застосовується числове додавання: обидва приводяться через `ToNumber`.\n\n- **Інші арифметичні оператори** (`-`, `*`, `/`, `%`, `**`) **завжди** працюють у числовому режимі: обидва операнди приводяться через `ToNumber`.\n\n### Приклади\n```js\n'5' - 2   // 3        → Number('5') - Number(2)\n'5' + 2   // '52'     → '5' + String(2)\n'5' * 2   // 10       → Number('5') * 2\n'5' - true // 4       → 5 - 1\n'5' + true // '5true' → '5' + 'true'\n```\n\n> Важливо: `+` не «частково парсить» рядки типу `'5a'`; `Number('5a')` дає `NaN`. Конкатенація ж просто склеює рядки.",
             theoryEN:
-                '### Theory: abstract equality `==`\n- If types match → comparison is like `===` (except for `NaN`).\n- `null` and `undefined` are equal **only** to each other.\n- `boolean` is converted to number before comparison (`true`→1, `false`→0).\n- `string` vs `number` → the string is converted to number.\n- `object` vs primitive → object goes through `ToPrimitive` (then compare).\n- `NaN` is never equal to anything, not even itself.',
-            level: 'middle',
+                "### Key idea\nOperators in JavaScript follow different coercion rules.\n\n- **`+` operator (addition/concatenation)**:\n  1. Both operands undergo `ToPrimitive` with the *default* hint.\n  2. If **either result is a `string`**, **string concatenation** happens (non-numeric): the other operand is converted with `ToString`.\n  3. If **neither is a string**, numeric addition occurs after `ToNumber`.\n\n- **Other arithmetic operators** (`-`, `*`, `/`, `%`, `**`) **always** operate numerically: both operands go through `ToNumber`.\n\n### Examples\n```js\n'5' - 2    // 3        → Number('5') - Number(2)\n'5' + 2    // '52'     → '5' + String(2)\n'5' * 2    // 10       → Number('5') * 2\n'5' - true // 4        → 5 - 1\n'5' + true // '5true'  → '5' + 'true'\n```\n\n> Note: `+` does not “partially parse” strings like `'5a'`; `Number('5a')` is `NaN`. Concatenation just glues strings.",
             answers: [
                 {
-                    textUK: '`null == undefined` → `true`.',
-                    textEN: '`null == undefined` → `true`.',
-                    theoryUK: '✅ Спеціальне правило для `==`.',
-                    theoryEN: '✅ Special rule for `==`.',
+                    textUK: "Оператор '+' спершу намагається перетворити операнди на примітиви; якщо хоча б один стає рядком — виконується конкатенація; '-' завжди приводить обидва операнди до числа і віднімає.",
+                    textEN: "The '+' operator first converts operands to primitives; if either becomes a string, it concatenates; '-' always coerces both to numbers and subtracts.",
+                    theoryUK: "✅ Це точний опис специфікації: '+' може стати рядковою операцією, тоді як '-' завжди числова.",
+                    theoryEN: "✅ This matches the spec: '+' can become a string operation, while '-' is always numeric.",
                     isCorrect: true
                 },
                 {
-                    textUK: '`null == 0` → `true`.',
-                    textEN: '`null == 0` → `true`.',
-                    theoryUK: '❌ `null` не дорівнює жодному числу.',
-                    theoryEN: '❌ `null` is not equal to any number.',
+                    textUK: "І '+' і '-' завжди перетворюють обидва операнди на числа, але '+' має вищий пріоритет.",
+                    textEN: "Both '+' and '-' always convert both operands to numbers, but '+' has higher precedence.",
+                    theoryUK: "❌ Помилка: '+' не завжди числовий; також пріоритет тут ні до чого — проблема в типі операції, а не в порядку.",
+                    theoryEN: "❌ Incorrect: '+' isn't always numeric; operator precedence is irrelevant here — it's about operation type, not order.",
                     isCorrect: false
                 },
                 {
-                    textUK: "`'0' == false` → `true`.",
-                    textEN: "`'0' == false` → `true`.",
-                    theoryUK: "✅ `false` → 0; `'0'` → 0; 0 == 0.",
-                    theoryEN: "✅ `false` → 0; `'0'` → 0; 0 == 0.",
-                    isCorrect: true
-                },
-                {
-                    textUK: "`'' == 0` → `true`.",
-                    textEN: "`'' == 0` → `true`.",
-                    theoryUK: '✅ Порожній рядок при порівнянні з числом стає 0.',
-                    theoryEN: '✅ Empty string becomes 0 when compared to a number.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`[] == ''` → `true`.",
-                    textEN: "`[] == ''` → `true`.",
-                    theoryUK: "✅ `[]` → `''` через `toString()`.",
-                    theoryEN: "✅ `[]` → `''` via `toString()`.",
-                    isCorrect: true
-                },
-                {
-                    textUK: '`[] == 0` → `true`.',
-                    textEN: '`[] == 0` → `true`.',
-                    theoryUK: "✅ `[]` → `''` → `0`.",
-                    theoryEN: "✅ `[]` → `''` → `0`.",
-                    isCorrect: true
-                },
-                {
-                    textUK: "`[1,2] == '1,2'` → `true`.",
-                    textEN: "`[1,2] == '1,2'` → `true`.",
-                    theoryUK: "✅ Масив перетворюється на рядок `'1,2'` і порівнюється як рядок.",
-                    theoryEN: "✅ The array coerces to `'1,2'` and compares as a string.",
-                    isCorrect: true
-                },
-                {
-                    textUK: '`NaN == NaN` → `true`.',
-                    textEN: '`NaN == NaN` → `true`.',
-                    theoryUK: '❌ `NaN` не дорівнює навіть самому собі; для перевірки використовуйте `Number.isNaN` або `Object.is`.',
-                    theoryEN: '❌ `NaN` is not equal to itself; use `Number.isNaN` or `Object.is` to check.',
+                    textUK: "'5' у виразі з будь-яким числовим оператором завжди парситься як 5, тому '5' + 2 === 7.",
+                    textEN: "A string '5' with any numeric operator is always parsed as 5, therefore '5' + 2 === 7.",
+                    theoryUK: "❌ Ні: '+' не завжди «числовий оператор» — він може бути рядковим і тоді не виконується `ToNumber` для конкатенації.",
+                    theoryEN: "❌ No: '+' isn't always numeric — it may be string concatenation, skipping `ToNumber`.",
                     isCorrect: false
                 },
                 {
-                    textUK: '`true == 1` → `true`.',
-                    textEN: '`true == 1` → `true`.',
-                    theoryUK: '✅ `true` → 1 перед порівнянням.',
-                    theoryEN: '✅ `true` is coerced to 1 before comparison.',
-                    isCorrect: true
+                    textUK: 'Результат залежить від того, чи рядок повністю числовий: якщо так — завжди математика, якщо ні — конкатенація.',
+                    textEN: 'It depends on whether the string is purely numeric: if yes — always math; if not — concatenation.',
+                    theoryUK: "❌ Ні: для '+' головне — чи є **рядковий тип** серед операндів після `ToPrimitive`, а не «наскільки числовий» рядок.",
+                    theoryEN: "❌ No: for '+', the key is whether a **string type** is present after `ToPrimitive`, not how numeric the string looks.",
+                    isCorrect: false
                 },
                 {
-                    textUK: "`{} == '[object Object]'` завжди `true`.",
-                    textEN: "`{} == '[object Object]'` is always `true`.",
-                    theoryUK: '❌ Це залежить від синтаксичного контексту та `ToPrimitive`; не «завжди» істина й безпечніше так не порівнювати.',
-                    theoryEN: '❌ Depends on parsing context and `ToPrimitive`; it\'s not "always" true and is unsafe to rely on.',
+                    textUK: "Оператор '-' спочатку конкатенує, а вже потім пробує віднімати, тому '5' - 2 → 3.",
+                    textEN: "'-' concatenates first and then tries to subtract, hence '5' - 2 → 3.",
+                    theoryUK: "❌ Ні, '-' ніколи не виконує конкатенацію; він одразу переводить обидва операнди до числа.",
+                    theoryEN: "❌ No, '-' never concatenates; it directly coerces both operands to numbers.",
                     isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Чим відрізняється `==` від `===` у контексті коерцій?',
-            textEN: 'How does `==` differ from `===` in the context of coercion?',
+            textUK: 'Обчисліть результати (одна відповідь містить **усі** правильні пари вираз → результат):',
+            textEN: 'Evaluate the results (one option contains **all** correct expression → result pairs):',
             theoryUK:
-                '### Теорія: `==` vs `===`\n- **`===` (строга рівність)**: *без коерції типів*. Якщо типи різні — одразу `false`. Винятки: `+0 === -0` → `true`; `NaN === NaN` → `false`.\n- **`==` (абстрактна рівність)**: *може виконувати коерцію* за правилами специ: `boolean → number`, `string ↔ number`, `object → primitive` (через `@@toPrimitive → valueOf → toString`). Спецвипадок: `null == undefined` → `true` і лише між собою.\n- `NaN` ніколи не дорівнює нічому в обох операторах.\n\n> Практичне правило: коли потрібна перевірка без прихованих перетворень — використовуйте `===`.',
+                "### Алгоритм для перевірки\n- Для `+`: після `ToPrimitive` — якщо є рядок → конкатенація; інакше → числове додавання (`ToNumber`).\n- Для `-` та `*`: обидва операнди → `ToNumber`.\n\nРозберемо:\n```js\n'5' - 2     // 3\n'5' + 2     // '52'\n'5' * 2     // 10\n'5' + true  // '5true'  (рядок + рядок)\n'5' - true  // 4        (5 - 1)\n```\nДе `ToNumber(true) === 1`.",
             theoryEN:
-                '### Theory: `==` vs `===`\n- **`===` (strict equality)**: *no type coercion*. If types differ → `false`. Exceptions: `+0 === -0` → `true`; `NaN === NaN` → `false`.\n- **`==` (abstract equality)**: *may coerce types* per spec rules: `boolean → number`, `string ↔ number`, `object → primitive` (`@@toPrimitive → valueOf → toString`). Special: `null == undefined` → `true` and only to each other.\n- `NaN` never equals anything under either operator.\n\n> Practical rule: prefer `===` when you don’t want hidden conversions.',
-            level: 'middle',
+                "### How to verify\n- For `+`: after `ToPrimitive` — if a string is present → concatenation; otherwise → numeric addition (`ToNumber`).\n- For `-` and `*`: both operands → `ToNumber`.\n\nWork through:\n```js\n'5' - 2     // 3\n'5' + 2     // '52'\n'5' * 2     // 10\n'5' + true  // '5true'  (string + string)\n'5' - true  // 4        (5 - 1)\n```\nWhere `ToNumber(true) === 1`.",
             answers: [
                 {
-                    textUK: "`'0' == 0` → `true`, тоді як `'0' === 0` → `false`.",
-                    textEN: "`'0' == 0` → `true`, whereas `'0' === 0` → `false`.",
-                    theoryUK: '✅ Для `==` рядок приводиться до числа 0; `===` не коерцює типи.',
-                    theoryEN: '✅ With `==` the string is coerced to number 0; `===` does not coerce.',
+                    textUK: "'5' - 2 → 3; '5' + 2 → '52'; '5' * 2 → 10; '5' + true → '5true'; '5' - true → 4",
+                    textEN: "'5' - 2 → 3; '5' + 2 → '52'; '5' * 2 → 10; '5' + true → '5true'; '5' - true → 4",
+                    theoryUK: "✅ Усі пари відповідають правилам: '+' з рядком — конкатенація, '-' і '*' — числові операції.",
+                    theoryEN: "✅ All pairs match the rules: '+' with a string → concatenation, '-' and '*' → numeric.",
                     isCorrect: true
                 },
                 {
-                    textUK: "`false == '0'` → `true`, але `false === '0'` → `true`.",
-                    textEN: "`false == '0'` → `true`, but `false === '0'` → `true`.",
-                    theoryUK: '❌ Для `===` типи різні (boolean vs string), результат `false`.',
-                    theoryEN: '❌ For `===`, types differ (boolean vs string), result is `false`.',
+                    textUK: "'5' - 2 → 3; '5' + 2 → 7; '5' * 2 → 10; '5' + true → 6; '5' - true → 4",
+                    textEN: "'5' - 2 → 3; '5' + 2 → 7; '5' * 2 → 10; '5' + true → 6; '5' - true → 4",
+                    theoryUK: "❌ Тут помилково вважається, що '+' завжди числовий: `'5' + 2` не 7, а `'5' + true` не 6.",
+                    theoryEN: "❌ Assumes '+' is always numeric: `'5' + 2` isn't 7, and `'5' + true` isn't 6.",
                     isCorrect: false
                 },
                 {
-                    textUK: '`0 == false` → `true`, `0 === false` → `false`.',
-                    textEN: '`0 == false` → `true`, `0 === false` → `false`.',
-                    theoryUK: '✅ `false` коертується до 0 для `==`; `===` не виконує коерцію.',
-                    theoryEN: '✅ `false` is coerced to 0 for `==`; `===` does no coercion.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`[0] == 0` → `true`, а `[0] === 0` → `true`.',
-                    textEN: '`[0] == 0` → `true`, and `[0] === 0` → `true`.',
-                    theoryUK: '❌ Для `===` об’єкт ніколи не дорівнює числу (без коерції).',
-                    theoryEN: '❌ For `===` an object never equals a number (no coercion).',
+                    textUK: "'5' - 2 → NaN; '5' + 2 → '52'; '5' * 2 → 10; '5' + true → '6'; '5' - true → 4",
+                    textEN: "'5' - 2 → NaN; '5' + 2 → '52'; '5' * 2 → 10; '5' + true → '6'; '5' - true → 4",
+                    theoryUK: "❌ Віднімання з рядком не дає NaN для числового рядка; і `'5' + true` — це рядок `'5true'`, а не `'6'`.",
+                    theoryEN: "❌ Subtraction with a numeric-looking string doesn't yield NaN; `'5' + true` is `'5true'`, not `'6'`.",
                     isCorrect: false
                 },
                 {
-                    textUK: '`null == undefined` → `true`, але `null === undefined` → `false`.',
-                    textEN: '`null == undefined` → `true`, but `null === undefined` → `false`.',
-                    theoryUK: '✅ Спецправило для `==`; строгий оператор вимагає однакові типи.',
-                    theoryEN: '✅ Special case for `==`; strict operator requires same types.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`NaN == NaN` → `false`, а `NaN === NaN` → `true`.',
-                    textEN: '`NaN == NaN` → `false`, while `NaN === NaN` → `true`.',
-                    theoryUK: '❌ В обох випадках порівняння з `NaN` → `false`.',
-                    theoryEN: '❌ In both cases, comparisons with `NaN` are `false`.',
+                    textUK: "'5' - 2 → 3; '5' + 2 → '52'; '5' * 2 → '10'; '5' + true → '5true'; '5' - true → '4'",
+                    textEN: "'5' - 2 → 3; '5' + 2 → '52'; '5' * 2 → '10'; '5' + true → '5true'; '5' - true → '4'",
+                    theoryUK: '❌ Помилка у типах: результати для `-` і `*` — числа, не рядки.',
+                    theoryEN: '❌ Type errors: results of `-` and `*` are numbers, not strings.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`+0 === -0` → `true`.',
-                    textEN: '`+0 === -0` → `true`.',
-                    theoryUK: '✅ У строгій рівності ці значення вважаються рівними.',
-                    theoryEN: '✅ In strict equality these values are equal.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Object.is(+0, -0)` дає те саме, що `+0 === -0`.',
-                    textEN: '`Object.is(+0, -0)` gives the same as `+0 === -0`.',
-                    theoryUK: '❌ `Object.is(+0, -0)` → `false`, на відміну від `===`.',
-                    theoryEN: '❌ `Object.is(+0, -0)` → `false`, unlike `===`.',
-                    isCorrect: false
-                },
-                {
-                    textUK: "`'\\n' == 0` → `true`, тоді як `'\\n' === 0` → `false`.",
-                    textEN: "`'\\n' == 0` → `true`, whereas `'\\n' === 0` → `false`.",
-                    theoryUK: '✅ Пробільний рядок коертується у 0 для `==`; `===` — різні типи.',
-                    theoryEN: '✅ Whitespace string coerces to 0 for `==`; `===` types differ.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`[] === []` → `true`.',
-                    textEN: '`[] === []` → `true`.',
-                    theoryUK: '❌ Різні об’єктні посилання → `false`.',
-                    theoryEN: '❌ Different object references → `false`.',
+                    textUK: "'5' - 2 → 3; '5' + 2 → '52'; '5' * 2 → 10; '5' + true → '51'; '5' - true → 4",
+                    textEN: "'5' - 2 → 3; '5' + 2 → '52'; '5' * 2 → 10; '5' + true → '51'; '5' - true → 4",
+                    theoryUK: "❌ `'5' + true` не `'51'`, бо `true` → `'true'` при конкатенації, а не `'1'`.",
+                    theoryEN: "❌ `'5' + true` isn't `'51'` because `true` becomes `'true'` on concatenation, not `'1'`.",
                     isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Як працює абстрактне відносне порівняння (`<`, `>`, `<=`, `>=`) з рядками, числами, null, undefined, масивами та Date?',
-            textEN: 'How does abstract relational comparison (`<`, `>`, `<=`, `>=`) work with strings, numbers, null, undefined, arrays, and Date?',
+            textUK: 'Як працює неявне приведення до рядка при конкатенації оператором "+" з рядком?',
+            textEN: 'How does implicit string coercion work when using the "+" operator with a string?',
             theoryUK:
-                "### Теорія: абстрактне відносне порівняння\n1) Якщо **обидва — рядки** → лексикографічне порівняння (за кодпоінтами).\n2) Інакше: обидва операнди проходять `ToPrimitive`, далі `ToNumber` і порівнюються як числа.\n- `null` → `+0`.\n- `undefined` → `NaN` → будь-яке порівняння із `NaN` дає `false`.\n- Масив `[x]` → `'x'` → число; масив з кількома елементами → `NaN`.\n- `Date` у відносних порівняннях дає **число** (timestamp), на відміну від `+`, де схиляється до **рядка**.",
+                "### Конкатенація з рядком і неявне приведення\nОператор `+` у JS має **дві** семантики: числове додавання та рядкову конкатенацію. Алгоритм спрощено:\n1. Обчислити лівий і правий операнди та застосувати **ToPrimitive** (з *hint* `default`).\n2. Якщо **будь-який** з примітивів є типу `string`, JS виконує **рядкову конкатенацію**: обидва операнди проходять через **ToString** і зшиваються.\n3. Якщо жоден не є `string`, виконується числова гілка (через **ToNumber**).\n\n> Важливо: навіть якщо один операнд — рядок літерально (наприклад, `'x'`), інший все одно приводиться до примітиву, а потім до рядка.\n\n#### Крайні випадки\n- `null` → `'null'`, `undefined` → `'undefined'` при ToString.\n- `Symbol` **не можна** неявно перетворити на рядок при `+` з рядком — буде `TypeError`. Використовуйте `String(sym)` або `sym.description`.\n- Порядок: спочатку ToPrimitive лівого, потім правого; рішення про конкатенацію приймається після цього.\n\n#### Приклади\n```js\n'hi ' + 3            // 'hi 3'\n'v=' + true         // 'v=true'\n'obj=' + {}         // 'obj=[object Object]'\n'list:' + [1,2]     // 'list:1,2'\n'now:' + new Date() // 'now:' + date.toString()\nSymbol('x') + ''    // TypeError\n```\n",
             theoryEN:
-                "### Theory: abstract relational comparison\n1) If **both are strings** → lexicographic comparison (by code points).\n2) Otherwise: both operands undergo `ToPrimitive`, then `ToNumber`, and are compared as numbers.\n- `null` → `+0`.\n- `undefined` → `NaN` → any comparison with `NaN` is `false`.\n- Array `[x]` → `'x'` → number; multi-element arrays → `NaN`.\n- `Date` in relational comparisons yields a **number** (timestamp); with `+` it typically becomes a **string**.",
-            level: 'middle',
+                "### Concatenation with a string and implicit coercion\nThe `+` operator in JS has **two** meanings: numeric addition and string concatenation. In short:\n1. Evaluate both operands and apply **ToPrimitive** (hint `default`).\n2. If **either** primitive is a `string`, JS performs **string concatenation**: both are passed through **ToString** and joined.\n3. If neither is a `string`, the numeric branch runs (via **ToNumber**).\n\n> Note: even if one operand is a string literal, the other still goes through ToPrimitive and then ToString.\n\n#### Edge cases\n- `null` → `'null'`, `undefined` → `'undefined'` for ToString.\n- `Symbol` **cannot** be implicitly converted to string in `+` with a string — it throws `TypeError`. Use `String(sym)` or `sym.description`.\n- Order: ToPrimitive left, then right; the concatenation decision is made afterwards.\n\n#### Examples\n```js\n'hi ' + 3            // 'hi 3'\n'v=' + true         // 'v=true'\n'obj=' + {}         // 'obj=[object Object]'\n'list:' + [1,2]     // 'list:1,2'\n'now:' + new Date() // 'now:' + date.toString()\nSymbol('x') + ''    // TypeError\n```\n",
             answers: [
                 {
-                    textUK: "`'2' < '10'` → `false` (лексикографічно).",
-                    textEN: "`'2' < '10'` → `false` (lexicographic).",
-                    theoryUK: "✅ Порівнюються посимвольно: `'2'` > `'1'`.",
-                    theoryEN: "✅ Compared by characters: `'2'` > `'1'`.",
+                    textUK: 'Якщо хоча б один операнд — рядок, застосовується конкатенація; інший операнд приводиться до рядка через ToString.',
+                    textEN: 'If at least one operand is a string, concatenation is used; the other operand is converted to string via ToString.',
+                    theoryUK: 'Це вірно: після ToPrimitive, якщо будь-який з операндів має тип `string`, обидва проходять ToString і зшиваються.',
+                    theoryEN: 'Correct: after ToPrimitive, if either operand is of type `string`, both go through ToString and are concatenated.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`2 < '10'` → `true`.",
-                    textEN: "`2 < '10'` → `true`.",
-                    theoryUK: '✅ Рядок приводиться до числа 10.',
-                    theoryEN: '✅ The string coerces to number 10.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`null >= 0` → `true`, а `null > 0` → `false`.',
-                    textEN: '`null >= 0` → `true`, and `null > 0` → `false`.',
-                    theoryUK: '✅ `null` → 0; 0 ≥ 0 істина, 0 > 0 хиба.',
-                    theoryEN: '✅ `null` → 0; 0 ≥ 0 is true, 0 > 0 is false.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`undefined < 1` → `true`.',
-                    textEN: '`undefined < 1` → `true`.',
-                    theoryUK: '❌ `undefined` → `NaN`; порівняння з `NaN` повертають `false`.',
-                    theoryEN: '❌ `undefined` → `NaN`; comparisons with `NaN` return `false`.',
+                    textUK: 'Оператор "+" завжди конкатенує, якщо лівий операнд — рядок; правий не приводиться.',
+                    textEN: 'The "+" operator always concatenates if the left operand is a string; the right one is not coerced.',
+                    theoryUK: 'Невірно: правий операнд **завжди** приводиться до примітиву і далі до рядка при конкатенації.',
+                    theoryEN: 'Incorrect: the right operand is **always** coerced to a primitive and then to string during concatenation.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`[2] > 1` → `true`.',
-                    textEN: '`[2] > 1` → `true`.',
-                    theoryUK: "✅ `[2]` → `'2'` → 2; 2 > 1.",
-                    theoryEN: "✅ `[2]` → `'2'` → 2; 2 > 1.",
+                    textUK: "При конкатенації з рядком `null` → 'null', `undefined` → 'undefined'.",
+                    textEN: "When concatenating with a string, `null` → 'null', `undefined` → 'undefined'.",
+                    theoryUK: "Вірно: ToString(null) дає 'null', ToString(undefined) дає 'undefined'.",
+                    theoryEN: "Correct: ToString(null) yields 'null', ToString(undefined) yields 'undefined'.",
                     isCorrect: true
                 },
                 {
-                    textUK: '`[1,2] < 3` → `true`.',
-                    textEN: '`[1,2] < 3` → `true`.',
-                    theoryUK: "❌ `[1,2]` → `'1,2'` → `NaN`; з `NaN` порівняння → `false`.",
-                    theoryEN: "❌ `[1,2]` → `'1,2'` → `NaN`; comparisons with `NaN` → `false`.",
+                    textUK: "Конкатенація зі `Symbol` працює як з будь-яким іншим типом і дає, наприклад, 'Symbol(x)'.",
+                    textEN: "Concatenation with a `Symbol` works like any other type and yields e.g. 'Symbol(x)'.",
+                    theoryUK: 'Невірно: `Symbol` не можна **неявно** перетворити на рядок у `+`; буде `TypeError`. Потрібно явно `String(sym)`.',
+                    theoryEN: 'Incorrect: `Symbol` cannot be **implicitly** converted to string with `+`; it throws `TypeError`. You must use `String(sym)`.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`new Date(0) < 1` → `true`.',
-                    textEN: '`new Date(0) < 1` → `true`.',
-                    theoryUK: '✅ У relational контексті `Date` → число (0).',
-                    theoryEN: '✅ In relational context `Date` → number (0).',
+                    textUK: 'Навіть якщо один операнд — рядок, інший спочатку проходить ToPrimitive (hint default), а вже потім ToString.',
+                    textEN: 'Even if one operand is a string, the other first goes through ToPrimitive (hint default), then ToString.',
+                    theoryUK: 'Вірно: алгоритм `+` спочатку викликає ToPrimitive для обох операндів, а рішення про конкатенацію приймає після цього.',
+                    theoryEN: 'Correct: the `+` algorithm first applies ToPrimitive to both operands, then decides on concatenation.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`'10' > '2'` → `true`.",
-                    textEN: "`'10' > '2'` → `true`.",
-                    theoryUK: "❌ Лексикографічно `'10'` < `'2'`, тож твердження хибне.",
-                    theoryEN: "❌ Lexicographically `'10'` < `'2'`, so the claim is false.",
-                    isCorrect: false
-                },
-                {
-                    textUK: "`'\\n' <= 0` → `true`.",
-                    textEN: "`'\\n' <= 0` → `true`.",
-                    theoryUK: '✅ Пробільний рядок → 0; 0 ≤ 0 істина.',
-                    theoryEN: '✅ Whitespace string → 0; 0 ≤ 0 is true.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`'abc' >= 0` → `true`.",
-                    textEN: "`'abc' >= 0` → `true`.",
-                    theoryUK: "❌ `'abc'` → `NaN`; порівняння з `NaN` → `false`.",
-                    theoryEN: "❌ `'abc'` → `NaN`; comparison with `NaN` → `false`.",
+                    textUK: 'Порядок перетворень: спочатку ToString обох, а вже потім ToPrimitive.',
+                    textEN: 'Order of conversions: first ToString on both, then ToPrimitive.',
+                    theoryUK: 'Невірно: навпаки — спочатку ToPrimitive, і лише якщо обрано рядкову гілку, застосовується ToString.',
+                    theoryEN: "Incorrect: it's the other way around — ToPrimitive first, then ToString if the string branch is chosen.",
                     isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Як відбувається неявне приведення об’єктів: порядок викликів `Symbol.toPrimitive`, `valueOf`, `toString` і що стається при помилковому результаті?',
-            textEN: 'How does implicit coercion of objects work: the order of `Symbol.toPrimitive`, `valueOf`, `toString` calls, and what happens with invalid results?',
+            textUK: 'Як об’єкти (наприклад `{}`, `[]`, `Date`) перетворюються на рядки при неявному приведенні?',
+            textEN: 'How are objects (e.g., `{}`, `[]`, `Date`) converted to strings during implicit coercion?',
             theoryUK:
-                "### Теорія: `ToPrimitive(obj, hint)`\n1) Якщо є `obj[Symbol.toPrimitive]`, викликається з підказкою (`'number'|'string'|'default'`).\n2) Інакше викликається `valueOf()`; якщо повертає **примітив** — він і береться.\n3) Інакше викликається `toString()`.\nЯкщо жоден крок не повернув примітив — **`TypeError`**. Якщо повернуто `Symbol` там, де потрібні число/рядок — також **`TypeError`**.",
+                "### Перетворення об’єктів у рядок (ToString через ToPrimitive)\n1. Спочатку викликається **ToPrimitive(input, hint)**. Для `+` (та більшості контекстів) hint = `default`.\n2. Для **звичайних об’єктів** (Object, Array, Function) при hint `string` або `default` порядок — спершу `toString()`, потім `valueOf()`. Те, що повертає **примітив**, і буде використано.\n3. Якщо після ToPrimitive отримали не `string`, але конкатенація з рядком вимагає рядка, застосовується **ToString** до примітиву.\n\n#### Типові об’єкти\n- **Plain Object (`{}`):** `{}.toString()` за замовчуванням → `\"[object Object]\"`.\n- **Array (`[]`):** `[].toString()` виконує `join(',')` над елементами з ToString для кожного → `''` для порожнього масиву, `'1,2'` для `[1,2]`, пропуски дають порожні сегменти (`[1,,3]` → `'1,,3'`).\n- **Date:** має *string-preferred* поведінку навіть для hint `default`: `new Date().toString()` → людський формат (не числовий timestamp).\n- **Function:** `fn.toString()` → текст подання функції.\n- **Symbol:** сам по собі об’єкт-примітив; `ToString(Symbol())` кидає `TypeError`, окрім явного `String(sym)` або `sym.toString()`.\n- **Власний `Symbol.toPrimitive`:** якщо об’єкт має метод `[Symbol.toPrimitive](hint)`, він має **пріоритет** над `toString`/`valueOf`.\n\n#### Приклади\n```js\nString({})            // \"[object Object]\"\nString([])            // ''\nString([1,2,3])       // '1,2,3'\nString(new Date(0))   // 'Thu Jan 01 1970 ...' (локалізовано)\n({ toString(){return 'X';} }) + ''   // 'X'\n({ valueOf(){return 7;} }) + ''      // '7' (через ToPrimitive → 7, потім ToString)\n({ [Symbol.toPrimitive](){return 'Z';} }) + '' // 'Z'\n```\n",
             theoryEN:
-                "### Theory: `ToPrimitive(obj, hint)`\n1) If `obj[Symbol.toPrimitive]` exists, call it with the hint (`'number'|'string'|'default'`).\n2) Else call `valueOf()`; if it returns a **primitive**, use it.\n3) Else call `toString()`.\nIf none returns a primitive → **`TypeError`**. Returning a `Symbol` where a number/string is required also throws **`TypeError`**.",
-            level: 'middle',
+                "### Converting objects to string (ToString via ToPrimitive)\n1. First, **ToPrimitive(input, hint)** runs. For `+` (and most contexts) the hint is `default`.\n2. For **ordinary objects** (Object, Array, Function) with hint `string` or `default`, the order is `toString()` first, then `valueOf()`. Whichever returns a **primitive** is used.\n3. If the primitive is not a string but concatenation with a string is happening, **ToString** is applied to that primitive.\n\n#### Typical objects\n- **Plain Object (`{}`):** default `{}.toString()` → `\"[object Object]\"`.\n- **Array (`[]`):** `[].toString()` performs `join(',')` over elements using ToString for each → `''` for empty, `'1,2'` for `[1,2]`, holes produce empty segments (`[1,,3]` → `'1,,3'`).\n- **Date:** has *string-preferred* behavior even with hint `default`: `new Date().toString()` → human-readable format (not a numeric timestamp).\n- **Function:** `fn.toString()` → source-like string.\n- **Symbol:** a primitive; `ToString(Symbol())` throws `TypeError` unless you explicitly call `String(sym)` or `sym.toString()`.\n- **Custom `Symbol.toPrimitive`:** if present, `[Symbol.toPrimitive](hint)` takes **precedence** over `toString`/`valueOf`.\n\n#### Examples\n```js\nString({})            // \"[object Object]\"\nString([])            // ''\nString([1,2,3])       // '1,2,3'\nString(new Date(0))   // 'Thu Jan 01 1970 ...' (localized)\n({ toString(){return 'X';} }) + ''   // 'X'\n({ valueOf(){return 7;} }) + ''      // '7' (via ToPrimitive → 7, then ToString)\n({ [Symbol.toPrimitive](){return 'Z';} }) + '' // 'Z'\n```\n",
             answers: [
                 {
-                    textUK: "`({ [Symbol.toPrimitive]: () => 'X' }) + 'Y'` → `'XY'`.",
-                    textEN: "`({ [Symbol.toPrimitive]: () => 'X' }) + 'Y'` → `'XY'`.",
-                    theoryUK: '✅ Результат із `@@toPrimitive` — примітивний рядок; далі конкатенація.',
-                    theoryEN: '✅ `@@toPrimitive` returns a primitive string; then concatenation.',
+                    textUK: '`{}` за замовчуванням дає рядок "[object Object]".',
+                    textEN: '`{}` by default yields the string "[object Object]".',
+                    theoryUK: 'Вірно: `Object.prototype.toString` повертає такий тег для звичайного об’єкта.',
+                    theoryEN: 'Correct: `Object.prototype.toString` returns that tag for a plain object.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`({ valueOf: () => 2 }) * 3` → `6`.',
-                    textEN: '`({ valueOf: () => 2 }) * 3` → `6`.',
-                    theoryUK: '✅ `valueOf()` повертає 2 (примітив), відбувається числова операція.',
-                    theoryEN: '✅ `valueOf()` returns 2 (primitive), numeric operation proceeds.',
+                    textUK: "`[]` перетворюється на порожній рядок, а `[1,2]` → '1,2' завдяки `Array.prototype.toString` (це `join(',')`).",
+                    textEN: "`[]` becomes an empty string, and `[1,2]` → '1,2' via `Array.prototype.toString` (i.e., `join(',')`).",
+                    theoryUK: "Вірно: масиви використовують `join(',')`; пропуски створюють порожні сегменти.",
+                    theoryEN: "Correct: arrays use `join(',')`; holes produce empty segments.",
                     isCorrect: true
                 },
                 {
-                    textUK: "`({ valueOf: () => ({}), toString: () => '7' }) - 5` → `2`.",
-                    textEN: "`({ valueOf: () => ({}), toString: () => '7' }) - 5` → `2`.",
-                    theoryUK: '✅ `valueOf` відкидається (повертає об’єкт), береться `toString()`.',
-                    theoryEN: '✅ `valueOf` is ignored (returns object), `toString()` is used.',
+                    textUK: '`new Date()` при неявному приведенні до рядка повертає локалізований людський формат через `toString()`.',
+                    textEN: '`new Date()` when implicitly converted to string returns a localized human-readable format via `toString().`',
+                    theoryUK: 'Вірно: об’єкти `Date` мають перевагу рядкового подання навіть для hint `default`.',
+                    theoryEN: 'Correct: `Date` objects are string-preferred even under the `default` hint.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`({ toString: () => ({}) }) + 1` кидає `TypeError`.',
-                    textEN: '`({ toString: () => ({}) }) + 1` throws `TypeError`.',
-                    theoryUK: '✅ Жоден метод не повернув примітив — виникає помилка.',
-                    theoryEN: '✅ No method returned a primitive — an error is thrown.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`({ [Symbol.toPrimitive]: () => Symbol('s') }) + 1` → `NaN`.",
-                    textEN: "`({ [Symbol.toPrimitive]: () => Symbol('s') }) + 1` → `NaN`.",
-                    theoryUK: '❌ Повернення `Symbol` у числовому контексті заборонене → `TypeError`.',
-                    theoryEN: '❌ Returning a `Symbol` in numeric context is forbidden → `TypeError`.',
+                    textUK: 'Якщо об’єкт має `valueOf()` що повертає число, при конкатенації з рядком результатом буде **числове додавання**, а не рядок.',
+                    textEN: 'If an object has `valueOf()` returning a number, concatenating with a string performs **numeric addition**, not a string result.',
+                    theoryUK: 'Невірно: наявність рядка в операції змусить гілку **конкатенації**; число спершу отримаємо з ToPrimitive, але потім ToString і зшивання.',
+                    theoryEN:
+                        'Incorrect: the presence of a string forces the **concatenation** branch; the number is obtained via ToPrimitive, then ToString and joined.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`({}) + ({})` завжди дорівнює `'[object Object][object Object]'`.",
-                    textEN: "`({}) + ({})` is always `'[object Object][object Object]'`.",
-                    theoryUK: '❌ Залежить від синтаксичного контексту; у виразі з дужками так, але «завжди» — некоректно.',
-                    theoryEN: '❌ Depends on parsing context; with parentheses yes, but not “always”.',
-                    isCorrect: false
-                },
-                {
-                    textUK: '`Number(new Date(0))` → `0`.',
-                    textEN: '`Number(new Date(0))` → `0`.',
-                    theoryUK: '✅ Явне перетворення використовує `valueOf()` дати (timestamp).',
-                    theoryEN: '✅ Explicit conversion uses date’s `valueOf()` (timestamp).',
+                    textUK: '`Symbol.toPrimitive` (якщо оголошений) має пріоритет і може відразу повернути рядок для конкатенації.',
+                    textEN: '`Symbol.toPrimitive` (if defined) takes precedence and can directly return a string for concatenation.',
+                    theoryUK: 'Вірно: специфікація спочатку перевіряє `[Symbol.toPrimitive]`, і лише потім `toString`/`valueOf`.',
+                    theoryEN: 'Correct: the spec checks `[Symbol.toPrimitive]` first, then falls back to `toString`/`valueOf`.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`String({})` → `'[object Object]'`.",
-                    textEN: "`String({})` → `'[object Object]'`.",
-                    theoryUK: '✅ Дефолтна рядкова репрезентація об’єкта.',
-                    theoryEN: '✅ Default string representation of an object.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`({ valueOf: () => 0 }) || 'x'` повертає `'x'`.",
-                    textEN: "`({ valueOf: () => 0 }) || 'x'` returns `'x'`.",
-                    theoryUK: '❌ Логічні оператори не коерцюють об’єкти до числа; об’єкт truthy, повернеться сам об’єкт.',
-                    theoryEN: '❌ Logical operators don’t coerce objects to number; objects are truthy, it returns the object.',
+                    textUK: "`Symbol` без явного `String(sym)` або `sym.toString()` завжди тихо перетворюється на 'Symbol(...)' при конкатенації.",
+                    textEN: "A `Symbol` without explicit `String(sym)` or `sym.toString()` silently becomes 'Symbol(...)' during concatenation.",
+                    theoryUK: 'Невірно: таке перетворення кидає `TypeError`; символи не мають неявного ToString у `+`.',
+                    theoryEN: 'Incorrect: that conversion throws `TypeError`; symbols lack implicit ToString with `+`.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`({ toString: () => '2' }) - '1'` → `1`.",
-                    textEN: "`({ toString: () => '2' }) - '1'` → `1`.",
-                    theoryUK: "✅ `-` змушує обидва операнди перейти до числа: `'2'` → 2, `'1'` → 1.",
-                    theoryEN: "✅ `-` forces numeric coercion: `'2'` → 2, `'1'` → 1.",
+                    textUK: 'Для звичайних об’єктів при hint `string` порядок спроб — спочатку `toString`, потім `valueOf`.',
+                    textEN: 'For ordinary objects with hint `string`, the order is `toString` first, then `valueOf`.',
+                    theoryUK: 'Вірно: це стандартний порядок для string-preferred перетворення.',
+                    theoryEN: "Correct: that's the standard order for string-preferred conversion.",
                     isCorrect: true
                 }
-            ]
+            ],
+            level: 'middle'
         },
         {
-            textUK: 'Як працює ToBoolean (truthy/falsy) і чому логічні оператори (&&, ||, ??) повертають значення, а не true/false?',
-            textEN: 'How does ToBoolean (truthy/falsy) work and why do logical operators (&&, ||, ??) return values instead of true/false?',
+            textUK: "Які значення вважаються 'falsy' у JavaScript?",
+            textEN: "Which values are considered 'falsy' in JavaScript?",
             theoryUK:
-                "### Теорія: ToBoolean і повернення операндів\n**Falsy** значення: `false`, `0`, `-0`, `0n`, `''` (порожній рядок), `null`, `undefined`, `NaN`. Усі об’єкти (включно з `new Boolean(false)`) — **truthy**.\n\n**Чому `&&`/`||`/`??` повертають значення?**\n- `a && b` повертає **перший falsy** операнд, або **останній** (якщо всі truthy).\n- `a || b` повертає **перший truthy** операнд.\n- `a ?? b` повертає `a`, **крім** випадків коли `a` є `null` або `undefined`; тоді повертає `b`. Це **не** те саме, що `||`, бо `||` спрацьовує на будь-яке falsy (наприклад, `0`, `''`).",
+                '### Приведення до логічного типу (Boolean) у JavaScript\nУ JavaScript будь-яке значення може бути приведене до логічного типу — `true` або `false`. Це відбувається неявно (наприклад, в умовах `if`, `while`) або явно — за допомогою конструкції `Boolean(value)` чи подвійного заперечення `!!value`.\n\n**Falsy значення** — це значення, які при приведенні до логічного типу дають `false`.\n\nДо `falsy` значень належать:\n- `false`\n- `0` і `-0`\n- `""` (порожній рядок)\n- `null`\n- `undefined`\n- `NaN`\n\nУсі інші значення є **truthy**, тобто перетворюються у `true`.',
             theoryEN:
-                "### Theory: ToBoolean and returning operands\n**Falsy** values: `false`, `0`, `-0`, `0n`, `''` (empty string), `null`, `undefined`, `NaN`. All objects (including `new Boolean(false)`) are **truthy**.\n\n**Why do `&&`/`||`/`??` return values?**\n- `a && b` returns the **first falsy** operand, or the **last** one if all are truthy.\n- `a || b` returns the **first truthy** operand.\n- `a ?? b` returns `a` unless `a` is `null` or `undefined`; then it returns `b`. This is **not** the same as `||` because `||` triggers on any falsy (e.g., `0`, `''`).",
-            level: 'middle',
+                '### Type coercion to Boolean in JavaScript\nIn JavaScript, any value can be coerced into a Boolean — either `true` or `false`. This happens implicitly (e.g., inside `if`, `while` conditions) or explicitly using `Boolean(value)` or double negation `!!value`.\n\n**Falsy values** are those that become `false` when converted to Boolean.\n\nThe following values are considered falsy:\n- `false`\n- `0` and `-0`\n- `""` (empty string)\n- `null`\n- `undefined`\n- `NaN`\n\nAll other values are **truthy**, meaning they convert to `true`.',
             answers: [
                 {
-                    textUK: '`Boolean(new Boolean(false))` → `true`.',
-                    textEN: '`Boolean(new Boolean(false))` → `true`.',
-                    theoryUK: '✅ Об’єкт-обгортка — завжди truthy, навіть якщо всередині false.',
-                    theoryEN: '✅ Wrapper objects are truthy even if they wrap false.',
+                    textUK: "false, 0, '', null, undefined, NaN",
+                    textEN: "false, 0, '', null, undefined, NaN",
+                    theoryUK: '✅ Це правильна відповідь. Саме ці значення вважаються *falsy* у JavaScript, бо при приведенні до логічного типу вони стають `false`.',
+                    theoryEN: '✅ Correct. These are the values considered *falsy* in JavaScript because they evaluate to `false` when coerced to Boolean.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`[] && 'x'` → `'x'`.",
-                    textEN: "`[] && 'x'` → `'x'`.",
-                    theoryUK: '✅ Порожній масив — truthy; `&&` поверне другий операнд.',
-                    theoryEN: '✅ Empty array is truthy; `&&` returns the second operand.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`0 || 'x'` → `'x'`.",
-                    textEN: "`0 || 'x'` → `'x'`.",
-                    theoryUK: '✅ `0` — falsy; `||` повертає перший truthy операнд.',
-                    theoryEN: '✅ `0` is falsy; `||` returns the first truthy operand.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`0 ?? 'x'` → `'x'`.",
-                    textEN: "`0 ?? 'x'` → `'x'`.",
-                    theoryUK: '❌ `??` не реагує на `0`; повертається `0`.',
-                    theoryEN: '❌ `??` does not trigger on `0`; it returns `0`.',
+                    textUK: "false, 0, '', null, undefined, NaN, []",
+                    textEN: "false, 0, '', null, undefined, NaN, []",
+                    theoryUK: "❌ Масив `[]` є truthy значенням, навіть якщо він порожній. Наприклад, `if ([]) console.log('yes')` виконається.",
+                    theoryEN: "❌ The array `[]` is truthy, even when empty. For example, `if ([]) console.log('yes')` executes.",
                     isCorrect: false
                 },
                 {
-                    textUK: "`null ?? 'x'` → `'x'`.",
-                    textEN: "`null ?? 'x'` → `'x'`.",
-                    theoryUK: '✅ `null` активує `??`, тож повертається правий операнд.',
-                    theoryEN: '✅ `null` triggers `??`, so the right operand is returned.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`NaN || 'a'` → `NaN`.",
-                    textEN: "`NaN || 'a'` → `NaN`.",
-                    theoryUK: "❌ `NaN` — falsy; `||` поверне `'a'`.",
-                    theoryEN: "❌ `NaN` is falsy; `||` returns `'a'`.",
+                    textUK: "false, 0, '', null, undefined, NaN, {}",
+                    textEN: "false, 0, '', null, undefined, NaN, {}",
+                    theoryUK: '❌ Об’єкт `{}` завжди truthy, навіть якщо він порожній. Умова `if ({})` завжди повертає `true`.',
+                    theoryEN: '❌ Objects `{}` are always truthy, even when empty. The condition `if ({})` always returns `true`.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`({}) || 0` → `({})` (сам об’єкт).',
-                    textEN: '`({}) || 0` → `({})` (the object itself).',
-                    theoryUK: '✅ Об’єкт — truthy; `||` повертає перший truthy.',
-                    theoryEN: '✅ Objects are truthy; `||` returns the first truthy.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`false ?? 'x'` → `'x'`.",
-                    textEN: "`false ?? 'x'` → `'x'`.",
-                    theoryUK: '❌ `false` не є `null` або `undefined`; результат — `false`.',
-                    theoryEN: '❌ `false` is not `null`/`undefined`; the result is `false`.',
+                    textUK: "false, 0, '', null, undefined",
+                    textEN: "false, 0, '', null, undefined",
+                    theoryUK: '❌ Тут пропущено `NaN`. `NaN` також є falsy значенням.',
+                    theoryEN: '❌ `NaN` is missing here. It is also a falsy value.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`0n && 'y'` → `0n`.",
-                    textEN: "`0n && 'y'` → `0n`.",
-                    theoryUK: '✅ `0n` — єдиний falsy серед BigInt; `&&` повертає перший falsy.',
-                    theoryEN: '✅ `0n` is the only falsy BigInt; `&&` returns the first falsy.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`'' || 0` → `0`.",
-                    textEN: "`'' || 0` → `0`.",
-                    theoryUK: '✅ Порожній рядок — falsy; `||` повертає 0 (truthy? ні, але це перший не-falsy серед операндів).',
-                    theoryEN: '✅ Empty string is falsy; `||` returns 0 (the first non-falsy among operands).',
-                    isCorrect: true
+                    textUK: "false, 0, '', null, undefined, NaN, Symbol()",
+                    textEN: "false, 0, '', null, undefined, NaN, Symbol()",
+                    theoryUK: '❌ `Symbol()` є truthy значенням, воно не може бути перетворене на `false`.',
+                    theoryEN: '❌ `Symbol()` is truthy and does not evaluate to `false`.',
+                    isCorrect: false
                 }
-            ]
+            ],
+            level: 'junior'
         },
         {
-            textUK: 'Як відбувається коерція у шаблонних літералах ${expr} і чому з Symbol виникає помилка?',
-            textEN: 'How does coercion work in template literals ${expr}, and why does Symbol cause an error?',
+            textUK: 'Які результати повертає подвійне заперечення (!!value) для різних типів даних?',
+            textEN: 'What results does the double negation (!!value) return for different data types?',
             theoryUK:
-                "### Теорія: інтерполяція в шаблонних літералах\nУ виразі `` `...${expr}...` `` виконується **`ToString(expr)`**. Більшість типів успішно перетворюються у рядок: числа, `null` (`'null'`), `undefined` (`'undefined'`), масиви (`'1,2'`), об’єкти (`'[object Object]'`, якщо не перевизначено `toString`).\n\n**Важливо:** `Symbol` **не можна** неявно перетворювати до рядка. Інтерполяція `Symbol` без явного `String(sym)` призводить до `TypeError`.",
+                '### Подвійне заперечення `!!value`\n`!!` — це короткий спосіб явно привести будь-яке значення до логічного типу в JavaScript.\n\n- Перше `!` перетворює значення на булеве і заперечує його (тобто `true → false`, `false → true`).\n- Друге `!` заперечує результат ще раз, отримуючи справжнє булеве значення без зміни логічного змісту.\n\n**Приклади:**\n```js\n!!0         // false\n!!""        // false\n!!null      // false\n!!undefined // false\n!!NaN       // false\n!!false     // false\n!!1         // true\n!!"hello"   // true\n!![]        // true\n!!{}        // true\n```\n\nТаким чином, `!!value` — це еквівалент `Boolean(value)`, але часто використовується в коді для короткості.',
             theoryEN:
-                "### Theory: interpolation in template literals\nIn `` `...${expr}...` ``, the engine performs **`ToString(expr)`**. Most types convert to strings: numbers, `null` (`'null'`), `undefined` (`'undefined'`), arrays (`'1,2'`), objects (`'[object Object]'` unless `toString` is overridden).\n\n**Important:** `Symbol` **cannot** be implicitly converted to string. Interpolating a `Symbol` without `String(sym)` throws `TypeError`.",
-            level: 'middle',
+                '### Double negation `!!value`\n`!!` is a shorthand way to explicitly convert any value to a Boolean in JavaScript.\n\n- The first `!` converts the value to a Boolean and inverts it (`true → false`, `false → true`).\n- The second `!` inverts the result again, producing the actual Boolean equivalent of the value.\n\n**Examples:**\n```js\n!!0         // false\n!!""        // false\n!!null      // false\n!!undefined // false\n!!NaN       // false\n!!false     // false\n!!1         // true\n!!"hello"   // true\n!![]        // true\n!!{}        // true\n```\n\nThus, `!!value` is equivalent to `Boolean(value)`, but often used for brevity in code.',
             answers: [
                 {
-                    textUK: "`` `x=${1}` `` → `'x=1'`.",
-                    textEN: "`` `x=${1}` `` → `'x=1'`.",
-                    theoryUK: '✅ Число перетворюється на рядок.',
-                    theoryEN: '✅ Number converts to string.',
+                    textUK: "!!0 → false, !!'' → false, !![] → true, !!{} → true, !!null → false",
+                    textEN: "!!0 → false, !!'' → false, !![] → true, !!{} → true, !!null → false",
+                    theoryUK: '✅ Це правильна відповідь. `!!` повертає логічний еквівалент значення, а порожні об’єкти та масиви завжди truthy.',
+                    theoryEN: '✅ Correct. `!!` returns the Boolean equivalent of a value, and empty objects/arrays are always truthy.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`` `x=${null}` `` → `'x=null'`.",
-                    textEN: "`` `x=${null}` `` → `'x=null'`.",
-                    theoryUK: "✅ `String(null)` → `'null'`.",
-                    theoryEN: "✅ `String(null)` → `'null'`.",
-                    isCorrect: true
-                },
-                {
-                    textUK: "`` `x=${undefined}` `` → `'x=undefined'`.",
-                    textEN: "`` `x=${undefined}` `` → `'x=undefined'`.",
-                    theoryUK: "✅ `String(undefined)` → `'undefined'`.",
-                    theoryEN: "✅ `String(undefined)` → `'undefined'`.",
-                    isCorrect: true
-                },
-                {
-                    textUK: "`` `x=${[1,2]}` `` → `'x=1,2'`.",
-                    textEN: "`` `x=${[1,2]}` `` → `'x=1,2'`.",
-                    theoryUK: '✅ Масив перетворюється через `toString()`.',
-                    theoryEN: '✅ Array converts via `toString()`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`` `x=${{}}` `` → `'x=[object Object]'`.",
-                    textEN: "`` `x=${{}}` `` → `'x=[object Object]'`.",
-                    theoryUK: '✅ Дефолтний `toString` об’єкта.',
-                    theoryEN: '✅ Default object `toString`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`` `x=${Symbol('s')}` `` → `'x=Symbol(s)'`.",
-                    textEN: "`` `x=${Symbol('s')}` `` → `'x=Symbol(s)'`.",
-                    theoryUK: '❌ Інтерполяція `Symbol` без `String()` кидає `TypeError`.',
-                    theoryEN: '❌ Interpolating `Symbol` without `String()` throws `TypeError`.',
+                    textUK: "!!0 → false, !!'' → false, !![] → false, !!{} → false, !!null → false",
+                    textEN: "!!0 → false, !!'' → false, !![] → false, !!{} → false, !!null → false",
+                    theoryUK: '❌ Неправильно. Порожні масиви `[]` та об’єкти `{}` — truthy, тому `!![]` і `!!{}` повертають `true`.',
+                    theoryEN: '❌ Incorrect. Empty arrays `[]` and objects `{}` are truthy, so `!![]` and `!!{}` return `true`.',
                     isCorrect: false
                 },
                 {
-                    textUK: "`` `x=${String(Symbol('s'))}` `` → `'x=Symbol(s)'`.",
-                    textEN: "`` `x=${String(Symbol('s'))}` `` → `'x=Symbol(s)'`.",
-                    theoryUK: '✅ Явне перетворення робить інтерполяцію безпечною.',
-                    theoryEN: '✅ Explicit conversion makes interpolation safe.',
+                    textUK: "!!0 → true, !!'' → false, !![] → true, !!{} → true, !!null → false",
+                    textEN: "!!0 → true, !!'' → false, !![] → true, !!{} → true, !!null → false",
+                    theoryUK: '❌ `0` є falsy, тому `!!0` завжди дорівнює `false`.',
+                    theoryEN: '❌ `0` is falsy, so `!!0` always equals `false`.',
+                    isCorrect: false
+                },
+                {
+                    textUK: "!!undefined → false, !!NaN → false, !!'text' → true, !![] → true",
+                    textEN: "!!undefined → false, !!NaN → false, !!'text' → true, !![] → true",
+                    theoryUK: '✅ Усі значення відображають правильну логіку приведення до логічного типу.',
+                    theoryEN: '✅ All values correctly reflect Boolean coercion rules.',
                     isCorrect: true
                 },
                 {
-                    textUK: "`` `x=${{ toString(){ return 'ok' }}}` `` → `'x=ok'`.",
-                    textEN: "`` `x=${{ toString(){ return 'ok' }}}` `` → `'x=ok'`.",
-                    theoryUK: '✅ Користувацький `toString` використовується при `ToString`.',
-                    theoryEN: '✅ Custom `toString` is used during `ToString`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`` `x=${{ [Symbol.toPrimitive](){ return 2 }}}` `` → `'x=2'`.",
-                    textEN: "`` `x=${{ [Symbol.toPrimitive](){ return 2 }}}` `` → `'x=2'`.",
-                    theoryUK: '✅ Повернене число конвертується у рядок.',
-                    theoryEN: '✅ Returned number converts to string.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`` `x=${true}` `` → `'x=true'`.",
-                    textEN: "`` `x=${true}` `` → `'x=true'`.",
-                    theoryUK: '✅ Boolean перетворюється рядком `"true"`/`"false"`.',
-                    theoryEN: '✅ Boolean converts to the string `"true"`/`"false"`.',
+                    textUK: '!!false → false, !!true → true, !!0 → false, !!1 → true',
+                    textEN: '!!false → false, !!true → true, !!0 → false, !!1 → true',
+                    theoryUK: '✅ Ці приклади демонструють базову поведінку `!!` для чисел і булевих значень.',
+                    theoryEN: '✅ These examples correctly show the `!!` behavior for numbers and booleans.',
                     isCorrect: true
                 }
-            ]
+            ],
+            level: 'junior'
         },
         {
-            textUK: 'Які особливості неявних приведень для BigInt (арифметика з Number, унарний +, порівняння, Boolean)?',
-            textEN: 'What are the specifics of implicit coercion for BigInt (arithmetic with Number, unary +, comparisons, Boolean)?',
+            textUK: 'Що відбувається при порівнянні null і undefined з іншими типами у JavaScript?',
+            textEN: 'What happens when comparing null and undefined with other types in JavaScript?',
             theoryUK:
-                '### Теорія: BigInt і коерції\n- Змішана **арифметика** `Number` з `BigInt` **заборонена** → `TypeError` (`1n + 1`).\n- Унарний `+` для `BigInt` **заборонений** → `TypeError` (`+1n`).\n- Порівняння: `1n == 1` → `true` (абстрактна рівність може порівнювати), але `1n === 1` → `false` (типи різні). Відносні порівняння (`<`, `>`) між `Number` і `BigInt` дозволені.\n- `Boolean(0n)` → `false`, `Boolean(1n)` → `true`.',
+                '### Порівняння `null` та `undefined` у JavaScript\n\nПоведінка `null` і `undefined` при порівнянні відрізняється залежно від того, чи використовується оператор **строгого (`===`)** чи **нестрогого (`==`)** порівняння.\n\n#### 🔹 Оператор `==` (нестроге порівняння)\n- `null == undefined` → `true`\n- `null` і `undefined` **не рівні жодному іншому типу**.\n  ```js\n  null == 0        // false\n  undefined == 0   // false\n  null == false    // false\n  undefined == false // false\n  ```\n\n#### 🔹 Оператор `===` (строге порівняння)\n- `null === undefined` → `false` (різні типи)\n- `null === null` → `true`\n- `undefined === undefined` → `true`\n\n#### 💡 Висновок\n`null` та `undefined` у нестрогому порівнянні рівні **тільки між собою**, а в строгому — **ніколи**, бо мають різні типи.',
             theoryEN:
-                '### Theory: BigInt and coercions\n- Mixed **arithmetic** between `Number` and `BigInt` is **forbidden** → `TypeError` (`1n + 1`).\n- Unary `+` on `BigInt` is **forbidden** → `TypeError` (`+1n`).\n- Comparisons: `1n == 1` → `true` (abstract equality may compare), but `1n === 1` → `false` (types differ). Relational comparisons (`<`, `>`) between `Number` and `BigInt` are allowed.\n- `Boolean(0n)` → `false`, `Boolean(1n)` → `true`.',
-            level: 'middle',
+                '### Comparing `null` and `undefined` in JavaScript\n\nThe behavior of `null` and `undefined` differs depending on whether **strict (`===`)** or **loose (`==`)** comparison is used.\n\n#### 🔹 `==` (loose comparison)\n- `null == undefined` → `true`\n- Both are **not equal to any other value**:\n  ```js\n  null == 0        // false\n  undefined == 0   // false\n  null == false    // false\n  undefined == false // false\n  ```\n\n#### 🔹 `===` (strict comparison)\n- `null === undefined` → `false`\n- `null === null` → `true`\n- `undefined === undefined` → `true`\n\n#### 💡 Conclusion\n`null` and `undefined` are equal only to each other in loose comparison, and never in strict comparison since they have different types.',
             answers: [
                 {
-                    textUK: '`1n + 2n` → `3n`.',
-                    textEN: '`1n + 2n` → `3n`.',
-                    theoryUK: '✅ Чиста арифметика BigInt дозволена.',
-                    theoryEN: '✅ Pure BigInt arithmetic is allowed.',
+                    textUK: '`null == undefined` → true; з будь-якими іншими типами — false',
+                    textEN: '`null == undefined` → true; false for all other types',
+                    theoryUK: '✅ Це правильна відповідь. `null` і `undefined` рівні лише між собою у нестрогому порівнянні.',
+                    theoryEN: '✅ Correct. `null` and `undefined` are only equal to each other in loose comparison.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`1n + 1` → `2n`.',
-                    textEN: '`1n + 1` → `2n`.',
-                    theoryUK: '❌ Змішана арифметика Number/BigInt → `TypeError`.',
-                    theoryEN: '❌ Mixed Number/BigInt arithmetic → `TypeError`.',
+                    textUK: "`null == 0` → true, бо обидва 'порожні' значення",
+                    textEN: "`null == 0` → true because both are 'empty' values",
+                    theoryUK: '❌ Ні, `null == 0` → `false`. JavaScript не вважає `null` числовим значенням.',
+                    theoryEN: '❌ No, `null == 0` is `false`. JavaScript does not coerce `null` to a number in this comparison.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`1n == 1` → `true`.',
-                    textEN: '`1n == 1` → `true`.',
-                    theoryUK: '✅ Абстрактна рівність дозволяє таке порівняння.',
-                    theoryEN: '✅ Abstract equality allows this comparison.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`1n === 1` → `false`.',
-                    textEN: '`1n === 1` → `false`.',
-                    theoryUK: '✅ Типи різні: BigInt vs Number.',
-                    theoryEN: '✅ Types differ: BigInt vs Number.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`+1n` → `1`.',
-                    textEN: '`+1n` → `1`.',
-                    theoryUK: '❌ Унарний `+` для BigInt заборонений → `TypeError`.',
-                    theoryEN: '❌ Unary `+` on BigInt is forbidden → `TypeError`.',
+                    textUK: '`undefined == 0` → true',
+                    textEN: '`undefined == 0` → true',
+                    theoryUK: '❌ Неправильно. `undefined` не рівне жодному числу — `undefined == 0` → `false`.',
+                    theoryEN: '❌ Incorrect. `undefined` equals no number — `undefined == 0` → `false`.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`Boolean(0n)` → `false`.',
-                    textEN: '`Boolean(0n)` → `false`.',
-                    theoryUK: '✅ Єдиний falsy серед BigInt — `0n`.',
-                    theoryEN: '✅ The only falsy BigInt is `0n`.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`1n < 2` → `true`.',
-                    textEN: '`1n < 2` → `true`.',
-                    theoryUK: '✅ Відносні порівняння Number/BigInt дозволені.',
-                    theoryEN: '✅ Relational comparisons Number/BigInt are allowed.',
-                    isCorrect: true
-                },
-                {
-                    textUK: "`1n + '1'` → `'11'`.",
-                    textEN: "`1n + '1'` → `'11'`.",
-                    theoryUK: '❌ `+` із BigInt і рядком не виконує конкатенацію — буде `TypeError`.',
-                    theoryEN: '❌ `+` with BigInt and string does not concatenate — it throws `TypeError`.',
-                    isCorrect: false
-                },
-                {
-                    textUK: '`Number(1n)` → `1`.',
-                    textEN: '`Number(1n)` → `1`.',
-                    theoryUK: '✅ Явне перетворення дозволене.',
-                    theoryEN: '✅ Explicit conversion is allowed.',
-                    isCorrect: true
-                },
-                {
-                    textUK: '`Boolean(1n)` → `false`.',
-                    textEN: '`Boolean(1n)` → `false`.',
-                    theoryUK: '❌ Ненульовий BigInt — truthy; результат `true`.',
-                    theoryEN: '❌ Non-zero BigInt is truthy; the result is `true`.',
+                    textUK: '`null === undefined` → true',
+                    textEN: '`null === undefined` → true',
+                    theoryUK: '❌ У строгому порівнянні типи не співпадають, тому результат `false`.',
+                    theoryEN: '❌ In strict comparison types differ, so the result is `false`.',
                     isCorrect: false
                 }
-            ]
+            ],
+            level: 'middle'
+        },
+        {
+            textUK: 'Як працює неявне приведення типів у виразах з об’єктами: [] + [], [] + {}, {} + [], {} + {}?',
+            textEN: 'How does implicit type coercion work in expressions with objects: [] + [], [] + {}, {} + [], {} + {}?',
+            theoryUK:
+                "### Неявне приведення об’єктів у JavaScript\nКоли об’єкти беруть участь в операціях, JavaScript намагається привести їх до примітивів через **`toPrimitive`**, **`valueOf`** або **`toString`**.\n\n#### 🔹 Приклад 1: `[] + []`\n- Кожен масив перетворюється на порожній рядок через `[].toString()` → `''`\n- `'' + ''` → `''`\n\n#### 🔹 Приклад 2: `[] + {}`\n- `[]` → `''`\n- `{}` → `'[object Object]'`\n- Результат: `'' + '[object Object]'` → `'[object Object]'`\n\n#### 🔹 Приклад 3: `{} + []`\n- Якщо код інтерпретується як блок `{}` і вираз `+[]`, то результат — `0` (унарний плюс перетворює масив на число → `0`).\n- Якщо ж написано `( {} + [] )`, тоді результат `'[object Object]'`.\n\n#### 🔹 Приклад 4: `{} + {}`\n- Аналогічно: якщо інтерпретується як блок, результат `NaN`, інакше `'[object Object][object Object]'`.\n\n> 💡 Поведінка залежить від контексту: **на початку рядка `{} + []` може бути сприйнято як блок коду, не як об’єкт.**",
+            theoryEN:
+                "### Implicit coercion of objects in JavaScript\nWhen objects participate in operations, JavaScript tries to convert them to primitives using **`toPrimitive`**, **`valueOf`**, or **`toString`**.\n\n#### 🔹 Example 1: `[] + []`\n- Each array is converted to an empty string via `[].toString()` → `''`\n- `'' + ''` → `''`\n\n#### 🔹 Example 2: `[] + {}`\n- `[]` → `''`\n- `{}` → `'[object Object]'`\n- Result: `'[object Object]'`\n\n#### 🔹 Example 3: `{} + []`\n- If interpreted as a block `{}` and expression `+[]`, result is `0`.\n- If wrapped like `( {} + [] )`, result is `'[object Object]'`.\n\n#### 🔹 Example 4: `{} + {}`\n- As block → `NaN`, otherwise `'[object Object][object Object]'`.\n\n> 💡 Behavior depends on parsing context: **at the beginning of a line, `{}` can be interpreted as a block, not an object.**",
+            answers: [
+                {
+                    textUK: "`[] + []` → '', `[] + {}` → '[object Object]', `{} + []` → 0, `{} + {}` → NaN",
+                    textEN: "`[] + []` → '', `[] + {}` → '[object Object]', `{} + []` → 0, `{} + {}` → NaN",
+                    theoryUK: '✅ Це правильна відповідь у випадку, коли код виконується без дужок — `{} + []` інтерпретується як блок.',
+                    theoryEN: '✅ Correct when code is evaluated without parentheses — `{} + []` is parsed as a block.',
+                    isCorrect: true
+                },
+                {
+                    textUK: "`[] + []` → '', `[] + {}` → '[object Object]', `{} + []` → '[object Object]', `{} + {}` → '[object Object][object Object]'",
+                    textEN: "`[] + []` → '', `[] + {}` → '[object Object]', `{} + []` → '[object Object]', `{} + {}` → '[object Object][object Object]'",
+                    theoryUK: '✅ Також правильна, якщо код оточено дужками `( {} + [] )` — тоді обидва операнди трактуються як об’єкти.',
+                    theoryEN: '✅ Also correct if code is wrapped in parentheses `( {} + [] )` — both operands treated as objects.',
+                    isCorrect: true
+                },
+                {
+                    textUK: '`[] + []` → 0, `[] + {}` → NaN, `{} + []` → NaN',
+                    textEN: '`[] + []` → 0, `[] + {}` → NaN, `{} + []` → NaN',
+                    theoryUK: '❌ Неправильно. Оператор `+` між об’єктами не перетворює їх на числа, а спершу приводить до рядків.',
+                    theoryEN: '❌ Incorrect. The `+` operator between objects coerces to strings first, not numbers.',
+                    isCorrect: false
+                }
+            ],
+            level: 'middle'
+        },
+        {
+            textUK: 'Як неявне приведення використовується у логічних операторах (&&, ||, ??)?',
+            textEN: 'How is implicit coercion used in logical operators (&&, ||, ??)?',
+            theoryUK:
+                "### Неявне приведення у логічних операторах\n\nЛогічні оператори у JavaScript **не завжди повертають булеві значення** — вони повертають **один з операндів**, використовуючи правила truthy/falsy.\n\n#### 🔹 `||` (логічне АБО)\n- Повертає **перший truthy** операнд або останній, якщо всі falsy.\n  ```js\n  'a' || 'b'   // 'a'\n  0 || 'hello' // 'hello'\n  false || 42   // 42\n  ```\n\n#### 🔹 `&&` (логічне І)\n- Повертає **перший falsy** операнд або останній, якщо всі truthy.\n  ```js\n  1 && 2       // 2\n  0 && 'a'     // 0\n  true && null // null\n  ```\n\n#### 🔹 `??` (nullish coalescing)\n- Повертає **перший не `null` і не `undefined`** операнд.\n  ```js\n  null ?? 'default'       // 'default'\n  undefined ?? 'fallback' // 'fallback'\n  0 ?? 42                 // 0 (бо 0 не null/undefined)\n  ```\n\n💡 На відміну від `||`, оператор `??` не спрацьовує на `0`, `''` або `false`, бо вони не вважаються відсутніми значеннями.",
+            theoryEN:
+                "### Implicit coercion in logical operators\n\nLogical operators in JavaScript **do not always return booleans** — they return **one of the operands**, following truthy/falsy rules.\n\n#### 🔹 `||` (logical OR)\n- Returns the **first truthy** operand or the last one if all are falsy.\n  ```js\n  'a' || 'b'   // 'a'\n  0 || 'hello' // 'hello'\n  false || 42   // 42\n  ```\n\n#### 🔹 `&&` (logical AND)\n- Returns the **first falsy** operand or the last one if all are truthy.\n  ```js\n  1 && 2       // 2\n  0 && 'a'     // 0\n  true && null // null\n  ```\n\n#### 🔹 `??` (nullish coalescing)\n- Returns the **first operand that is not `null` or `undefined`**.\n  ```js\n  null ?? 'default'       // 'default'\n  undefined ?? 'fallback' // 'fallback'\n  0 ?? 42                 // 0 (since 0 is not null/undefined)\n  ```\n\n💡 Unlike `||`, the `??` operator does not trigger on `0`, `''`, or `false` because they are valid defined values.",
+            answers: [
+                {
+                    textUK: '`||` повертає перший truthy, `&&` — перший falsy, `??` — перший не null/undefined',
+                    textEN: '`||` returns first truthy, `&&` returns first falsy, `??` returns first non-null/undefined',
+                    theoryUK: '✅ Це правильна відповідь. Оператори повертають операнди, а не булеві значення.',
+                    theoryEN: '✅ Correct. These operators return operands, not boolean values.',
+                    isCorrect: true
+                },
+                {
+                    textUK: '`||`, `&&`, `??` завжди повертають true або false',
+                    textEN: '`||`, `&&`, `??` always return true or false',
+                    theoryUK: "❌ Ні, вони повертають **операнди**, не булеві значення. Наприклад, `'a' || 'b'` → `'a'`.",
+                    theoryEN: "❌ No, they return **operands**, not booleans. For example, `'a' || 'b'` → `'a'`.",
+                    isCorrect: false
+                },
+                {
+                    textUK: '`??` працює так само, як `||`',
+                    textEN: '`??` works the same as `||`',
+                    theoryUK: '❌ Вони відрізняються: `??` ігнорує лише `null` і `undefined`, а `||` — будь-яке falsy значення.',
+                    theoryEN: '❌ They differ: `??` ignores only `null` and `undefined`, while `||` ignores all falsy values.',
+                    isCorrect: false
+                },
+                {
+                    textUK: '`&&` повертає true лише якщо всі операнди truthy',
+                    textEN: '`&&` returns true only if all operands are truthy',
+                    theoryUK: '❌ Хоча це здається правильним, `&&` фактично повертає **останній truthy операнд**, а не просто `true`.',
+                    theoryEN: '❌ While it may seem correct, `&&` actually returns the **last truthy operand**, not `true`.',
+                    isCorrect: false
+                }
+            ],
+            level: 'middle'
+        },
+        {
+            textUK: 'Чому [] == ![] → true, але [] == [] → false?',
+            textEN: 'Why does [] == ![] evaluate to true, but [] == [] to false?',
+            theoryUK:
+                '### Неявне приведення типів у порівняннях з `==`\n\nУ JavaScript оператор `==` (нестроге порівняння) **виконує неявне приведення типів**, якщо операнди мають різні типи.\n\n#### Кроки виконання `[] == ![]`\n1. Вираз `![]` — це логічне заперечення масиву. Будь-який об\'єкт (включно з масивом) є **truthy**, тому `![]` → `false`.\n2. Тепер маємо: `[] == false`.\n3. Оператор `==` бачить, що зліва — об’єкт, а справа — булеве значення, тому **булеве приводиться до числа**: `false` → `0`.\n4. Потім `[]` приводиться до примітиву. Для масиву `[]`:\n   - `valueOf()` повертає сам масив (об\'єкт).\n   - `toString()` повертає `""` (порожній рядок).\n5. Порожній рядок `""` при приведенні до числа → `0`.\n6. Отже, `0 == 0` → `true`.\n\n#### Кроки виконання `[] == []`\n1. У цьому випадку **обидва операнди — об’єкти**.\n2. Порівняння `==` (і `===`) для об’єктів **порівнює посилання**, а не вміст.\n3. Кожен літерал `[]` створює **новий об’єкт**, тому посилання різні.\n4. Отже, `[] == []` → `false`.\n\n#### Висновок\n- `[] == ![]` → `true`, тому що після приведення обидві сторони стають `0`.\n- `[] == []` → `false`, тому що порівнюються різні об’єкти.',
+            theoryEN:
+                '### Implicit type coercion in `==` comparisons\n\nIn JavaScript, the `==` operator performs **type coercion** if the operands have different types.\n\n#### Steps for `[] == ![]`\n1. `![]` negates an array. Any object is **truthy**, so `![]` → `false`.\n2. Now the expression is `[] == false`.\n3. When comparing object vs boolean, JS converts boolean to number: `false` → `0`.\n4. Then `[]` is converted to a primitive value. For an empty array:\n   - `valueOf()` returns the array itself (object),\n   - `toString()` returns an empty string `""`.\n5. Empty string converts to number `0`.\n6. Therefore, `0 == 0` → `true`.\n\n#### Steps for `[] == []`\n1. Both operands are objects.\n2. `==` and `===` compare **references**, not contents.\n3. Each literal `[]` creates a **new object**, so the references differ.\n4. Hence `[] == []` → `false`.\n\n#### Summary\n- `[] == ![]` → `true` because both sides become `0` after coercion.\n- `[] == []` → `false` because the objects are distinct.',
+            answers: [
+                {
+                    textUK: 'Тому що у першому випадку відбувається неявне приведення типів до числа, а у другому порівнюються різні об’єкти.',
+                    textEN: 'Because in the first case implicit type coercion converts both sides to numbers, and in the second, different objects are compared.',
+                    theoryUK:
+                        "✅ Вірно. `![]` → `false` → `0`, `[]` → `''` → `0`, тому `0 == 0`. У випадку `[] == []` створюються два різні об'єкти, що мають різні посилання.",
+                    theoryEN: "✅ Correct. `![]` → `false` → `0`, `[]` → `''` → `0`, so `0 == 0`. In `[] == []`, two distinct objects are compared by reference.",
+                    isCorrect: true
+                },
+                {
+                    textUK: 'Тому що оператор == завжди порівнює лише значення, а не посилання.',
+                    textEN: 'Because the == operator always compares only values, not references.',
+                    theoryUK: '❌ Невірно. Для об’єктів оператор `==` порівнює посилання, а не значення.',
+                    theoryEN: '❌ Incorrect. For objects, `==` compares references, not values.',
+                    isCorrect: false
+                },
+                {
+                    textUK: 'Тому що у першому випадку масив автоматично перетворюється в рядок, а у другому — у число.',
+                    textEN: 'Because in the first case the array converts to a string, and in the second to a number.',
+                    theoryUK:
+                        '❌ Невірно. У випадку `[] == ![]` масив приводиться до рядка `""`, який потім до числа `0`. У `[] == []` немає приведення типів — просто різні об’єкти.',
+                    theoryEN: '❌ Wrong. In `[] == ![]`, the array becomes `""` and then `0`. In `[] == []`, no coercion occurs — they’re distinct objects.',
+                    isCorrect: false
+                },
+                {
+                    textUK: 'Тому що `![]` повертає `true`, а `[] == true` → `true`.',
+                    textEN: 'Because `![]` returns `true`, and `[] == true` is true.',
+                    theoryUK: '❌ Невірно. `![]` повертає `false`, оскільки будь-який об’єкт є truthy. Отже, `![]` → `false`, не `true`.',
+                    theoryEN: '❌ Incorrect. `![]` → `false`, because any object is truthy. So `![]` is not `true`.',
+                    isCorrect: false
+                },
+                {
+                    textUK: 'Тому що порівняння масивів завжди повертає false у JavaScript.',
+                    textEN: 'Because comparing arrays always returns false in JavaScript.',
+                    theoryUK: '❌ Не зовсім. Це не завжди так — наприклад, якщо порівнювати одне й те саме посилання: `const a = []; a == a` → `true`.',
+                    theoryEN: '❌ Not exactly. If you compare the same reference, like `const a = []; a == a`, it returns `true`.',
+                    isCorrect: false
+                }
+            ],
+            level: 'middle'
         }
     ]
 };
