@@ -21,6 +21,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
         return NextResponse.redirect(new URL(appPaths.dashboard, request.url));
     }
 
+    if (path === appPaths.adminQuestions) {
+        return NextResponse.redirect(new URL(appPaths.admin, request.url));
+    }
+
     if (path.startsWith(appPaths.admin)) {
         const role = request.cookies.get('role')?.value;
         if (role !== UserRole.Admin) {

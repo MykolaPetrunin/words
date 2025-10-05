@@ -75,6 +75,43 @@ export interface DbAnswer {
     theoryEn: string | null;
 }
 
+export interface QuestionDetailLevel {
+    id: string;
+    key: string;
+    nameUk: string;
+    nameEn: string;
+}
+
+export interface QuestionDetail {
+    id: string;
+    textUk: string;
+    textEn: string;
+    theoryUk: string | null;
+    theoryEn: string | null;
+    topicId: string | null;
+    level: QuestionDetailLevel;
+    topic: QuestionListTopic | null;
+    answers: DbAnswer[];
+}
+
+export interface QuestionAnswerUpdateInput {
+    id?: string;
+    textUk: string;
+    textEn: string;
+    theoryUk?: string | null;
+    theoryEn?: string | null;
+    isCorrect: boolean;
+}
+
+export interface UpdateQuestionInput {
+    textUk: string;
+    textEn: string;
+    theoryUk?: string | null;
+    theoryEn?: string | null;
+    topicId?: string | null;
+    answers: QuestionAnswerUpdateInput[];
+}
+
 export async function getAllQuestions(filters?: QuestionListFilters): Promise<QuestionListItem[]> {
     const subjectIds = filters?.subjectIds ? Array.from(new Set(filters.subjectIds)) : [];
     const bookIds = filters?.bookIds ? Array.from(new Set(filters.bookIds)) : [];
@@ -193,6 +230,70 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
     });
 }
 
+export async function getQuestionDetailById(questionId: string): Promise<QuestionDetail | null> {
+    const question = await prisma.question.findUnique({
+        where: { id: questionId },
+        include: {
+            level: true,
+            topic: true,
+            answers: {
+                orderBy: {
+                    orderIndex: 'asc'
+                }
+            }
+        }
+    });
+
+    if (!question) {
+        return null;
+    }
+
+    return {
+        id: question.id,
+        textUk: question.textUk,
+        textEn: question.textEn,
+        theoryUk: question.theoryUk,
+        theoryEn: question.theoryEn,
+        topicId: question.topicId,
+        level: {
+            id: question.level.id,
+            key: question.level.key,
+            nameUk: question.level.nameUk,
+            nameEn: question.level.nameEn
+        },
+        topic: question.topic
+            ? {
+                  id: question.topic.id,
+                  titleUk: question.topic.titleUk,
+                  titleEn: question.topic.titleEn
+              }
+            : null,
+        answers: question.answers.map((answer) => ({
+            id: answer.id,
+            textUk: answer.textUk,
+            textEn: answer.textEn,
+            isCorrect: answer.isCorrect,
+            orderIndex: answer.orderIndex,
+            theoryUk: answer.theoryUk,
+            theoryEn: answer.theoryEn
+        }))
+    };
+}
+
+export async function getAllTopics(): Promise<QuestionListTopic[]> {
+    const topics = await prisma.topic.findMany({
+        orderBy: {
+            titleEn: 'asc'
+        }
+    });
+
+    return topics.map((topic) => ({
+        id: topic.id,
+        titleUk: topic.titleUk,
+        titleEn: topic.titleEn
+    }));
+}
+
 export async function getQuestionFiltersTree(): Promise<QuestionFiltersTree> {
     const subjects = await prisma.subject.findMany({
         where: {
@@ -295,4 +396,72 @@ export async function getAnswersByQuestionId(questionId: string): Promise<DbAnsw
 export async function getPublicAnswersByQuestionId(questionId: string): Promise<PublicAnswer[]> {
     const answers = await getAnswersByQuestionId(questionId);
     return answers.map(({ id, textUk, textEn, orderIndex, theoryUk, theoryEn, isCorrect }) => ({ id, textUk, textEn, orderIndex, theoryUk, theoryEn, isCorrect }));
+}
+
+export async function updateQuestionDetail(questionId: string, input: UpdateQuestionInput): Promise<QuestionDetail> {
+    await prisma.$transaction(async (tx) => {
+        await tx.question.update({
+            where: { id: questionId },
+            data: {
+                textUk: input.textUk,
+                textEn: input.textEn,
+                theoryUk: input.theoryUk ?? null,
+                theoryEn: input.theoryEn ?? null,
+                topicId: input.topicId ?? null
+            }
+        });
+
+        const existingAnswers = await tx.answer.findMany({
+            where: { questionId },
+            select: { id: true }
+        });
+
+        const incomingIds = new Set(input.answers.map((answer) => answer.id).filter((id): id is string => typeof id === 'string' && id.length > 0));
+
+        const idsToDelete = existingAnswers.map((answer) => answer.id).filter((id) => !incomingIds.has(id));
+
+        if (idsToDelete.length > 0) {
+            await tx.answer.deleteMany({
+                where: {
+                    id: {
+                        in: idsToDelete
+                    }
+                }
+            });
+        }
+
+        for (const [index, answer] of input.answers.entries()) {
+            const payload = {
+                textUk: answer.textUk,
+                textEn: answer.textEn,
+                theoryUk: answer.theoryUk ?? null,
+                theoryEn: answer.theoryEn ?? null,
+                isCorrect: answer.isCorrect,
+                orderIndex: index
+            };
+
+            if (answer.id) {
+                await tx.answer.update({
+                    where: { id: answer.id },
+                    data: payload
+                });
+                continue;
+            }
+
+            await tx.answer.create({
+                data: {
+                    questionId,
+                    ...payload
+                }
+            });
+        }
+    });
+
+    const updatedQuestion = await getQuestionDetailById(questionId);
+
+    if (!updatedQuestion) {
+        throw new Error('Question not found after update');
+    }
+
+    return updatedQuestion;
 }
