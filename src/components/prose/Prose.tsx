@@ -6,13 +6,16 @@ import rehypeSanitize from 'rehype-sanitize';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 
+import { cn } from '@/lib/utils';
+
 interface ProseProps {
     isMD?: boolean;
+    className?: string;
 }
 
-export const Prose: FC<PropsWithChildren<ProseProps>> = ({ children, isMD = false }) => {
+export const Prose: FC<PropsWithChildren<ProseProps>> = ({ children, isMD = false, className }) => {
     return (
-        <article className="prose prose-zinc dark:prose-invert max-w-none">
+        <article className={cn('prose prose-zinc dark:prose-invert max-w-none', className)}>
             {isMD ? (
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}

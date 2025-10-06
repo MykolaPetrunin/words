@@ -127,7 +127,9 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                             <div className="flex-1 overflow-y-auto prose dark:prose-invert prose-sm max-w-none p-4">
                                 {currentQuestion ? (
                                     <div className="space-y-4">
-                                        <p className="text-base">{questionText}</p>
+                                        <Prose className="text-base" isMD>
+                                            {questionText}
+                                        </Prose>
                                         <p className="text-xs text-muted-foreground">{t('books.selectAllCorrect')}</p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {answers.map((a) => (
@@ -148,11 +150,11 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                                 )}
                             </div>
                             <div className="p-4 border-t flex justify-end gap-2">
+                                <Button onClick={handleAnswerClick} disabled={answers.length === 0 || isPending || isAnswered}>
+                                    {t('books.answerQuestion')}
+                                </Button>
                                 <Button variant="outline" onClick={nextQuestion}>
                                     {t('books.nextQuestion')}
-                                </Button>
-                                <Button onClick={handleAnswerClick} disabled={answers.length === 0 || isPending}>
-                                    {t('books.answerQuestion')}
                                 </Button>
                             </div>
                         </>

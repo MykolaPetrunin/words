@@ -7,10 +7,12 @@ import BookActions from '@/components/bookActions/BookActions';
 import BookQuestionsList from '@/components/bookQuestionsList/BookQuestionsList';
 import QuestionsListSkeleton from '@/components/bookQuestionsList/components/QuestionsListSkeleton';
 import TestingModal from '@/components/testingModal/TestingModal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/hooks/useI18n';
 import { clientLogger } from '@/lib/logger/clientLogger';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
-import type { DbBookQuestion, DbBookWithQuestions } from '@/lib/repositories/bookRepository';
+import type { DbBookQuestion, DbBookWithLearningStatus, DbBookWithQuestions } from '@/lib/repositories/bookRepository';
 import { getBookWithQuestions } from '@/lib/repositories/bookRepository';
 import type { UserLocale } from '@/lib/types/user';
 
@@ -28,6 +30,26 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
     const [testQuestions, setTestQuestions] = useState<DbBookQuestion[]>([]);
 
     const bookTitle = locale === 'uk' ? book.titleUk : book.titleEn;
+    const levelProgress = useMemo(
+        () => [
+            {
+                key: 'junior' as const,
+                label: t('books.levelJunior'),
+                value: book.levelCompletion.junior
+            },
+            {
+                key: 'middle' as const,
+                label: t('books.levelMiddle'),
+                value: book.levelCompletion.middle
+            },
+            {
+                key: 'senior' as const,
+                label: t('books.levelSenior'),
+                value: book.levelCompletion.senior
+            }
+        ],
+        [book.levelCompletion.junior, book.levelCompletion.middle, book.levelCompletion.senior, t]
+    );
 
     const handleLearningAction = async (action: 'start' | 'stop'): Promise<void> => {
         const isStarting = action === 'start';
@@ -60,10 +82,11 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
                 return;
             }
 
-            const updatedBook = await response.json();
+            const updatedBook: DbBookWithLearningStatus = await response.json();
             setBook((prevBook) => ({
                 ...prevBook,
                 isLearning: updatedBook.isLearning,
+                levelCompletion: updatedBook.levelCompletion,
                 userLevelScores: updatedBook.userLevelScores
             }));
 
@@ -154,6 +177,23 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
                             onStartTesting={handleStartTesting}
                         />
                     </div>
+
+                    <Card className="border-muted/40">
+                        <CardHeader className="space-y-1 p-4 pb-2">
+                            <CardTitle className="text-base font-semibold">{t('books.levelProgressTitle')}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-3 p-4 pt-0 sm:grid-cols-3">
+                            {levelProgress.map((level) => (
+                                <div key={level.key} className="space-y-2 rounded-md bg-muted/40 p-3">
+                                    <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        <span>{level.label}</span>
+                                        <span>{`${level.value}%`}</span>
+                                    </div>
+                                    <Progress value={level.value} className="h-1.5" />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
 
                     {isBookSyncing ? (
                         <QuestionsListSkeleton questionsCount={sortedQuestions.length} />

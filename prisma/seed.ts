@@ -6,8 +6,13 @@ import { PrismaClient } from '@prisma/client';
 import { tests as bigintTests } from './seeds/tests/javascript-bigint';
 import { tests as boxingUnboxingTests } from './seeds/tests/javascript-boxing-unboxing';
 import { tests as implicitTypeCastingTests } from './seeds/tests/javascript-implicit-type-casting';
+import { tests as logicalOperatorsTests } from './seeds/tests/javascript-logical-operators';
+import { tests as nanAndInfinityTests } from './seeds/tests/javascript-nan-and-infinity';
+import { tests as objectIsTests } from './seeds/tests/javascript-object-is';
 import { tests as primitivesObjectsTests } from './seeds/tests/javascript-primitives-objects';
 import { tests as symbolTests } from './seeds/tests/javascript-symbol';
+import { tests as typeofInstanceofInDeleteTests } from './seeds/tests/javascript-typeof-instanceof-in-delete';
+import { tests as variablesTests } from './seeds/tests/javascript-variables';
 import { seedQuestions } from './seeds/utils';
 
 const prisma = new PrismaClient();
@@ -164,6 +169,45 @@ async function main(): Promise<void> {
         topicName: 'JavaScript BigInt questions'
     });
 
+    await seedQuestions({
+        prisma,
+        questions: nanAndInfinityTests,
+        levelIds,
+        bookId,
+        topicName: 'JavaScript NaN and Infinity questions'
+    });
+
+    await seedQuestions({
+        prisma,
+        questions: objectIsTests,
+        levelIds,
+        bookId,
+        topicName: 'JavaScript Object.is questions'
+    });
+
+    await seedQuestions({
+        prisma,
+        questions: variablesTests,
+        levelIds,
+        bookId,
+        topicName: 'JavaScript Variables questions'
+    });
+
+    await seedQuestions({
+        prisma,
+        questions: typeofInstanceofInDeleteTests,
+        levelIds,
+        bookId,
+        topicName: 'JavaScript typeof, instanceof, in, delete questions'
+    });
+
+    await seedQuestions({
+        prisma,
+        questions: logicalOperatorsTests,
+        levelIds,
+        bookId,
+        topicName: 'JavaScript Logical operators questions'
+    });
     console.log('🎉 Seed completed!');
 }
 

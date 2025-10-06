@@ -615,6 +615,61 @@ export const tests: TopicMock = {
                 }
             ],
             level: 'middle'
+        },
+        {
+            textUK: 'Чому порівняння `null == undefined` повертає true, але всі інші комбінації з ними — false?',
+            textEN: 'Why does `null == undefined` return true, but all other combinations with them return false?',
+            theoryUK:
+                "### Теорія: `null` vs `undefined` у нестрогому порівнянні (`==`)\n\nJavaScript має два спеціальні значення, які представляють 'відсутність значення': `null` і `undefined`.\n- `null` — це навмисна відсутність значення.\n- `undefined` — це значення змінної, яка ще не була ініціалізована або явно не має значення.\n\nПри нестрогому порівнянні (`==`) діє спеціальне правило з **абстрактного алгоритму порівняння рівності** (ECMAScript §7.2.14):\n> Якщо одне з операндів `null`, а інше `undefined`, повернути `true`.\n\nЖодне інше перетворення типів не виконується для `null` чи `undefined` у цьому випадку. Вони є *ексклюзивною парою*, яка вважається рівною лише між собою.\n\nПри строгому порівнянні (`===`) типи не збігаються (`null` — тип Null, `undefined` — тип Undefined), тому результат завжди `false`.\n\nЦе зроблено для зручності старого коду, де `null` і `undefined` часто використовувалися як 'порожні' значення взаємозамінно.",
+            theoryEN:
+                "### Theory: `null` vs `undefined` in non-strict equality (`==`)\n\nJavaScript defines two special 'no value' primitives: `null` and `undefined`.\n- `null` means intentional absence of any value.\n- `undefined` means a variable has been declared but not assigned a value.\n\nWhen compared with loose equality (`==`), there is a **special rule** in the *Abstract Equality Comparison Algorithm* (ECMAScript §7.2.14):\n> If one operand is `null` and the other is `undefined`, return `true`.\n\nNo further type conversion is applied. They are an *exclusive pair* that only equal each other.\n\nWith strict equality (`===`), their types differ (Null vs Undefined), so the result is always `false`.\n\nThis rule exists for legacy reasons — in early JavaScript code, both were used to represent 'no value' interchangeably.",
+            answers: [
+                {
+                    textUK: 'Бо алгоритм `==` має спеціальне правило, що `null` і `undefined` рівні лише між собою.',
+                    textEN: 'Because the `==` algorithm has a special rule that `null` and `undefined` are only equal to each other.',
+                    theoryUK:
+                        '✅ Це правильна відповідь. В абстрактному алгоритмі порівняння рівності ECMAScript (§7.2.14) прямо вказано: якщо один операнд — `null`, а інший — `undefined`, результат `true`. Для всіх інших типів — `false`.',
+                    theoryEN:
+                        '✅ Correct. The ECMAScript Abstract Equality Comparison (§7.2.14) explicitly states: if one operand is `null` and the other is `undefined`, the result is `true`. For all other types — `false`.',
+                    isCorrect: true
+                },
+                {
+                    textUK: 'Бо `null` і `undefined` спершу перетворюються на число 0, тому результат true.',
+                    textEN: 'Because `null` and `undefined` are first converted to the number 0, so the result is true.',
+                    theoryUK:
+                        '❌ Невірно. Для `==` порівняння `null` і `undefined` **не виконується жодного числового приведення**. Вони прирівнюються напряму, без перетворень.',
+                    theoryEN:
+                        '❌ Incorrect. In the `==` comparison, `null` and `undefined` are **not converted to numbers**. They are compared directly according to a special rule.',
+                    isCorrect: false
+                },
+                {
+                    textUK: "Бо обидва мають тип 'undefined' у JavaScript.",
+                    textEN: "Because both have the type 'undefined' in JavaScript.",
+                    theoryUK: "❌ Хибно. `typeof null` повертає `'object'` (це історична помилка мови), а `typeof undefined` — `'undefined'`. Тобто типи різні.",
+                    theoryEN:
+                        "❌ Wrong. `typeof null` returns `'object'` (a historical bug in JavaScript), while `typeof undefined` returns `'undefined'`. Their types differ.",
+                    isCorrect: false
+                },
+                {
+                    textUK: 'Бо при порівнянні `==` виконується `ToPrimitive`, який повертає true.',
+                    textEN: 'Because in `==` comparison `ToPrimitive` is applied and returns true.',
+                    theoryUK:
+                        '❌ Ні. Для `null` і `undefined` операція `ToPrimitive` не виконується — вони вже примітиви. Порівняння ґрунтується лише на спеціальному правилі.',
+                    theoryEN:
+                        '❌ No. For `null` and `undefined`, `ToPrimitive` is not applied — they are already primitives. The comparison relies only on the special rule.',
+                    isCorrect: false
+                },
+                {
+                    textUK: 'Бо `==` порівнює значення через привід до булевого типу.',
+                    textEN: 'Because `==` compares values by converting them to boolean.',
+                    theoryUK:
+                        '❌ Невірно. Алгоритм `==` ніколи не приводить операнди до булевого типу. Булеві значення обробляються окремо (через `ToNumber`), але це не стосується `null`/`undefined`.',
+                    theoryEN:
+                        '❌ Incorrect. The `==` algorithm never coerces operands to boolean. Booleans are handled via `ToNumber`, but this doesn’t apply to `null`/`undefined`.',
+                    isCorrect: false
+                }
+            ],
+            level: 'senior'
         }
     ]
 };

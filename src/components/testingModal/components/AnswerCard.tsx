@@ -10,6 +10,8 @@ import type { PublicAnswer } from '@/lib/repositories/questionRepository';
 import type { UserLocale } from '@/lib/types/user';
 import { cn } from '@/lib/utils';
 
+import { Prose } from '../../prose/Prose';
+
 interface AnswerCardProps {
     answer: PublicAnswer;
     locale: UserLocale;
@@ -37,25 +39,30 @@ export default function AnswerCard({ answer, selected, onToggle, showTheory, loc
     return (
         <Card className={cn('cursor-pointer border transition-colors', colorStyle)} onClick={() => onToggle(answer.id)}>
             <CardContent className="p-4 flex justify-between items-center">
-                <p className="text-sm leading-5">{text}</p>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (theory) showTheory(theory);
-                            }}
-                        >
-                            <BookOpen className="h-4 w-4" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{t('testing.viewTheory')}</p>
-                    </TooltipContent>
-                </Tooltip>
+                <Prose className={cn('text-sm leading-5', colorStyle)} isMD>
+                    {text}
+                </Prose>
+
+                {answered && (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (theory) showTheory(theory);
+                                }}
+                            >
+                                <BookOpen className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t('testing.viewTheory')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                )}
             </CardContent>
         </Card>
     );
