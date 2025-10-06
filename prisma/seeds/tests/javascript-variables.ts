@@ -58,7 +58,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: 'Reassignment vs Redeclaration: коли що дозволено для var, let, const?',
@@ -113,7 +113,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: "`var` у глобальній області: чи створює він властивість глобального об'єкта (window/globalThis)?",
@@ -166,7 +166,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: 'const і об’єкти: чи можна змінювати властивості об’єкта, оголошеного через const?',
@@ -219,7 +219,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: '`let` у циклах: як створюється нова лексична змінна на кожну ітерацію `for`?',
@@ -273,7 +273,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: '`var` у циклах і асинхронності: чому всі колбеки часто «бачать» останнє значення?',
@@ -326,7 +326,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: 'Області видимості: чим відрізняються функціональна, блокова та глобальна? Наведіть правильні твердження.',
@@ -379,7 +379,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: 'Scope chain: як відбувається пошук змінних у лексичних середовищах?',
@@ -432,7 +432,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: 'Shadowing: коли локальна змінна перекриває глобальну, і як це працює?',
@@ -487,7 +487,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: 'Closure та scope: як саме замикання “запам’ятовують” область видимості?',
@@ -540,7 +540,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: '`with` та `eval`: як вони змінюють (або ламають) передбачуваність ланцюга областей видимості?',
@@ -593,7 +593,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Етапи створення Execution Context: коли й де створюються bindings для var, let, const, function?',
@@ -646,7 +646,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Hoisting функцій vs змінних: у чому різниця доступності до виконання?',
@@ -699,7 +699,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Temporal Dead Zone (TDZ): що це таке і чому `typeof x` інколи кидає помилку?',
@@ -754,7 +754,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Hoisting у вкладених блоках: як поводяться `let/const` у вкладених областях видимості (TDZ, shadowing, доступність)? Оберіть усі коректні твердження.',
@@ -821,7 +821,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Створення змінних без декларації: що станеться у strict mode і як це відрізняється від нестрогого режиму?',
@@ -874,7 +874,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: '`this` у звичайних функціях: `undefined` проти глобального об’єкта — як саме працює у strict/sloppy?',
@@ -927,7 +927,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Strict mode у модулях: чому модулі автоматично строгі і чим вони відрізняються від скриптів?',
@@ -980,7 +980,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'LexicalEnvironment та EnvironmentRecord: як рушій зберігає змінні (концептуальний рівень)?',
@@ -1034,7 +1034,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'TDZ і ReferenceError на рівні специфікації: чому змінна «є у scope», але доступ викликає помилку?',
