@@ -3,6 +3,7 @@ import { createHash } from 'crypto';
 
 import { PrismaClient } from '@prisma/client';
 
+import { tests as bigintTests } from './seeds/tests/javascript-bigint';
 import { tests as boxingUnboxingTests } from './seeds/tests/javascript-boxing-unboxing';
 import { tests as implicitTypeCastingTests } from './seeds/tests/javascript-implicit-type-casting';
 import { tests as primitivesObjectsTests } from './seeds/tests/javascript-primitives-objects';
@@ -154,6 +155,15 @@ async function main(): Promise<void> {
         bookId,
         topicName: 'JavaScript Symbol questions'
     });
+
+    await seedQuestions({
+        prisma,
+        questions: bigintTests,
+        levelIds,
+        bookId,
+        topicName: 'JavaScript BigInt questions'
+    });
+
     console.log('🎉 Seed completed!');
 }
 
