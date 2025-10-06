@@ -1,5 +1,6 @@
 'use client';
 
+import { BookOpen } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -13,6 +14,8 @@ import type { DbBookQuestion } from '@/lib/repositories/bookRepository';
 import type { PublicAnswer } from '@/lib/repositories/questionRepository';
 import { fetchQuestionAnswers } from '@/lib/repositories/questions.server';
 import type { UserLocale } from '@/lib/types/user';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface TestingModalProps {
     isOpen: boolean;
@@ -127,6 +130,27 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                             <div className="flex-1 overflow-y-auto prose dark:prose-invert prose-sm max-w-none p-4">
                                 {currentQuestion ? (
                                     <div className="space-y-4">
+                                        {isAnswered && (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const theory = locale === 'uk' ? currentQuestion.theoryUk : currentQuestion.theoryEn;
+                                                            setTheory(theory);
+                                                        }}
+                                                    >
+                                                        <BookOpen className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{t('testing.viewTheory')}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
                                         <Prose className="text-base" isMD>
                                             {questionText}
                                         </Prose>
