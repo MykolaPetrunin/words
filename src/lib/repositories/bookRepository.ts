@@ -40,6 +40,13 @@ export async function getBooksBySubjectId(subjectId: string, userId?: string): P
                         ? {
                               where: {
                                   userId
+                              },
+                              include: {
+                                  level: {
+                                      select: {
+                                          key: true
+                                      }
+                                  }
                               }
                           }
                         : false
@@ -47,9 +54,6 @@ export async function getBooksBySubjectId(subjectId: string, userId?: string): P
             }
         }
     });
-
-    const bookIds = bookSubjects.map((bs) => bs.bookId);
-    const levelCompletionMap = await getBookLevelCompletionMap(bookIds, userId);
 
     return bookSubjects.map((bs) => ({
         id: bs.book.id,
@@ -61,7 +65,7 @@ export async function getBooksBySubjectId(subjectId: string, userId?: string): P
         createdAt: bs.book.createdAt,
         updatedAt: bs.book.updatedAt,
         isLearning: userId ? bs.book.userLevelScores.length > 0 : false,
-        levelCompletion: levelCompletionMap.get(bs.bookId) ?? createEmptyBookLevelCompletion(),
+        levelCompletion: userId ? resolveLevelCompletionFromScores(bs.book.userLevelScores) : createEmptyBookLevelCompletion(),
         userLevelScores: userId
             ? bs.book.userLevelScores.map((uls) => ({
                   levelId: uls.levelId,
@@ -99,80 +103,28 @@ export interface DbBookWithQuestions extends DbBookWithLearningStatus {
     questions: DbBookQuestion[];
 }
 
-async function getBookLevelCompletionMap(bookIds: readonly string[], userId?: string): Promise<Map<string, BookLevelCompletion>> {
-    const result = new Map<string, BookLevelCompletion>();
+type LevelScoreInput = {
+    level?: {
+        key: string;
+    } | null;
+    averageScore: number | null;
+    totalQuestions: number | null;
+};
 
-    if (bookIds.length === 0) {
-        return result;
+function resolveLevelCompletionFromScores(levelScores: readonly LevelScoreInput[] | undefined): BookLevelCompletion {
+    if (!levelScores || levelScores.length === 0) {
+        return createEmptyBookLevelCompletion();
     }
 
-    if (!userId) {
-        for (const bookId of bookIds) {
-            result.set(bookId, createEmptyBookLevelCompletion());
-        }
+    const inputs: BookLevelCompletionInput[] = levelScores
+        .filter((score): score is Required<Pick<LevelScoreInput, 'level'>> & LevelScoreInput => Boolean(score.level))
+        .map((score) => ({
+            levelKey: score.level!.key,
+            averageScore: score.averageScore,
+            totalQuestions: score.totalQuestions ?? 0
+        }));
 
-        return result;
-    }
-
-    const bookQuestions = await prisma.bookQuestion.findMany({
-        where: {
-            bookId: {
-                in: [...bookIds]
-            }
-        },
-        select: {
-            bookId: true,
-            question: {
-                select: {
-                    level: {
-                        select: {
-                            key: true
-                        }
-                    },
-                    userScores: userId
-                        ? {
-                              where: {
-                                  userId
-                              },
-                              select: {
-                                  score: true
-                              },
-                              take: 1
-                          }
-                        : false
-                }
-            }
-        }
-    });
-
-    const grouped = new Map<string, BookLevelCompletionInput[]>();
-
-    for (const bookQuestion of bookQuestions) {
-        const entries = grouped.get(bookQuestion.bookId) ?? [];
-        let score: number | null = null;
-
-        if ('userScores' in bookQuestion.question && Array.isArray(bookQuestion.question.userScores)) {
-            score = bookQuestion.question.userScores[0]?.score ?? null;
-        }
-
-        entries.push({
-            levelKey: bookQuestion.question.level.key,
-            score
-        });
-        grouped.set(bookQuestion.bookId, entries);
-    }
-
-    for (const bookId of bookIds) {
-        const inputs = grouped.get(bookId) ?? [];
-        result.set(bookId, calculateBookLevelCompletion(inputs));
-    }
-
-    return result;
-}
-
-async function getBookLevelCompletionValue(bookId: string, userId?: string): Promise<BookLevelCompletion> {
-    const map = await getBookLevelCompletionMap([bookId], userId);
-    return map.get(bookId) ?? createEmptyBookLevelCompletion();
+    return calculateBookLevelCompletion(inputs);
 }
 
 export async function getBookWithQuestions(bookId: string, userId?: string): Promise<DbBookWithQuestions | null> {
@@ -205,6 +157,13 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
                 ? {
                       where: {
                           userId
+                      },
+                      include: {
+                          level: {
+                              select: {
+                                  key: true
+                              }
+                          }
                       }
                   }
                 : false
@@ -215,20 +174,7 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
         return null;
     }
 
-    const levelCompletionInputs = book.bookQuestions.map<BookLevelCompletionInput>((bookQuestion) => {
-        let score: number | null = null;
-
-        if ('userScores' in bookQuestion.question && Array.isArray(bookQuestion.question.userScores)) {
-            score = bookQuestion.question.userScores[0]?.score ?? null;
-        }
-
-        return {
-            levelKey: bookQuestion.question.level.key,
-            score
-        };
-    });
-
-    const levelCompletion = calculateBookLevelCompletion(levelCompletionInputs);
+    const levelCompletion = userId ? resolveLevelCompletionFromScores(book.userLevelScores) : createEmptyBookLevelCompletion();
 
     return {
         id: book.id,
@@ -339,7 +285,14 @@ export async function startLearningBook(userId: string, bookId: string): Promise
         where: { id: bookId },
         include: {
             userLevelScores: {
-                where: { userId }
+                where: { userId },
+                include: {
+                    level: {
+                        select: {
+                            key: true
+                        }
+                    }
+                }
             }
         }
     });
@@ -348,7 +301,7 @@ export async function startLearningBook(userId: string, bookId: string): Promise
         throw new Error('Book not found');
     }
 
-    const levelCompletion = await getBookLevelCompletionValue(bookId, userId);
+    const levelCompletion = resolveLevelCompletionFromScores(updatedBook.userLevelScores);
 
     return {
         id: updatedBook.id,
@@ -413,7 +366,7 @@ export async function stopLearningBook(userId: string, bookId: string): Promise<
         throw new Error('Book not found');
     }
 
-    const levelCompletion = await getBookLevelCompletionValue(bookId, userId);
+    const levelCompletion = createEmptyBookLevelCompletion();
 
     return {
         id: updatedBook.id,
