@@ -61,9 +61,9 @@ export const tests: TopicMock = {
             textUK: 'Серіалізація та передача `NaN`/`Infinity`/`-0`: що правильно для `JSON.stringify`, `structuredClone` і `postMessage`? Оберіть усі правильні твердження.',
             textEN: 'Serialization & transfer of `NaN`/`Infinity`/`-0`: what is correct for `JSON.stringify`, `structuredClone`, and `postMessage`? Select all that apply.',
             theoryUK:
-                '## Теорія: JSON vs Structured Clone\n\n### JSON\n- JSON **не має представлення** для `NaN`/`±Infinity`. При серіалізації вони стають `null` у значеннях: `JSON.stringify({v: NaN}) -> {"v":null}`.\n- Знак нуля у числі **не зберігається текстово**; при парсі `-0` зазвичай матеріалізується як `0` у полях, де було серіалізоване значення через інші механізми.\n\n### Structured Clone (використовують `structuredClone`, `postMessage`)\n- Зберігає **точно** `NaN`, `Infinity`, `-Infinity` і **знак нуля** (`-0`).\n- Працює з більшістю вбудованих структур (Map, Set, ArrayBuffer тощо), на відміну від JSON.\n- `postMessage` між вікнами/воркерами також базується на structured clone, тому переносить ці значення **без спотворення**.\n\n> Висновок: для точної передачі числових аномалій і бінарних даних — використовуйте structured clone (`structuredClone`, `postMessage`). JSON слід застосовувати лише коли втрата `NaN`/`Infinity` до `null` прийнятна.',
+                '## Теорія: JSON vs Structured Clone\n\n### JSON\n- JSON **не має представлення** для `NaN`/`±Infinity`. При серіалізації вони стають `null` у значеннях: `JSON.stringify({v: NaN}) -> {"v":null}`.\n- **Важливо про `-0`:** формат JSON *дозволяє* число `-0`, і `JSON.parse("-0")` у JS повертає саме `-0` (`Object.is(-0, parsed) === true`). **Але** `JSON.stringify(-0)` виводить `"0"`, тому у циклі *stringify → parse* знак **втрачається**.\n\n### Structured Clone (використовують `structuredClone`, `postMessage`)\n- Зберігає **точно** `NaN`, `Infinity`, `-Infinity` і **знак нуля** (`-0`).\n- Працює з більшістю вбудованих структур (Map, Set, ArrayBuffer тощо), на відміну від JSON.\n- `postMessage` між вікнами/воркерами також базується на structured clone, тому переносить ці значення **без спотворення**.\n\n> Висновок: для точної передачі числових аномалій і бінарних даних — використовуйте structured clone (`structuredClone`, `postMessage`). JSON застосовуйте лише коли втрата `NaN`/`Infinity` до `null` та втрата знака `-0` при `JSON.stringify` прийнятні.',
             theoryEN:
-                '## Theory: JSON vs Structured Clone\n\n### JSON\n- JSON **has no representation** for `NaN`/`±Infinity`. They serialize as `null` in values: `JSON.stringify({v: NaN}) -> {"v":null}`.\n- The zero sign is **not preserved textually**; after parse, `-0` typically materializes as `0` when routed through plain JSON.\n\n### Structured Clone (used by `structuredClone`, `postMessage`)\n- Preserves **exactly** `NaN`, `Infinity`, `-Infinity` and the **zero sign** (`-0`).\n- Works over many built-ins (Map, Set, ArrayBuffer, etc.), unlike JSON.\n- `postMessage` across windows/workers also uses structured clone, thus transfers these values **without distortion**.\n\n> Bottom line: prefer structured clone (`structuredClone`, `postMessage`) for precise transfer of numeric anomalies; JSON will collapse `NaN`/`Infinity` to `null`.',
+                '## Theory: JSON vs Structured Clone\n\n### JSON\n- JSON **has no representation** for `NaN`/`±Infinity`. They serialize as `null` in values: `JSON.stringify({v: NaN}) -> {"v":null}`.\n- **Important about `-0`:** the JSON format *allows* `-0`, and `JSON.parse("-0")` in JS yields `-0` (`Object.is(-0, parsed) === true`). **However**, `JSON.stringify(-0)` outputs `"0"`, so a *stringify → parse* round-trip **loses** the sign.\n\n### Structured Clone (used by `structuredClone`, `postMessage`)\n- Preserves **exactly** `NaN`, `Infinity`, `-Infinity` and the **zero sign** (`-0`).\n- Works over many built-ins (Map, Set, ArrayBuffer, etc.), unlike JSON.\n- `postMessage` across windows/workers also uses structured clone, thus transfers these values **without distortion**.\n\n> Bottom line: prefer structured clone (`structuredClone`, `postMessage`) for precise transfer of numeric anomalies; JSON will collapse `NaN`/`Infinity` to `null` and `JSON.stringify` loses the `-0` sign.',
             answers: [
                 {
                     textUK: '`JSON.stringify({ v: Infinity })` дає рядок з `{"v":null}`',
@@ -87,10 +87,10 @@ export const tests: TopicMock = {
                     isCorrect: false
                 },
                 {
-                    textUK: 'JSON може без втрат представити `-0` як число в рядку',
-                    textEN: 'JSON can losslessly represent `-0` as a number in text',
-                    theoryUK: '**Неправильно:** Текстове представлення не несе знаку нуля; при `JSON.parse` ви отримаєте `0`.',
-                    theoryEN: '**Incorrect:** The textual form doesn’t carry the zero sign; `JSON.parse` gives `0`.',
+                    textUK: '`JSON.stringify(-0)` зберігає знак нуля (`"−0"`)',
+                    textEN: '`JSON.stringify(-0)` preserves the zero sign (`"−0"`)',
+                    theoryUK: '**Неправильно:** `JSON.stringify(-0)` повертає рядок `"0"`, отже знак втрачається у серіалізації.',
+                    theoryEN: '**Incorrect:** `JSON.stringify(-0)` returns the string `"0"`, so the sign is lost on serialization.',
                     isCorrect: false
                 },
                 {
@@ -175,7 +175,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Арифметика з `Infinity`, `-Infinity`, `NaN` та знаковим нулем (`+0`/`-0`): які вирази повертають саме `NaN`, а які — ні? Оберіть усі, що дають `NaN`.',
@@ -235,7 +235,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: '`Object.is` vs `===` vs `SameValueZero`: які твердження про `NaN`, `+0`/`-0`, `includes`, `indexOf`, `Map`/`Set` є вірними? Оберіть усі правильні варіанти.',
@@ -288,7 +288,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: '`Number.isNaN` / `isNaN` / `Number.isFinite` / `isFinite`: які твердження коректно описують коерсію та результати для різних значень? Оберіть усі правильні варіанти.',
@@ -348,7 +348,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'TypedArray і Float32Array: як `NaN`, `Infinity`, `-Infinity` та `-0` зберігаються і читаються на низькому рівні? Оберіть усі правильні твердження.',
@@ -428,9 +428,9 @@ export const tests: TopicMock = {
             textUK: 'Ділення на нуль і знаковий нуль: які вирази повертають саме `Infinity`, `-Infinity` або `NaN`? Оберіть усі твердження, які є коректними.',
             textEN: 'Division by zero and signed zero: which expressions evaluate to `Infinity`, `-Infinity` or `NaN`? Select all correct statements.',
             theoryUK:
-                '## Теорія: `1 / 0`, `1 / -0` та інші крайні випадки\n\nJavaScript числа — IEEE-754 **double**. Це означає, що **ділення на нуль** дає нескінченності зі збереженням знаку, а деякі форми — **невизначені** й повертають `NaN`.\n\n### Базові правила\n- **Ненульове скінченне / `+0`** → `Infinity`  \n  `1 / +0 === Infinity`\n- **Ненульове скінченне / `-0`** → `-Infinity`  \n  `1 / -0 === -Infinity`\n- **`0 / 0`** → `NaN` (невизначеність)\n- **Будь-що / `Infinity`**:  \n  `1 / Infinity === 0`, `1 / -Infinity === -0`\n\n### Поширені контрасти\n- `Infinity / Infinity` → `NaN` (невизначеність)\n- `Infinity / 0` → зберігає знак нескінченності (`Infinity` або `-Infinity`)\n- `0 / -0` → `NaN` (як і `0 / +0`)\n\n> **Спостереження знаку нуля**: `Object.is(-0, +0) === false`; також `1 / -0 === -Infinity`, `1 / +0 === Infinity`.',
+                '## Теорія: `1 / 0`, `1 / -0` та інші крайні випадки\n\nJavaScript числа — IEEE-754 **double**. Це означає, що **ділення на нуль** дає нескінченності зі збереженням знаку, а деякі форми — **невизначені** й повертають `NaN`.\n\n### Базові правила\n- **Ненульове скінченне / `+0`** → `Infinity`  \n  `1 / +0 === Infinity`\n- **Ненульове скінченне / `-0`** → `-Infinity`  \n  `1 / -0 === -Infinity`\n- **`0 / 0`** → `NaN` (невизначеність)\n- **Будь-що / `Infinity`**:  \n  `1 / Infinity === 0`, `1 / -Infinity === -0`\n\n### Додаткові приклади з урахуванням знака нуля\n- `Infinity / +0 === Infinity`, `Infinity / -0 === -Infinity`\n- `-Infinity / +0 === -Infinity`, `-Infinity / -0 === Infinity`\n- `0 / -0` та `0 / +0` → `NaN`\n\n> **Спостереження знаку нуля**: `Object.is(-0, +0) === false`; також `1 / -0 === -Infinity`, `1 / +0 === Infinity`.',
             theoryEN:
-                '## Theory: `1 / 0`, `1 / -0` and other edge cases\n\nJavaScript numbers follow IEEE-754 **double**. This implies division by zero yields infinities with preserved sign, while some forms are **indeterminate** and return `NaN`.\n\n### Core rules\n- **Non-zero finite / `+0`** → `Infinity`  \n  `1 / +0 === Infinity`\n- **Non-zero finite / `-0`** → `-Infinity`  \n  `1 / -0 === -Infinity`\n- **`0 / 0`** → `NaN` (indeterminate)\n- **Anything / `Infinity`**:  \n  `1 / Infinity === 0`, `1 / -Infinity === -0`\n\n### Common contrasts\n- `Infinity / Infinity` → `NaN` (indeterminate)\n- `Infinity / 0` → keeps infinity’s sign (`Infinity` or `-Infinity`)\n- `0 / -0` → `NaN` (same for `0 / +0`)\n\n> **Observing the zero sign**: `Object.is(-0, +0) === false`; also `1 / -0 === -Infinity`, `1 / +0 === Infinity`.',
+                '## Theory: `1 / 0`, `1 / -0` and other edge cases\n\nJavaScript numbers follow IEEE-754 **double**. This implies division by zero yields infinities with preserved sign, while some forms are **indeterminate** and return `NaN`.\n\n### Core rules\n- **Non-zero finite / `+0`** → `Infinity`  \n  `1 / +0 === Infinity`\n- **Non-zero finite / `-0`** → `-Infinity`  \n  `1 / -0 === -Infinity`\n- **`0 / 0`** → `NaN` (indeterminate)\n- **Anything / `Infinity`**:  \n  `1 / Infinity === 0`, `1 / -Infinity === -0`\n\n### Extra examples with signed zero\n- `Infinity / +0 === Infinity`, `Infinity / -0 === -Infinity`\n- `-Infinity / +0 === -Infinity`, `-Infinity / -0 === Infinity`\n- `0 / -0` and `0 / +0` → `NaN`\n\n> **Observing the zero sign**: `Object.is(-0, +0) === false`; also `1 / -0 === -Infinity`, `1 / +0 === Infinity`.',
             answers: [
                 {
                     textUK: '`1 / 0 === Infinity`',
@@ -475,7 +475,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: 'Math API з `NaN` і `Infinity`: які результати повернуть наведені виклики? Оберіть усі правильні твердження.',
@@ -528,7 +528,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: '`BigInt` + `NaN` та змішана арифметика: які з наведених тверджень є вірними? Оберіть усі правильні варіанти.',
@@ -581,7 +581,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: 'Чим відрізняються `isNaN` (глобальна) і `Number.isNaN` (строга) у JavaScript? Оберіть усі правильні твердження.',
@@ -634,7 +634,7 @@ export const tests: TopicMock = {
                     isCorrect: false
                 }
             ],
-            level: 'senior'
+            level: 'junior'
         },
         {
             textUK: '`Array.includes`, `indexOf` і `Set.has` з `NaN`: які твердження вірно описують поведінку (SameValueZero vs `===`)? Оберіть усі правильні варіанти.',
@@ -687,15 +687,15 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         },
         {
             textUK: '`JSON.stringify` з `NaN` та `Infinity`: що отримаємо у результаті серіалізації (включно з вкладеннями)? Оберіть усі правильні твердження.',
             textEN: '`JSON.stringify` with `NaN` and `Infinity`: what do we get after serialization (including nested values)? Select all correct statements.',
             theoryUK:
-                "## Теорія: JSON не підтримує `NaN`/`±Infinity`\n\nСтандарт JSON **не має представлення** для `NaN`, `Infinity`, `-Infinity`. У JavaScript це означає:\n\n- **Як значення полів обʼєкта/елементів масиву** — замінюються на `null`:\n  - `JSON.stringify({ v: NaN }) // '{\"v\":null}'`\n  - `JSON.stringify([Infinity, -Infinity]) // '[null,null]'`\n- **Як кореневе значення** — результатом буде рядок `'null'`:\n  - `JSON.stringify(NaN) === 'null'`\n  - `JSON.stringify(Infinity) === 'null'`\n- **Знак нуля** текстово не зберігається: `JSON.stringify(-0) === '0'`, при `JSON.parse('0') -> 0` (знак втрачено).\n- `structuredClone`/`postMessage` **на відміну від JSON** зберігають `NaN`/`±Infinity`/`-0` без змін.\n- Можна використати **replacer** для власного кодування, якщо важливо уникнути `null`.\n\n> **Висновок:** очікуйте `null` замість `NaN`/`Infinity` у JSON; якщо потрібна точність — не використовуйте JSON як транспорт.",
+                "## Теорія: JSON не підтримує `NaN`/`±Infinity`\n\nСтандарт JSON **не має представлення** для `NaN`, `Infinity`, `-Infinity`. У JavaScript це означає:\n\n- **Як значення полів обʼєкта/елементів масиву** — замінюються на `null`:\n  - `JSON.stringify({ v: NaN }) // '{\"v\":null}'`\n  - `JSON.stringify([Infinity, -Infinity]) // '[null,null]'`\n- **Як кореневе значення** — результатом буде рядок `'null'`:\n  - `JSON.stringify(NaN) === 'null'`\n  - `JSON.stringify(Infinity) === 'null'`\n- **Про `-0`**: формат JSON *дозволяє* запис `-0`, і `JSON.parse('-0')` повертає `-0`. Водночас `JSON.stringify(-0) === '0'`, тому при серіалізації знак **втрачається** (round-trip `stringify → parse`).\n- `structuredClone`/`postMessage` **на відміну від JSON** зберігають `NaN`/`±Infinity`/`-0` без змін.\n- Можна використати **replacer** для власного кодування, якщо важливо уникнути `null`.\n\n> **Висновок:** очікуйте `null` замість `NaN`/`Infinity` у JSON; якщо потрібна точність або збереження `-0` — не використовуйте JSON як транспорт або кодуйте явно.",
             theoryEN:
-                "## Theory: JSON does not support `NaN`/`±Infinity`\n\nThe JSON standard **has no representation** for `NaN`, `Infinity`, or `-Infinity`. In JavaScript this means:\n\n- **As object properties/array elements** — they are replaced with `null`:\n  - `JSON.stringify({ v: NaN }) // '{\"v\":null}'`\n  - `JSON.stringify([Infinity, -Infinity]) // '[null,null]'`\n- **As the root value** — the result is the string `'null'`:\n  - `JSON.stringify(NaN) === 'null'`\n  - `JSON.stringify(Infinity) === 'null'`\n- **Zero sign** is not preserved textually: `JSON.stringify(-0) === '0'`, `JSON.parse('0') -> 0` (sign lost).\n- `structuredClone`/`postMessage`, **unlike JSON**, preserve `NaN`/`±Infinity`/`-0` as-is.\n- A **replacer** can be used to custom-encode if you need to avoid `null`.\n\n> **Bottom line:** expect `null` in place of `NaN`/`Infinity` in JSON; if precision is required, avoid JSON for transport.",
+                "## Theory: JSON does not support `NaN`/`±Infinity`\n\nThe JSON standard **has no representation** for `NaN`, `Infinity`, or `-Infinity`. In JavaScript this means:\n\n- **As object properties/array elements** — they are replaced with `null`:\n  - `JSON.stringify({ v: NaN }) // '{\"v\":null}'`\n  - `JSON.stringify([Infinity, -Infinity]) // '[null,null]'`\n- **As the root value** — the result is the string `'null'`:\n  - `JSON.stringify(NaN) === 'null'`\n  - `JSON.stringify(Infinity) === 'null'`\n- **About `-0`**: the JSON format *allows* `-0`, and `JSON.parse('-0')` yields `-0`. However, `JSON.stringify(-0) === '0'`, so the sign is **lost** during serialization (round-trip `stringify → parse`).\n- `structuredClone`/`postMessage`, **unlike JSON**, preserve `NaN`/`±Infinity`/`-0` as-is.\n- A **replacer** can be used to custom-encode if you need to avoid `null`.\n\n> **Bottom line:** expect `null` in place of `NaN`/`Infinity` in JSON; if precision or `-0` matters, avoid JSON for transport or encode explicitly.",
             answers: [
                 {
                     textUK: '`JSON.stringify({ a: NaN })` поверне рядок з `{ "a": null }`',
@@ -721,8 +721,8 @@ export const tests: TopicMock = {
                 {
                     textUK: '`JSON.stringify(-0) === "0"` і після `JSON.parse("0")` знак нуля втрачено',
                     textEN: '`JSON.stringify(-0) === "0"` and after `JSON.parse("0")` the zero sign is lost',
-                    theoryUK: '**Правильно:** Текстове представлення числа не містить знака нуля.',
-                    theoryEN: '**Correct:** The textual number form does not carry the zero sign.',
+                    theoryUK: '**Правильно:** Текстове представлення, яке емісить `JSON.stringify`, не містить знака нуля.',
+                    theoryEN: '**Correct:** The textual form emitted by `JSON.stringify` does not carry the zero sign.',
                     isCorrect: true
                 },
                 {
@@ -740,7 +740,7 @@ export const tests: TopicMock = {
                     isCorrect: true
                 }
             ],
-            level: 'senior'
+            level: 'middle'
         }
     ]
 };
