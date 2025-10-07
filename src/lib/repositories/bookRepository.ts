@@ -93,6 +93,7 @@ export interface DbBookQuestion {
     theoryEn: string | null;
     level: {
         id: string;
+        key: string;
         nameUk: string;
         nameEn: string;
     };
@@ -202,6 +203,7 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
             theoryEn: bq.question.theoryEn,
             level: {
                 id: bq.question.level.id,
+                key: bq.question.level.key,
                 nameUk: bq.question.level.nameUk,
                 nameEn: bq.question.level.nameEn
             },

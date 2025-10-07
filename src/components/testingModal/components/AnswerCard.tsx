@@ -39,7 +39,7 @@ export default function AnswerCard({ answer, selected, onToggle, showTheory, loc
     return (
         <Card className={cn('cursor-pointer border transition-colors', colorStyle)} onClick={() => !answered && onToggle(answer.id)}>
             <CardContent className="p-4 flex justify-between items-center">
-                <Prose className={cn('text-sm leading-5', colorStyle)} isMD>
+                <Prose colorStyles={colorStyle} className={cn('text-sm leading-5')} isMD>
                     {text}
                 </Prose>
 

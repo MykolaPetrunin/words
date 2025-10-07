@@ -10,12 +10,13 @@ import { cn } from '@/lib/utils';
 
 interface ProseProps {
     isMD?: boolean;
+    colorStyles?: string;
     className?: string;
 }
 
-export const Prose: FC<PropsWithChildren<ProseProps>> = ({ children, isMD = false, className }) => {
+export const Prose: FC<PropsWithChildren<ProseProps>> = ({ children, isMD = false, colorStyles, className }) => {
     return (
-        <article className={cn('prose prose-zinc dark:prose-invert max-w-none', className)}>
+        <article className={cn('prose max-w-none', colorStyles ? colorStyles : 'prose-zinc dark:prose-invert', className)}>
             {isMD ? (
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}

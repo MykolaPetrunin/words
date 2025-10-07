@@ -106,6 +106,8 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
     };
 
     const sortedQuestions = useMemo<DbBookQuestion[]>(() => {
+        const levelOrder = { junior: 0, middle: 1, senior: 2 };
+
         return book.questions.sort((a, b) => {
             const scoreA = a.userScore ?? 0;
             const scoreB = b.userScore ?? 0;
@@ -114,10 +116,10 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
                 return scoreA - scoreB;
             }
 
-            const levelA = a.level.id;
-            const levelB = b.level.id;
+            const levelOrderA = levelOrder[a.level.key as keyof typeof levelOrder] ?? 999;
+            const levelOrderB = levelOrder[b.level.key as keyof typeof levelOrder] ?? 999;
 
-            return levelA.localeCompare(levelB);
+            return levelOrderA - levelOrderB;
         });
     }, [book.questions]);
 
