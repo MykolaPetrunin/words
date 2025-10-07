@@ -205,9 +205,7 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
                 </div>
             </div>
 
-            {testQuestions.length > 0 && (
-                <TestingModal isOpen={testQuestions.length > 0} onClose={handleTestingModalClose} questions={testQuestions.values()} locale={locale} />
-            )}
+            {testQuestions.length > 0 && <TestingModal isOpen={testQuestions.length > 0} onClose={handleTestingModalClose} questions={testQuestions} locale={locale} />}
         </>
     );
 }

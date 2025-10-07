@@ -20,20 +20,22 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 interface TestingModalProps {
     isOpen: boolean;
     onClose: () => void;
-    questions: Iterable<DbBookQuestion>;
+    questions: DbBookQuestion[];
     locale: UserLocale;
 }
 
 export default function TestingModal({ isOpen, onClose, questions, locale }: TestingModalProps): React.ReactElement {
     const t = useI18n();
 
-    const iteratorRef = useRef<Iterator<DbBookQuestion>>(questions[Symbol.iterator]());
+    const iteratorRef = useRef<Iterator<DbBookQuestion>>(questions.values()[Symbol.iterator]());
     const [currentQuestion, setCurrentQuestion] = useState<DbBookQuestion | null>(() => {
         const next = iteratorRef.current.next();
         return next.done ? null : next.value;
     });
     const [theory, setTheory] = useState<string | null>(null);
     const [isAnswered, setIsAnswered] = useState<boolean>(false);
+
+    const [currentIndex, setCurrentIndex] = useState<number>(0);
 
     const [isPending, startTransition] = useTransition();
     const [selectedAnswerIds, setSelectedAnswerIds] = useState<Set<string>>(new Set());
@@ -91,7 +93,8 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
         setAnswers([]);
         setCurrentQuestion(next.value);
         setIsAnswered(false);
-    }, [onClose]);
+        setCurrentIndex(currentIndex + 1);
+    }, [currentIndex, onClose]);
 
     const toggleAnswer = (id: string): void => {
         setSelectedAnswerIds((prev) => {
@@ -125,7 +128,10 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                     ) : (
                         <>
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-semibold">{t('books.testingTitle')}</DialogTitle>
+                                <DialogTitle className="text-xl font-semibold">
+                                    {t('books.testingTitle')}
+                                    {questions.length > 0 ? ` (${currentIndex + 1} ${t('books.testingProgressConnector')} ${questions.length})` : ''}
+                                </DialogTitle>
                             </DialogHeader>
                             <div className="flex-1 overflow-y-auto prose dark:prose-invert prose-sm max-w-none p-4">
                                 {currentQuestion ? (

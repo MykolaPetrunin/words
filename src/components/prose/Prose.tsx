@@ -26,13 +26,13 @@ export const Prose: FC<PropsWithChildren<ProseProps>> = ({ children, isMD = fals
                             const match = /language-(\w+)/.exec(className || '');
                             const isInline = !match;
                             return !isInline ? (
-                                <pre className=" p-4 rounded-lg overflow-x-auto">
-                                    <code className={className} {...props}>
+                                <pre className="p-4 rounded-lg overflow-x-auto">
+                                    <code className={cn(className, colorStyles)} {...props}>
                                         {children}
                                     </code>
                                 </pre>
                             ) : (
-                                <code className="px-1 py-0.5 rounded text-sm" {...props}>
+                                <code className={cn(colorStyles, 'px-1 py-0.5 rounded text-sm')} {...props}>
                                     {children}
                                 </code>
                             );
