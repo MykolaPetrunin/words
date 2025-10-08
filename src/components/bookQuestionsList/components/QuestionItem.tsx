@@ -32,22 +32,13 @@ export default function QuestionItem({ index, question, locale }: QuestionItemPr
 
     return (
         <>
-            <div className="rounded-lg border p-4 hover:bg-muted/50 transition-colors">
-                <div className="flex items-start gap-3">
-                    <span className="text-sm text-muted-foreground font-medium">{index + 1}.</span>
-                    <div className="flex-1">
-                        <Prose isMD className="text-sm">
-                            {questionText}
-                        </Prose>
-                        <span className="text-xs text-muted-foreground mt-1 inline-block">
-                            {t('books.level')}: {levelName}
-                        </span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <div className="w-32 flex flex-col items-center gap-1">
+            <div className="rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+                    <div className="flex items-center gap-3 sm:hidden">
+                        <div className="flex-1">
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="relative w-full">
+                                    <div className="relative w-full overflow-hidden rounded-md">
                                         <Progress value={progressPercentage} className="h-6" />
                                         <span className="absolute inset-0 flex items-center justify-center text-xs font-medium">{Math.round(progressPercentage)}%</span>
                                     </div>
@@ -58,18 +49,56 @@ export default function QuestionItem({ index, question, locale }: QuestionItemPr
                             </Tooltip>
                         </div>
                         {theory && (
-                            <div className="w-full flex justify-end">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsTheoryModalOpen(true)}>
-                                            <BookOpen className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>{t('books.viewTheory')}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </div>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsTheoryModalOpen(true)}>
+                                        <BookOpen className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t('books.viewTheory')}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
+                    </div>
+
+                    <div className="flex items-start gap-3 sm:flex-1 sm:min-w-0">
+                        <span className="text-sm font-medium text-muted-foreground">{index + 1}.</span>
+                        <div className="flex-1 space-y-2 min-w-0">
+                            <Prose isMD className="w-full text-sm break-words [&_*]:break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto">
+                                {questionText}
+                            </Prose>
+                            <span className="inline-block text-xs text-muted-foreground">
+                                {t('books.level')}: {levelName}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="hidden w-32 flex-shrink-0 flex-col gap-2 sm:flex">
+                        <div className="flex flex-col items-center gap-1">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="relative w-full overflow-hidden rounded-md">
+                                        <Progress value={progressPercentage} className="h-6" />
+                                        <span className="absolute inset-0 flex items-center justify-center text-xs font-medium">{Math.round(progressPercentage)}%</span>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t('books.questionProgress')}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </div>
+                        {theory && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="self-end h-8 w-8" onClick={() => setIsTheoryModalOpen(true)}>
+                                        <BookOpen className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t('books.viewTheory')}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                     </div>
                 </div>

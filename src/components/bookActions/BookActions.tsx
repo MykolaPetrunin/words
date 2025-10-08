@@ -13,9 +13,10 @@ interface BookActionsProps {
     onStartLearning: () => Promise<void>;
     onStopLearning: () => Promise<void>;
     onStartTesting: () => void;
+    className?: string;
 }
 
-export default function BookActions({ isLearning, onStartLearning, onStopLearning, onStartTesting }: BookActionsProps): React.ReactElement {
+export default function BookActions({ isLearning, onStartLearning, onStopLearning, onStartTesting, className }: BookActionsProps): React.ReactElement {
     const [isPending, startTransition] = useTransition();
     const t = useI18n();
 
@@ -30,7 +31,7 @@ export default function BookActions({ isLearning, onStartLearning, onStopLearnin
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className={cn('flex items-center gap-2', className)}>
             <Button onClick={handleLearningClick} variant={isLearning ? 'destructive' : 'default'} disabled={isPending} className="gap-2">
                 {isPending ? (
                     <>

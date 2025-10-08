@@ -170,13 +170,14 @@ export default function BookPageClient({ book: initialBook }: BookPageClientProp
         <>
             <div className="container mx-auto p-6">
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold">{bookTitle}</h1>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <h1 className="w-full text-3xl font-bold sm:flex-1">{bookTitle}</h1>
                         <BookActions
                             isLearning={book.isLearning}
                             onStartLearning={handleStartLearning}
                             onStopLearning={handleStopLearning}
                             onStartTesting={handleStartTesting}
+                            className="w-full flex-wrap justify-start sm:w-auto sm:flex-nowrap sm:justify-end"
                         />
                     </div>
 
