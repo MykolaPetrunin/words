@@ -9,18 +9,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const { idToken } = (await request.json()) as { idToken?: string };
 
         if (!idToken) {
+            serverLogger.warn('Session creation failed: Missing ID token', { endpoint: '/api/auth/session' });
             return NextResponse.json({ error: 'Missing ID token' }, { status: 400 });
         }
+
+        serverLogger.info('Starting session creation', { hasIdToken: !!idToken });
 
         const decoded = await verifyIdToken(idToken);
 
         if (!decoded.uid) {
+            serverLogger.warn('Session creation failed: Invalid token', { endpoint: '/api/auth/session' });
             return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         }
+
+        serverLogger.info('Token verified successfully', { uid: decoded.uid, email: decoded.email });
 
         const profile = await getUserProfile(decoded.uid);
         const email = decoded.email || profile.email;
         if (!email) {
+            serverLogger.warn('Session creation failed: Email not found', { uid: decoded.uid, endpoint: '/api/auth/session' });
             return NextResponse.json({ error: 'Email not found in token' }, { status: 400 });
         }
 
@@ -29,9 +36,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const firstName = parts[0] || '';
         const lastName = parts.slice(1).join(' ') || '';
 
+        serverLogger.info('Upserting user in database', { firebaseId: decoded.uid, email, firstName, lastName });
         await upsertUserByFirebaseId({ firebaseId: decoded.uid, email, firstName, lastName });
 
         const expiresIn = 60 * 60 * 24 * 14 * 1000;
+        serverLogger.info('Creating session cookie', { expiresIn });
         const sessionCookie = await createSessionCookie(idToken, expiresIn);
 
         const response = NextResponse.json({ success: true });
@@ -44,7 +53,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         });
 
         const dbUser = await getUserByFirebaseId(decoded.uid);
-        console.info('Session creation route: dbUser:', dbUser);
+        serverLogger.info('Session creation successful', {
+            firebaseId: decoded.uid,
+            email: email,
+            hasDbUser: !!dbUser
+        });
         if (dbUser) {
             response.cookies.set('locale', dbUser.locale, {
                 maxAge: 60 * 60 * 24 * 365,
@@ -63,7 +76,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         return response;
     } catch (error) {
-        console.error('Session creation failed', error);
         serverLogger.error('Session creation failed', error as Error, { endpoint: '/api/auth/session' });
         return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
     }
