@@ -15,6 +15,16 @@ export interface DbBook {
     updatedAt: Date;
 }
 
+export interface BookSubjectInfo {
+    id: string;
+    nameUk: string;
+    nameEn: string;
+}
+
+export interface DbBookWithSubjects extends DbBook {
+    subjects: BookSubjectInfo[];
+}
+
 export interface DbBookWithLearningStatus extends DbBook {
     isLearning: boolean;
     levelCompletion: BookLevelCompletion;
@@ -23,6 +33,138 @@ export interface DbBookWithLearningStatus extends DbBook {
         averageScore: number;
         totalQuestions: number;
     }[];
+}
+
+export interface BookInput {
+    titleUk: string;
+    titleEn: string;
+    descriptionUk: string | null;
+    descriptionEn: string | null;
+    isActive: boolean;
+    subjectIds: readonly string[];
+}
+
+type BookBaseRow = {
+    id: string;
+    titleUk: string;
+    titleEn: string;
+    descriptionUk: string | null;
+    descriptionEn: string | null;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+type BookSubjectRow = {
+    subject: {
+        id: string;
+        nameUk: string;
+        nameEn: string;
+    };
+};
+
+type BookWithSubjectsRow = BookBaseRow & {
+    bookSubjects: BookSubjectRow[];
+};
+
+const mapToDbBook = (book: BookBaseRow): DbBook => ({
+    id: book.id,
+    titleUk: book.titleUk,
+    titleEn: book.titleEn,
+    descriptionUk: book.descriptionUk,
+    descriptionEn: book.descriptionEn,
+    isActive: book.isActive,
+    createdAt: book.createdAt,
+    updatedAt: book.updatedAt
+});
+
+const mapToDbBookWithSubjects = (book: BookWithSubjectsRow): DbBookWithSubjects => ({
+    ...mapToDbBook(book),
+    subjects: book.bookSubjects.map((item) => ({
+        id: item.subject.id,
+        nameUk: item.subject.nameUk,
+        nameEn: item.subject.nameEn
+    }))
+});
+
+export async function getAllBooks(): Promise<DbBookWithSubjects[]> {
+    const rows = await prisma.book.findMany({
+        orderBy: { createdAt: 'asc' },
+        include: {
+            bookSubjects: {
+                include: {
+                    subject: {
+                        select: {
+                            id: true,
+                            nameUk: true,
+                            nameEn: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+    return rows.map((row) => mapToDbBookWithSubjects(row));
+}
+
+export async function createBook(input: BookInput): Promise<DbBookWithSubjects> {
+    const book = await prisma.book.create({
+        data: {
+            titleUk: input.titleUk,
+            titleEn: input.titleEn,
+            descriptionUk: input.descriptionUk,
+            descriptionEn: input.descriptionEn,
+            isActive: input.isActive,
+            bookSubjects: {
+                create: input.subjectIds.map((subjectId) => ({ subjectId }))
+            }
+        },
+        include: {
+            bookSubjects: {
+                include: {
+                    subject: {
+                        select: {
+                            id: true,
+                            nameUk: true,
+                            nameEn: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+    return mapToDbBookWithSubjects(book);
+}
+
+export async function updateBook(id: string, input: BookInput): Promise<DbBookWithSubjects> {
+    const book = await prisma.book.update({
+        where: { id },
+        data: {
+            titleUk: input.titleUk,
+            titleEn: input.titleEn,
+            descriptionUk: input.descriptionUk,
+            descriptionEn: input.descriptionEn,
+            isActive: input.isActive,
+            bookSubjects: {
+                deleteMany: {},
+                create: input.subjectIds.map((subjectId) => ({ subjectId }))
+            }
+        },
+        include: {
+            bookSubjects: {
+                include: {
+                    subject: {
+                        select: {
+                            id: true,
+                            nameUk: true,
+                            nameEn: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+    return mapToDbBookWithSubjects(book);
 }
 
 export async function getBooksBySubjectId(subjectId: string, userId?: string): Promise<DbBookWithLearningStatus[]> {

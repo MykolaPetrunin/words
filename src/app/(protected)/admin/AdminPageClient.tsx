@@ -77,7 +77,7 @@ export default function AdminPageClient({ initialQuestions, filters }: AdminPage
     );
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
             <div className="space-y-1">
                 <h1 className="text-2xl font-semibold">{t('questions.pageTitle')}</h1>
                 <p className="text-sm text-muted-foreground">{t('questions.pageSubtitle')}</p>

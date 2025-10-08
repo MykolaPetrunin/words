@@ -8,6 +8,8 @@ export interface AppPaths {
     readonly subjects: '/subjects';
     readonly books: '/books';
     readonly admin: '/admin';
+    readonly adminSubjects: '/admin/subjects';
+    readonly adminBooks: '/admin/books';
     readonly adminQuestions: '/admin/questions';
     readonly adminQuestionDetail: '/admin/questions/[id]';
     readonly apiSubjects: '/api/subjects';
@@ -23,6 +25,8 @@ export const appPaths: AppPaths = {
     subjects: '/subjects',
     books: '/books',
     admin: '/admin',
+    adminSubjects: '/admin/subjects',
+    adminBooks: '/admin/books',
     adminQuestions: '/admin/questions',
     adminQuestionDetail: '/admin/questions/[id]',
     apiSubjects: '/api/subjects'
