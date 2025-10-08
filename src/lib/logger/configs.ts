@@ -1,11 +1,21 @@
-import { LoggerConfig } from './types';
+import { LoggerConfig, LogLevel } from './types';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isTest = process.env.NODE_ENV === 'test';
 const isPrettyEnabled = process.env.LOG_PRETTY === 'true';
 
+const validLogLevels: LogLevel[] = ['debug', 'info', 'warn', 'error', 'fatal'];
+
+const getLogLevel = (): LogLevel => {
+    const envLogLevel = process.env.LOG_LEVEL;
+    if (envLogLevel && validLogLevels.includes(envLogLevel as LogLevel)) {
+        return envLogLevel as LogLevel;
+    }
+    return isDevelopment ? 'debug' : 'info';
+};
+
 export const defaultConfig: LoggerConfig = {
-    level: (process.env.LOG_LEVEL as LoggerConfig['level']) || (isDevelopment ? 'debug' : 'info'),
+    level: getLogLevel(),
     name: process.env.LOGGER_NAME || 'words-next',
     prettyPrint: isDevelopment && !isTest && isPrettyEnabled,
     redact: ['password', 'token', 'idToken', 'secret', 'key', 'authorization']
