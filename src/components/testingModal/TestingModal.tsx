@@ -1,19 +1,21 @@
 'use client';
 
 import { BookOpen } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Prose } from '@/components/prose/Prose';
 import AnswerCard from '@/components/testingModal/components/AnswerCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/hooks/useI18n';
 import { clientLogger } from '@/lib/logger';
 import type { DbBookQuestion } from '@/lib/repositories/bookRepository';
 import type { PublicAnswer } from '@/lib/repositories/questionRepository';
 import { fetchQuestionAnswers } from '@/lib/repositories/questions.server';
 import type { UserLocale } from '@/lib/types/user';
+import { cn } from '@/lib/utils';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
@@ -37,7 +39,9 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
 
     const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-    const [isPending, startTransition] = useTransition();
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [isAnswersLoading, setIsAnswersLoading] = useState<boolean>(false);
+    const [answerStatus, setAnswerStatus] = useState<'correct' | 'incorrect' | null>(null);
     const [selectedAnswerIds, setSelectedAnswerIds] = useState<Set<string>>(new Set());
     const [answers, setAnswers] = useState<Array<PublicAnswer>>([]);
 
@@ -47,18 +51,18 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
     }, [currentQuestion, locale]);
 
     const handleAnswerClick = useCallback((): void => {
-        if (!currentQuestion) return;
+        if (!currentQuestion || isSubmitting) return;
 
-        // Determine if answer is correct on client side
         const correctAnswerIds = answers.filter((answer) => answer.isCorrect).map((answer) => answer.id);
         const selectedSet = new Set(selectedAnswerIds);
         const correctSet = new Set(correctAnswerIds);
 
-        // Answer is correct if all correct answers are selected and no incorrect ones
         const isCorrect =
             correctAnswerIds.every((id) => selectedSet.has(id)) && selectedAnswerIds.size > 0 && Array.from(selectedAnswerIds).every((id) => correctSet.has(id));
 
-        startTransition(async () => {
+        setIsSubmitting(true);
+
+        const submitAnswer = async (): Promise<void> => {
             try {
                 const response = await fetch(`/api/questions/${currentQuestion.id}/answer`, {
                     method: 'POST',
@@ -72,6 +76,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
 
                 if (response.ok) {
                     setIsAnswered(true);
+                    setAnswerStatus(isCorrect ? 'correct' : 'incorrect');
                 } else {
                     clientLogger.error('Failed to submit answer - server error', new Error(`HTTP ${response.status}`));
                     toast.error(t('common.error'));
@@ -79,9 +84,13 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
             } catch (error) {
                 clientLogger.error('Failed to submit answer', error as Error);
                 toast.error(t('common.error'));
+            } finally {
+                setIsSubmitting(false);
             }
-        });
-    }, [currentQuestion, answers, selectedAnswerIds, t]);
+        };
+
+        void submitAnswer();
+    }, [currentQuestion, isSubmitting, answers, selectedAnswerIds, t]);
 
     const nextQuestion = useCallback((): void => {
         const next = iteratorRef.current.next();
@@ -94,9 +103,13 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
         setCurrentQuestion(next.value);
         setIsAnswered(false);
         setCurrentIndex(currentIndex + 1);
+        setAnswerStatus(null);
+        setTheory(null);
+        setIsSubmitting(false);
     }, [currentIndex, onClose]);
 
     const toggleAnswer = (id: string): void => {
+        if (isSubmitting || isAnswered) return;
         setSelectedAnswerIds((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
@@ -105,17 +118,39 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
         });
     };
     const fetchAnswers = useCallback(async (): Promise<void> => {
-        startTransition(async () => {
+        if (!currentQuestion) {
             setAnswers([]);
-            if (!currentQuestion) return;
+            return;
+        }
+
+        setIsAnswersLoading(true);
+        setAnswers([]);
+
+        try {
             const data = await fetchQuestionAnswers(currentQuestion.id);
             setAnswers(data.sort(() => Math.random() - 0.5));
-        });
-    }, [currentQuestion]);
+        } catch (error) {
+            clientLogger.error('Failed to load answers', error as Error);
+            toast.error(t('common.error'));
+        } finally {
+            setIsAnswersLoading(false);
+        }
+    }, [currentQuestion, t]);
 
     useEffect(() => {
         fetchAnswers();
     }, [fetchAnswers]);
+
+    const titleClassName = useMemo<string>(
+        () =>
+            cn('text-xl font-semibold', {
+                'text-emerald-600': isAnswered && answerStatus === 'correct',
+                'text-red-500': isAnswered && answerStatus === 'incorrect'
+            }),
+        [isAnswered, answerStatus]
+    );
+
+    const skeletonItems = useMemo<Array<number>>(() => Array.from({ length: 4 }, (_, index) => index), []);
 
     return (
         <>
@@ -128,7 +163,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                     ) : (
                         <>
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-semibold">
+                                <DialogTitle className={titleClassName}>
                                     {t('books.testingTitle')}
                                     {questions.length > 0 ? ` (${currentIndex + 1} ${t('books.testingProgressConnector')} ${questions.length})` : ''}
                                 </DialogTitle>
@@ -162,17 +197,20 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                                         </Prose>
                                         <p className="text-xs text-muted-foreground">{t('books.selectAllCorrect')}</p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {answers.map((a) => (
-                                                <AnswerCard
-                                                    locale={locale}
-                                                    key={a.id}
-                                                    answer={a}
-                                                    selected={selectedAnswerIds.has(a.id)}
-                                                    onToggle={toggleAnswer}
-                                                    showTheory={(t) => setTheory(t)}
-                                                    answered={isAnswered}
-                                                />
-                                            ))}
+                                            {isAnswersLoading
+                                                ? skeletonItems.map((item) => <Skeleton key={item} className="h-32 w-full" />)
+                                                : answers.map((a) => (
+                                                      <AnswerCard
+                                                          locale={locale}
+                                                          key={a.id}
+                                                          answer={a}
+                                                          selected={selectedAnswerIds.has(a.id)}
+                                                          onToggle={toggleAnswer}
+                                                          showTheory={(value) => setTheory(value)}
+                                                          answered={isAnswered}
+                                                          disabled={isSubmitting}
+                                                      />
+                                                  ))}
                                         </div>
                                     </div>
                                 ) : (
@@ -180,7 +218,11 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                                 )}
                             </div>
                             <div className="p-4 border-t flex flex-col gap-2 sm:flex-row sm:justify-end">
-                                <Button className="w-full sm:w-auto" onClick={handleAnswerClick} disabled={answers.length === 0 || isPending || isAnswered}>
+                                <Button
+                                    className="w-full sm:w-auto"
+                                    onClick={handleAnswerClick}
+                                    disabled={answers.length === 0 || isSubmitting || isAnswered || isAnswersLoading}
+                                >
                                     {t('books.answerQuestion')}
                                 </Button>
                                 <Button className="w-full sm:w-auto" variant="outline" onClick={nextQuestion}>

@@ -19,9 +19,10 @@ interface AnswerCardProps {
     onToggle: (id: string) => void;
     showTheory: (theory: string) => void;
     answered: boolean;
+    disabled: boolean;
 }
 
-export default function AnswerCard({ answer, selected, onToggle, showTheory, locale, answered }: AnswerCardProps): React.ReactElement {
+export default function AnswerCard({ answer, selected, onToggle, showTheory, locale, answered, disabled }: AnswerCardProps): React.ReactElement {
     const t = useI18n();
     const text = locale === 'uk' ? answer.textUk : answer.textEn;
     const theory = locale === 'uk' ? answer.theoryUk : answer.theoryEn;
@@ -52,12 +53,27 @@ export default function AnswerCard({ answer, selected, onToggle, showTheory, loc
         return { container: 'bg-background/95 dark:bg-background/80 border-border', prose: 'text-foreground', code: 'text-foreground bg-muted/30' };
     }, [answered, selected, answer]);
 
+    const isInteractive = !answered && !disabled;
+
     return (
         <Card
-            className={cn('cursor-pointer border transition-colors', appearance.container)}
-            onClick={() => !answered && onToggle(answer.id)}
+            className={cn('border transition-colors', appearance.container, {
+                'cursor-pointer': isInteractive,
+                'cursor-default': !isInteractive
+            })}
+            onClick={() => {
+                if (isInteractive) onToggle(answer.id);
+            }}
             role="button"
             aria-pressed={selected}
+            aria-disabled={!isInteractive}
+            tabIndex={isInteractive ? 0 : -1}
+            onKeyDown={(event) => {
+                if (isInteractive && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    onToggle(answer.id);
+                }
+            }}
         >
             <CardContent className="p-4 flex justify-between items-center gap-3">
                 <Prose
