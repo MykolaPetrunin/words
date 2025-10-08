@@ -59,54 +59,66 @@ export const tests: TopicMock = {
             ],
             level: 'junior'
         },
+
         {
-            textUK: 'Short-circuiting у `&&` і `||`: що буде в консолі та яке значення матиме `count`?',
-            textEN: 'Short-circuiting with `&&` and `||`: what will be logged and what will `count` become?',
+            textUK: "### Short-circuiting у `&&` і `||`: один завершений приклад\n\n**Завдання.** Прочитай теорію нижче, а потім визнач **точний порядок логів у консолі** та **остаточне значення `count`** після виконання коду.\n\n```js\nlet count = 0;\nconst inc = (tag) => { count++; console.log('inc:' + tag); return true; };\nconst fail = (tag) => { console.log('fail:' + tag); return false; };\nconst zero = () => { console.log('zero'); return 0; };\n\nconsole.log( 0 && inc('A') );      // A\nconsole.log( 1 || fail('B') );     // B\nconsole.log( false || inc('C') );  // C\nconsole.log( true && fail('D') );  // D\nconsole.log( zero() || inc('E') ); // E\n```\n\n> **Підказка:** лівий операнд завжди обчислюється (навіть якщо це виклик функції); коротке замикання може **пропустити тільки правий**.",
+            textEN: "### Short-circuiting with `&&` and `||`: one complete exercise\n\n**Task.** Read the theory below, then determine the **exact console log order** and the **final value of `count`** after running the code.\n\n```js\nlet count = 0;\nconst inc = (tag) => { count++; console.log('inc:' + tag); return true; };\nconst fail = (tag) => { console.log('fail:' + tag); return false; };\nconst zero = () => { console.log('zero'); return 0; };\n\nconsole.log( 0 && inc('A') );      // A\nconsole.log( 1 || fail('B') );     // B\nconsole.log( false || inc('C') );  // C\nconsole.log( true && fail('D') );  // D\nconsole.log( zero() || inc('E') ); // E\n```\n\n> **Hint:** the left operand is always evaluated; short-circuiting can only **skip the right** operand.",
             theoryUK:
-                "### Теорія: коротке замикання у `&&` та `||`\n\n- `a && b` **не** обчислює `b`, якщо `a` *falsy* (результат вже відомий: *falsy* → повертаємо `a`). Якщо `a` *truthy*, `b` **обчислюється** і повертається його значення.\n- `a || b` **не** обчислює `b`, якщо `a` *truthy* (результат вже truthy → повертаємо `a`). Якщо `a` *falsy*, `b` **обчислюється** і повертається його значення.\n\nЦе означає, що функції праворуч можуть **не викликатися**. Використання побічних ефектів (наприклад, інкремент змінної) добре демонструє коротке замикання.\n\nРозглянемо код:\n```js\nlet count = 0;\nconst inc = () => { count++; console.log('inc'); return true; };\nconst fail = () => { console.log('fail'); return false; };\n\nconsole.log( 0 && inc() );      // A\nconsole.log( 1 || fail() );     // B\nconsole.log( false || inc() );  // C\nconsole.log( true && fail() );  // D\n```\n- A: `0 && inc()` → `0` *falsy*, отже `inc()` **не** викличеться.\n- B: `1 || fail()` → `1` *truthy*, `fail()` **не** викличеться.\n- C: `false || inc()` → `false` *falsy*, отже викличеться `inc()` і поверне `true`.\n- D: `true && fail()` → `true` *truthy*, отже викличеться `fail()` і поверне `false`.\n\nПісля цього виклики `inc()` трапляться **один раз** (у C), `fail()` — **один раз** (у D).",
+                "### Теорія: як працюють `&&` і `||`\n\n1. **Коротке замикання**:\n   - `a && b`: якщо `a` *falsy* → повертається **`a`** і `b` **не** обчислюється; якщо `a` *truthy* → обчислюється `b`, повертається його значення.\n   - `a || b`: якщо `a` *truthy* → повертається **`a`** і `b` **не** обчислюється; якщо `a` *falsy* → обчислюється `b`, повертається його значення.\n2. **Повернення операндів**: обидва оператори повертають **сам операнд** (наприклад, `1 || x` поверне `1`, а не `true`).\n3. **Лівий операнд завжди обчислюється**: якщо зліва виклик функції (`zero()`), він виконається у будь-якому разі; коротке замикання стосується лише **правої** частини.\n4. **Порядок логів**: логи з функцій (`console.log` всередині `inc/fail/zero`) зʼявляються **до** того, як виводиться результат у зовнішньому `console.log(...)` цього рядка.\n\nРозбір по рядках:\n- **A**: `0 && inc('A')` → зліва `0` (*falsy*) → `inc` не викликається → у консоль піде `0`.\n- **B**: `1 || fail('B')` → зліва `1` (*truthy*) → `fail` не викликається → у консоль піде `1`.\n- **C**: `false || inc('C')` → зліва *falsy* → викликається `inc('C')` (лог `inc:C`), значення виразу `true` → у консоль далі піде `true`.\n- **D**: `true && fail('D')` → зліва *truthy* → викликається `fail('D')` (лог `fail:D`), значення виразу `false` → далі `false`.\n- **E**: `zero() || inc('E')` → спершу викликається **`zero()`** (лог `zero`), повертає `0` (*falsy*) → викликається `inc('E')` (лог `inc:E`), вираз `true` → далі `true`.\n\nПідсумок побічних ефектів: `inc` — у C та E (разом 2 рази), `fail` — у D (1 раз), `zero` — у E (1 раз). Остаточне `count` = **2**.",
             theoryEN:
-                "### Theory: short-circuiting in `&&` and `||`\n\n- `a && b` does **not** evaluate `b` when `a` is *falsy* (result is already determined: *falsy* → return `a`). If `a` is *truthy*, `b` **is** evaluated and returned.\n- `a || b` does **not** evaluate `b` when `a` is *truthy* (result is already truthy → return `a`). If `a` is *falsy*, `b` **is** evaluated and returned.\n\nThus right-hand functions may **not be called**. Side effects (like incrementing a variable) clearly expose short-circuiting.\n\nConsider the code:\n```js\nlet count = 0;\nconst inc = () => { count++; console.log('inc'); return true; };\nconst fail = () => { console.log('fail'); return false; };\n\nconsole.log( 0 && inc() );      // A\nconsole.log( 1 || fail() );     // B\nconsole.log( false || inc() );  // C\nconsole.log( true && fail() );  // D\n```\n- A: `0 && inc()` → `0` is *falsy*, so `inc()` **won't** run.\n- B: `1 || fail()` → `1` is *truthy*, so `fail()` **won't** run.\n- C: `false || inc()` → left is *falsy*, so `inc()` **runs** and returns `true`.\n- D: `true && fail()` → left is *truthy*, so `fail()` **runs** and returns `false`.\n\nSo `inc()` is called **once** (in C) and `fail()` is called **once** (in D).",
+                "### Theory: how `&&` and `||` work\n\n1. **Short-circuiting**:\n   - `a && b`: if `a` is *falsy* → return **`a`**; `b` is **not** evaluated. If `a` is *truthy* → evaluate `b` and return its value.\n   - `a || b`: if `a` is *truthy* → return **`a`**; `b` is **not** evaluated. If `a` is *falsy* → evaluate `b` and return its value.\n2. **Operand return**: both operators return an **operand** (e.g., `1 || x` returns `1`, not `true`).\n3. **Left operand always runs**: if the left side is a function call (`zero()`), it executes; short-circuiting can only skip the **right** side.\n4. **Log order**: logs inside helper functions appear **before** the outer `console.log(...)` result for that line.\n\nLine-by-line:\n- **A**: `0 && inc('A')` → left is *falsy* → `inc` doesn't run → console prints `0`.\n- **B**: `1 || fail('B')` → left is *truthy* → `fail` doesn't run → console prints `1`.\n- **C**: `false || inc('C')` → left *falsy* → calls `inc('C')` (log `inc:C`), expression `true` → then `true`.\n- **D**: `true && fail('D')` → left *truthy* → calls `fail('D')` (log `fail:D`), expression `false` → then `false`.\n- **E**: `zero() || inc('E')` → `zero()` runs first (log `zero`), returns `0` (*falsy*) → calls `inc('E')` (log `inc:E`), expression `true` → then `true`.\n\nSide effects summary: `inc` in C & E (2 times), `fail` in D (1 time), `zero` in E (1 time). Final `count` = **2**.",
             answers: [
                 {
-                    textUK: 'Логи: A→0, B→1, C→true, D→false; `count` дорівнює 1.',
-                    textEN: 'Logs: A→0, B→1, C→true, D→false; `count` equals 1.',
-                    theoryUK: '✅ **Вірно.** `inc()` викликано лише у C, тому один інкремент → `count = 1`. `fail()` викликано у D, але він не змінює `count`.',
-                    theoryEN: '✅ **Correct.** `inc()` is invoked only in C, so one increment → `count = 1`. `fail()` runs in D but does not affect `count`.',
+                    textUK: 'Порядок логів:\n```\n0\n1\ninc:C\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\nФінальне `count`: `2`.',
+                    textEN: 'Log order:\n```\n0\n1\ninc:C\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\nFinal `count`: `2`.',
+                    theoryUK:
+                        'Розбір: у C спершу зʼявляється `inc:C`, потім `true`; у D — `fail:D`, потім `false`; у E — `zero`, `inc:E`, потім `true`. `inc` викликається двічі → `count` дорівнює 2.',
+                    theoryEN:
+                        'Breakdown: in C `inc:C` precedes `true`; in D `fail:D` precedes `false`; in E `zero` then `inc:E` then `true`. `inc` runs twice → `count` is 2.',
                     isCorrect: true
                 },
                 {
-                    textUK: 'Логи: A→undefined, B→1, C→true, D→false; `count` дорівнює 2.',
-                    textEN: 'Logs: A→undefined, B→1, C→true, D→false; `count` equals 2.',
-                    theoryUK: '❌ **Хибно.** В A повертається саме `0`, а не `undefined`. Також `inc()` викликається лише один раз (у C), тож `count` не може бути 2.',
-                    theoryEN: '❌ **Incorrect.** In A the result is `0`, not `undefined`. Also `inc()` runs only once (in C), so `count` cannot be 2.',
+                    textUK: '```\n0\n1\ntrue\nfalse\ninc:C\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    textEN: '```\n0\n1\ntrue\nfalse\ninc:C\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    theoryUK:
+                        'Помилка порядку: внутрішні логи мають бути **до** значення виразу того ж рядка. Для C повинно бути `inc:C` **перед** `true`; для D — `fail:D` **перед** `false`.',
+                    theoryEN:
+                        'Order issue: inner logs must appear **before** the expression result on the same line. In C `inc:C` must be **before** `true`; in D `fail:D` **before** `false`.',
                     isCorrect: false
                 },
                 {
-                    textUK: 'Логи: A→0, B→1, C→true, D→true; `count` дорівнює 1.',
-                    textEN: 'Logs: A→0, B→1, C→true, D→true; `count` equals 1.',
-                    theoryUK: '❌ **Хибно.** У D викликається `fail()` і повертає **`false`**, не `true`.',
-                    theoryEN: '❌ **Incorrect.** In D `fail()` is called and returns **`false`**, not `true`.',
+                    textUK: '```\n0\n1\ninc:C\ntrue\nfalse\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    textEN: '```\n0\n1\ninc:C\ntrue\nfalse\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    theoryUK: "Пропущено `fail:D`: у D викликається `fail('D')`, тому лог `fail:D` має бути **перед** `false`.",
+                    theoryEN: "Missing `fail:D`: in D `fail('D')` runs, so `fail:D` must appear **before** `false`.",
                     isCorrect: false
                 },
                 {
-                    textUK: 'Логи: A→0, B→1, C→true, D→false; `count` дорівнює 0.',
-                    textEN: 'Logs: A→0, B→1, C→true, D→false; `count` equals 0.',
-                    theoryUK: '❌ **Хибно.** `inc()` було викликано у C, тому `count` став 1.',
-                    theoryEN: '❌ **Incorrect.** `inc()` is called in C, so `count` becomes 1.',
+                    textUK: '```\n0\n1\ninc:C\ntrue\nfail:D\nfalse\ninc:E\ntrue\n```\n`count = 2`.',
+                    textEN: '```\n0\n1\ninc:C\ntrue\nfail:D\nfalse\ninc:E\ntrue\n```\n`count = 2`.',
+                    theoryUK: 'Відсутній лог `zero`. У E лівий операнд — виклик **`zero()`**, він завжди обчислюється і лог має бути **перед** `inc:E`.',
+                    theoryEN: 'Missing `zero` log. In E the left operand is a **`zero()`** call, it always runs and must log **before** `inc:E`.',
                     isCorrect: false
                 },
                 {
-                    textUK: 'Логи: A→0, B→1, C→true, D→false; `count` дорівнює 2, бо `inc()` викликається у A та C.',
-                    textEN: 'Logs: A→0, B→1, C→true, D→false; `count` equals 2 because `inc()` runs in A and C.',
-                    theoryUK: '❌ **Хибно.** У A `0 && inc()` коротко замикає, тож `inc()` **не** викликається.',
-                    theoryEN: '❌ **Incorrect.** In A `0 && inc()` short-circuits, so `inc()` **does not** run.',
+                    textUK: '```\n0\n1\ninc:C\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\n`count = 1`.',
+                    textEN: '```\n0\n1\ninc:C\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\n`count = 1`.',
+                    theoryUK: '`count` занижено: `inc` викликається **двічі** (у C та E), тому має бути `2`.',
+                    theoryEN: '`count` is too low: `inc` runs **twice** (C and E), so it must be `2`.',
                     isCorrect: false
                 },
                 {
-                    textUK: 'Логи: A→0, B→true, C→true, D→false; `count` дорівнює 1.',
-                    textEN: 'Logs: A→0, B→true, C→true, D→false; `count` equals 1.',
-                    theoryUK: '❌ **Хибно.** Вираз `1 || fail()` повертає **`1`**, а не `true`, бо `||` повертає операнд.',
-                    theoryEN: '❌ **Incorrect.** The expression `1 || fail()` returns **`1`**, not `true`, because `||` returns an operand.',
+                    textUK: '```\n0\ntrue\ninc:C\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    textEN: '```\n0\ntrue\ninc:C\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    theoryUK: '`1 || ...` повертає **`1`**, а не булеве `true`, бо оператори повертають **операнд**.',
+                    theoryEN: '`1 || ...` returns **`1`**, not boolean `true`, because these operators return an **operand**.',
+                    isCorrect: false
+                },
+                {
+                    textUK: '```\n0\n1\ninc:A\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    textEN: '```\n0\n1\ninc:A\ntrue\nfail:D\nfalse\nzero\ninc:E\ntrue\n```\n`count = 2`.',
+                    theoryUK: "У A `0 && inc('A')` не викликає `inc`, бо лівий операнд *falsy* і вираз завершується одразу. `inc:A` зʼявитися не може.",
+                    theoryEN: "In A, `0 && inc('A')` does not call `inc` because the left operand is *falsy* and the expression short-circuits. `inc:A` cannot appear.",
                     isCorrect: false
                 }
             ],

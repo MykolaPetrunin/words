@@ -11,6 +11,8 @@ import { useI18n } from '@/hooks/useI18n';
 import type { DbBookWithQuestions } from '@/lib/repositories/bookRepository';
 import type { UserLocale } from '@/lib/types/user';
 
+import { Prose } from '../../prose/Prose';
+
 interface QuestionItemProps {
     index: number;
     question: DbBookWithQuestions['questions'][number];
@@ -34,7 +36,9 @@ export default function QuestionItem({ index, question, locale }: QuestionItemPr
                 <div className="flex items-start gap-3">
                     <span className="text-sm text-muted-foreground font-medium">{index + 1}.</span>
                     <div className="flex-1">
-                        <p className="text-sm">{questionText}</p>
+                        <Prose isMD className="text-sm">
+                            {questionText}
+                        </Prose>
                         <span className="text-xs text-muted-foreground mt-1 inline-block">
                             {t('books.level')}: {levelName}
                         </span>

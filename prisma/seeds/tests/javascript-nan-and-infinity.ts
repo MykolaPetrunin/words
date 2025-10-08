@@ -241,48 +241,48 @@ export const tests: TopicMock = {
             textUK: '`Object.is` vs `===` vs `SameValueZero`: які твердження про `NaN`, `+0`/`-0`, `includes`, `indexOf`, `Map`/`Set` є вірними? Оберіть усі правильні варіанти.',
             textEN: '`Object.is` vs `===` vs `SameValueZero`: which statements about `NaN`, `+0`/`-0`, `includes`, `indexOf`, and `Map`/`Set` are true? Select all that apply.',
             theoryUK:
-                '## Теорія: три алгоритми рівності\n\n- **Strict Equality (`===`)**: `NaN === NaN` → `false`; `+0 === -0` → `true`.\n- **SameValue (`Object.is`)**: `Object.is(NaN, NaN)` → `true`; `Object.is(+0, -0)` → `false`.\n- **SameValueZero**: як SameValue, **але** `+0` та `-0` вважаються рівними; `NaN` дорівнює `NaN`.\n\n### Де вони застосовуються\n- `===`/`!==` — оператори порівняння в коді.\n- `Object.is` — безпосередньо виклик API.\n- **SameValueZero** — `Array.prototype.includes`, `Set`, `Map` (для зіставлення ключів/значень), `TypedArray.prototype.includes`.\n- **Виняток**: `Array.prototype.indexOf` використовує `===`, тому *не* знаходить `NaN`.\n\n> Практика: для пошуку `NaN` у масиві — використовуйте `includes`. Для розрізнення `+0` та `-0` — лише `Object.is` або перевірка через `1/x`.',
+                '## Теорія: три алгоритми рівності\n\n- **Strict Equality (`===`)**: `NaN === NaN` → `false`; `+0 === -0` → `true`.\n- **SameValue (`Object.is`)**: `Object.is(NaN, NaN)` → `true`; `Object.is(+0, -0)` → `false`.\n- **SameValueZero**: як SameValue, **але** `+0` та `-0` вважаються рівними; `NaN` дорівнює `NaN`.\n\n### Де вони застосовуються\n- `===`/`!==` — оператори порівняння в коді.\n- `Object.is` — безпосередньо виклик API.\n- **SameValueZero** — `Array.prototype.includes`, `Set`, `Map` (для зіставлення ключів/значень), `TypedArray.prototype.includes`.\n- **Виняток**: `Array.prototype.indexOf` використовує `===`, тому *не* знаходить `NaN`.\n\n> 💡 Для пошуку `NaN` у масиві використовуйте `includes`. Для розрізнення `+0` та `-0` — лише `Object.is` або перевірку через `1/x`.',
             theoryEN:
-                '## Theory: the three equality algorithms\n\n- **Strict Equality (`===`)**: `NaN === NaN` → `false`; `+0 === -0` → `true`.\n- **SameValue (`Object.is`)**: `Object.is(NaN, NaN)` → `true`; `Object.is(+0, -0)` → `false`.\n- **SameValueZero**: like SameValue, **except** `+0` and `-0` are equal; `NaN` equals `NaN`.\n\n### Where they are used\n- `===`/`!==` — comparison operators.\n- `Object.is` — explicit API.\n- **SameValueZero** — `Array.prototype.includes`, `Set`, `Map` (key/value matching), `TypedArray.prototype.includes`.\n- **Exception**: `Array.prototype.indexOf` uses `===`, so it does *not* find `NaN`.\n\n> Practice: to find `NaN` in an array — use `includes`. To distinguish `+0` from `-0` — use `Object.is` or `1/x` trick.',
+                '## Theory: the three equality algorithms\n\n- **Strict Equality (`===`)**: `NaN === NaN` → `false`; `+0 === -0` → `true`.\n- **SameValue (`Object.is`)**: `Object.is(NaN, NaN)` → `true`; `Object.is(+0, -0)` → `false`.\n- **SameValueZero**: like SameValue, **except** `+0` and `-0` are equal; `NaN` equals `NaN`.\n\n### Where they are used\n- `===`/`!==` — comparison operators.\n- `Object.is` — explicit API.\n- **SameValueZero** — `Array.prototype.includes`, `Set`, `Map` (key/value matching), `TypedArray.prototype.includes`.\n- **Exception**: `Array.prototype.indexOf` uses `===`, so it does *not* find `NaN`.\n\n> 💡 To find `NaN` in an array — use `includes`. To distinguish `+0` from `-0` — use `Object.is` or the `1/x` trick.',
             answers: [
                 {
-                    textUK: '`Array.prototype.includes(NaN)` може повернути `true`',
-                    textEN: '`Array.prototype.includes(NaN)` can return `true`',
+                    textUK: '`Array.prototype.includes(NaN)` повертає `true`, якщо елемент `NaN` є в масиві.',
+                    textEN: '`Array.prototype.includes(NaN)` returns `true` if the element `NaN` is present in the array.',
                     theoryUK: '**Правильно:** `includes` застосовує SameValueZero, у якому `NaN` дорівнює `NaN`.',
                     theoryEN: '**Correct:** `includes` uses SameValueZero where `NaN` equals `NaN`.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`Array.prototype.indexOf(NaN)` надійно знаходить `NaN`',
-                    textEN: '`Array.prototype.indexOf(NaN)` reliably finds `NaN`',
+                    textUK: '`Array.prototype.indexOf(NaN)` надійно знаходить `NaN`.',
+                    textEN: '`Array.prototype.indexOf(NaN)` reliably finds `NaN`.',
                     theoryUK: '**Неправильно:** `indexOf` використовує `===`; `NaN === NaN` → `false`.',
                     theoryEN: '**Incorrect:** `indexOf` uses `===`; `NaN === NaN` → `false`.',
                     isCorrect: false
                 },
                 {
-                    textUK: '`Object.is(+0, -0)` повертає `false`',
-                    textEN: '`Object.is(+0, -0)` returns `false`',
+                    textUK: '`Object.is(+0, -0)` повертає `false`.',
+                    textEN: '`Object.is(+0, -0)` returns `false`.',
                     theoryUK: '**Правильно:** SameValue розрізняє знак нуля.',
                     theoryEN: '**Correct:** SameValue distinguishes the zero sign.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`Set` вважає `+0` і `-0` однаковими',
-                    textEN: '`Set` treats `+0` and `-0` as equal',
+                    textUK: '`Set` вважає `+0` і `-0` однаковими.',
+                    textEN: '`Set` treats `+0` and `-0` as equal.',
                     theoryUK: '**Правильно:** `Set` використовує SameValueZero, де `+0` і `-0` рівні.',
                     theoryEN: '**Correct:** `Set` uses SameValueZero where `+0` and `-0` are equal.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`Map` з ключем `NaN` дозволяє зчитувати значення іншим `NaN`',
-                    textEN: '`Map` with a `NaN` key can be read using another `NaN`',
-                    theoryUK: '**Правильно:** Порівняння ключів у `Map` — SameValueZero.',
-                    theoryEN: '**Correct:** `Map` key equality is SameValueZero.',
+                    textUK: '`Map` з ключем `NaN` дозволяє зчитувати значення іншим `NaN`.',
+                    textEN: '`Map` with a `NaN` key allows retrieving the value using another `NaN`.',
+                    theoryUK: '**Правильно:** Порівняння ключів у `Map` базується на SameValueZero.',
+                    theoryEN: '**Correct:** Key comparison in `Map` is based on SameValueZero.',
                     isCorrect: true
                 },
                 {
-                    textUK: '`+0 === -0` повертає `false`',
-                    textEN: '`+0 === -0` returns `false`',
+                    textUK: '`+0 === -0` повертає `false`.',
+                    textEN: '`+0 === -0` returns `false`.',
                     theoryUK: '**Неправильно:** Strict Equality не розрізняє нулі за знаком — поверне `true`.',
                     theoryEN: '**Incorrect:** Strict Equality does not distinguish zero sign — returns `true`.',
                     isCorrect: false

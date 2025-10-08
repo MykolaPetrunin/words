@@ -1,9 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -26,7 +27,17 @@ interface TopicMockAnswer {
     isCorrect: boolean;
 }
 
-interface TopicMockQuestion {
+interface TopicMock {
+    titleUK: string;
+    titleEN: string;
+    questions: QuestionMock[];
+}
+
+type TopicMockLevel = 'junior' | 'middle' | 'senior';
+
+const topicMockLevels: readonly TopicMockLevel[] = ['junior', 'middle', 'senior'] as const;
+
+interface QuestionMock {
     textUK: string;
     textEN: string;
     theoryUK: string;
@@ -35,15 +46,26 @@ interface TopicMockQuestion {
     answers: TopicMockAnswer[];
 }
 
-interface TopicMock {
-    titleUK: string;
-    titleEN: string;
-    questions: TopicMockQuestion[];
-}
-
-type TopicMockLevel = 'junior' | 'middle' | 'senior';
-
-const topicMockLevels: readonly TopicMockLevel[] = ['junior', 'middle', 'senior'] as const;
+const questionMockSchema = z
+    .object({
+        textUK: z.string().min(1),
+        textEN: z.string().min(1),
+        theoryUK: z.string(),
+        theoryEN: z.string(),
+        level: z.enum(topicMockLevels),
+        answers: z
+            .array(
+                z.object({
+                    textUK: z.string().min(1),
+                    textEN: z.string().min(1),
+                    theoryUK: z.string(),
+                    theoryEN: z.string(),
+                    isCorrect: z.boolean()
+                })
+            )
+            .min(2)
+    })
+    .strict();
 
 const mapQuestionToFormData = (question: QuestionDetail): QuestionFormData => ({
     textUk: question.textUk,
@@ -71,6 +93,113 @@ const normalizeLevel = (key: string): TopicMockLevel => {
     return 'junior';
 };
 
+const mapMockToFormData = (mock: QuestionMock, topicId: string | null): QuestionFormData => ({
+    textUk: mock.textUK,
+    textEn: mock.textEN,
+    theoryUk: mock.theoryUK,
+    theoryEn: mock.theoryEN,
+    topicId,
+    answers: mock.answers.map((answer) => ({
+        textUk: answer.textUK,
+        textEn: answer.textEN,
+        theoryUk: answer.theoryUK,
+        theoryEn: answer.theoryEN,
+        isCorrect: answer.isCorrect
+    }))
+});
+
+interface QuestionMockImporterProps {
+    disabled: boolean;
+    label: string;
+    placeholder: string;
+    buttonLabel: string;
+    parseErrorMessage: string;
+    submitErrorMessage: string;
+    onImport: (mock: QuestionMock) => Promise<void>;
+    questionId: string;
+}
+
+const QuestionMockImporter = ({
+    disabled,
+    label,
+    placeholder,
+    buttonLabel,
+    parseErrorMessage,
+    submitErrorMessage,
+    onImport,
+    questionId
+}: QuestionMockImporterProps): React.ReactElement => {
+    const [value, setValue] = useState<string>('');
+    const textareaId = useId();
+
+    const handleChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setValue(event.target.value);
+    }, []);
+
+    const handleImport = useCallback(async () => {
+        if (value.trim().length === 0) {
+            toast.error(parseErrorMessage);
+            return;
+        }
+
+        let mock: QuestionMock | null = null;
+
+        try {
+            const raw = JSON.parse(value) as unknown;
+            const parsed = questionMockSchema.parse(raw);
+            mock = {
+                textUK: parsed.textUK,
+                textEN: parsed.textEN,
+                theoryUK: parsed.theoryUK,
+                theoryEN: parsed.theoryEN,
+                level: parsed.level,
+                answers: parsed.answers.map((answer) => ({
+                    textUK: answer.textUK,
+                    textEN: answer.textEN,
+                    theoryUK: answer.theoryUK,
+                    theoryEN: answer.theoryEN,
+                    isCorrect: answer.isCorrect
+                }))
+            };
+        } catch (error) {
+            clientLogger.error('Question mock JSON parse failed', error as Error, { questionId });
+            toast.error(parseErrorMessage);
+            return;
+        }
+
+        if (!mock) {
+            return;
+        }
+
+        try {
+            await onImport(mock);
+        } catch (error) {
+            clientLogger.error('Question mock import failed', error as Error, { questionId });
+            toast.error(submitErrorMessage);
+        }
+    }, [onImport, parseErrorMessage, questionId, submitErrorMessage, value]);
+
+    return (
+        <div className="space-y-2">
+            <label htmlFor={textareaId} className="text-sm font-medium">
+                {label}
+            </label>
+            <textarea
+                id={textareaId}
+                value={value}
+                onChange={handleChange}
+                placeholder={placeholder}
+                className="min-h-[160px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <div className="flex justify-end">
+                <Button type="button" onClick={handleImport} disabled={disabled || value.trim().length === 0}>
+                    {buttonLabel}
+                </Button>
+            </div>
+        </div>
+    );
+};
+
 interface QuestionPageClientProps {
     question: QuestionDetail;
     topics: QuestionListTopic[];
@@ -88,6 +217,17 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
             required: t('questions.detailValidationRequired'),
             answersMin: t('questions.detailValidationAnswersMin'),
             correctAnswer: t('questions.detailValidationCorrect')
+        }),
+        [t]
+    );
+
+    const importerMessages = useMemo(
+        () => ({
+            label: t('questions.detailMockJsonLabel'),
+            placeholder: t('questions.detailMockJsonPlaceholder'),
+            button: t('questions.detailMockJsonButton'),
+            parseError: t('questions.detailMockJsonInvalid'),
+            submitError: t('questions.detailMockJsonError')
         }),
         [t]
     );
@@ -162,6 +302,17 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
             toast.error(t('questions.detailCopyError'));
         }
     }, [getValues, question.id, question.level.key, question.topic, question.topicId, t, topics]);
+
+    const handleImportMock = useCallback(
+        async (mock: QuestionMock) => {
+            const formTopic = getValues('topicId');
+            const targetTopic = formTopic ?? question.topicId ?? null;
+            const formData = mapMockToFormData(mock, targetTopic);
+            reset(formData);
+            await handleSubmit(onSubmit)();
+        },
+        [getValues, handleSubmit, onSubmit, question.topicId, reset]
+    );
 
     const answersError = formState.errors.answers;
     let answersErrorMessage: string | undefined;
@@ -404,6 +555,17 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                         </div>
                         {answersErrorMessage && <p className="text-sm font-medium text-destructive">{answersErrorMessage}</p>}
                     </div>
+
+                    <QuestionMockImporter
+                        disabled={formState.isSubmitting}
+                        label={importerMessages.label}
+                        placeholder={importerMessages.placeholder}
+                        buttonLabel={importerMessages.button}
+                        parseErrorMessage={importerMessages.parseError}
+                        submitErrorMessage={importerMessages.submitError}
+                        onImport={handleImportMock}
+                        questionId={question.id}
+                    />
 
                     <div className="flex flex-wrap gap-3">
                         <Button type="submit" disabled={!formState.isDirty || formState.isSubmitting}>

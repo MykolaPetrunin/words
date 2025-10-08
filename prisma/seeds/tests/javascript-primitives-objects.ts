@@ -290,6 +290,7 @@ export const tests: TopicMock = {
                 "### Обгортки примітивів: чому їх краще уникати\n- `new String('a')`, `new Number(0)`, `new Boolean(false)` створюють **ОБ’ЄКТИ**, а не примітиви.\n- Це впливає на `typeof`, порівняння та істинність у умовах.\n- **Проблемні місця**:\n  - `Boolean(new Boolean(false)) === true` — бо будь-який об’єкт істинний.\n  - `'a' === new String('a')` → `false` (різні типи), але `'a' == new String('a')` → `true` (неявне розпакування).\n  - `new Number(0) === 0` → `false`, тоді як `new Number(0) == 0` → `true`.\n- Краще використовувати **літерали/примітиви**, а не конструктори-обгортки.",
             theoryEN:
                 "### Wrapper objects: why to avoid them\n- `new String('a')`, `new Number(0)`, `new Boolean(false)` create **OBJECTS**, not primitives.\n- This affects `typeof`, comparisons, and truthiness.\n- **Gotchas**:\n  - `Boolean(new Boolean(false)) === true` — any object is truthy.\n  - `'a' === new String('a')` → `false` (different types) while `'a' == new String('a')` → `true` (unboxing).\n  - `new Number(0) === 0` → `false`, but `new Number(0) == 0` → `true`.\n- Prefer **literals/primitives** over wrapper constructors.",
+            level: 'middle',
             answers: [
                 {
                     textUK: "`new String('a')` — це об’єкт; `typeof new String('a') === 'object'`.",
@@ -306,8 +307,8 @@ export const tests: TopicMock = {
                     isCorrect: false
                 },
                 {
-                    textUK: "`'a' == new String('a')` може дати `true` через неявне розпакування (ToPrimitive).",
-                    textEN: "`'a' == new String('a')` can be `true` due to implicit unboxing (ToPrimitive).",
+                    textUK: "`'a' == new String('a')` дає `true` через неявне розпакування (ToPrimitive).",
+                    textEN: "`'a' == new String('a')` yields `true` due to implicit unboxing (ToPrimitive).",
                     theoryUK: '✅ `==` викликає перетворення типів; обгортка розпаковується до рядка.',
                     theoryEN: '✅ `==` performs coercion; the wrapper is unboxed to a string.',
                     isCorrect: true
@@ -340,14 +341,13 @@ export const tests: TopicMock = {
                     theoryEN: '✅ They create objects with surprising comparison and truthiness behavior.',
                     isCorrect: true
                 }
-            ],
-            level: 'middle'
+            ]
         },
         {
             textUK: 'Функції в JS: що з наведеного істинно щодо їх природи як об’єктів і `[[Call]]`?',
             textEN: 'Functions in JS: which statements are true about their object nature and `[[Call]]`?',
             theoryUK:
-                "### Функції — це об’єкти з внутрішньою здатністю виклику\n- Функція — **об’єкт**, що має внутрішнє `[[Call]]` (викликається як `f()`), а звичайні об’єкти — ні.\n- `typeof f === 'function'`, але це **окреме позначення типу** для викликаємих об’єктів; при цьому `f instanceof Object` теж `true`.\n- Функції успадковують від `Function.prototype`, мають властивості (`name`, `length`) і можуть отримувати довільні власні властивості.\n- Порівняння функцій — **за посиланням**.\n- Стрілкові функції мають `[[Call]]`, але **не** мають `[[Construct]`], тому `new (()=>{})` — помилка.",
+                "### Функції — це об’єкти з внутрішньою здатністю виклику\n- Функція — **об’єкт**, що має внутрішнє `[[Call]]` (викликається як `f()`), а звичайні об’єкти — ні.\n- `typeof f === 'function'`, але це **окреме позначення типу** для викликаємих об’єктів; при цьому `f instanceof Object` теж `true`.\n- Функції успадковують від `Function.prototype`, мають властивості (`name`, `length`) і можуть отримувати довільні власні властивості.\n- Порівняння функцій — **за посиланням**.\n- Стрілкові функції мають `[[Call]]`, але **не** мають `[[Construct]]`, тому `new (()=>{})` — помилка.",
             theoryEN:
                 "### Functions are objects with an internal callable capability\n- A function is an **object** that has `[[Call]]` (invoked via `f()`); plain objects don’t.\n- `typeof f === 'function'` is a special tag for callable objects; still, `f instanceof Object` is `true`.\n- Functions inherit from `Function.prototype`, have properties (`name`, `length`), and can hold arbitrary own properties.\n- Functions are compared **by reference**.\n- Arrow functions have `[[Call]]` but **no** `[[Construct]]`, so `new (()=>{})` throws.",
             answers: [
@@ -366,8 +366,8 @@ export const tests: TopicMock = {
                     isCorrect: true
                 },
                 {
-                    textUK: '`f instanceof Function` і `f instanceof Object` зазвичай обидва `true`.',
-                    textEN: '`f instanceof Function` and `f instanceof Object` are typically both `true`.',
+                    textUK: '`f instanceof Function` і `f instanceof Object` обидва дорівнюють `true`.',
+                    textEN: '`f instanceof Function` and `f instanceof Object` are both `true`.',
                     theoryUK: '✅ Функції успадковують від `Function.prototype`, а той — від `Object.prototype`.',
                     theoryEN: '✅ Functions inherit from `Function.prototype`, which in turn inherits from `Object.prototype`.',
                     isCorrect: true
