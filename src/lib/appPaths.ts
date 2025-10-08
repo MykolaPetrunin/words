@@ -10,6 +10,7 @@ export interface AppPaths {
     readonly admin: '/admin';
     readonly adminSubjects: '/admin/subjects';
     readonly adminBooks: '/admin/books';
+    readonly adminBookDetail: '/admin/books/[id]';
     readonly adminQuestions: '/admin/questions';
     readonly adminQuestionDetail: '/admin/questions/[id]';
     readonly apiSubjects: '/api/subjects';
@@ -27,6 +28,7 @@ export const appPaths: AppPaths = {
     admin: '/admin',
     adminSubjects: '/admin/subjects',
     adminBooks: '/admin/books',
+    adminBookDetail: '/admin/books/[id]',
     adminQuestions: '/admin/questions',
     adminQuestionDetail: '/admin/questions/[id]',
     apiSubjects: '/api/subjects'
@@ -35,3 +37,4 @@ export const appPaths: AppPaths = {
 export type AppPathValue = AppPaths[keyof AppPaths];
 
 export const getAdminQuestionPath = (questionId: string): `/admin/questions/${string}` => `/admin/questions/${questionId}`;
+export const getAdminBookPath = (bookId: string): `/admin/books/${string}` => `/admin/books/${bookId}`;

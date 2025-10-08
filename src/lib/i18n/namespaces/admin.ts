@@ -45,12 +45,26 @@ export const uk = {
     booksEditButton: 'Редагувати',
     booksFormTitleUk: 'Назва українською',
     booksFormTitleEn: 'Назва англійською',
+    booksFormTitleUkRequired: 'Введіть назву українською.',
+    booksFormTitleEnRequired: 'Введіть назву англійською.',
     booksFormDescriptionUk: 'Опис українською',
     booksFormDescriptionEn: 'Опис англійською',
     booksFormIsActive: 'Активна книга',
     booksFormSubjects: 'Предмети',
+    booksFormSubjectsRequired: 'Оберіть щонайменше один предмет.',
     booksFormSubjectsEmpty: 'Спочатку створіть хоча б один предмет.',
-    booksNoSubjects: 'Без предметів'
+    booksFormTopics: 'Теми',
+    booksFormTopicsEmpty: 'Спочатку створіть хоча б одну тему.',
+    booksNoSubjects: 'Без предметів',
+    booksNoTopics: 'Без тем',
+    booksDetailTitle: 'Редагування книги',
+    booksDetailSubtitle: 'Оновіть інформацію про книгу, предмети та теми.',
+    booksDetailSubmit: 'Зберегти зміни',
+    booksDetailSuccess: 'Книгу успішно оновлено.',
+    booksDetailError: 'Не вдалося оновити книгу.',
+    booksDetailNotFoundTitle: 'Книгу не знайдено',
+    booksDetailNotFoundDescription: 'Можливо, її було видалено або посилання застаріло.',
+    booksDetailNotFoundAction: 'Повернутися до списку книг'
 } as const;
 
 export const en = {
@@ -100,10 +114,24 @@ export const en = {
     booksEditButton: 'Edit',
     booksFormTitleUk: 'Title in Ukrainian',
     booksFormTitleEn: 'Title in English',
+    booksFormTitleUkRequired: 'Enter the title in Ukrainian.',
+    booksFormTitleEnRequired: 'Enter the title in English.',
     booksFormDescriptionUk: 'Description in Ukrainian',
     booksFormDescriptionEn: 'Description in English',
     booksFormIsActive: 'Active book',
     booksFormSubjects: 'Subjects',
+    booksFormSubjectsRequired: 'Select at least one subject.',
     booksFormSubjectsEmpty: 'Create at least one subject first.',
-    booksNoSubjects: 'No subjects'
+    booksFormTopics: 'Topics',
+    booksFormTopicsEmpty: 'Create at least one topic first.',
+    booksNoSubjects: 'No subjects',
+    booksNoTopics: 'No topics',
+    booksDetailTitle: 'Edit book',
+    booksDetailSubtitle: 'Update the book details, subjects, and topics.',
+    booksDetailSubmit: 'Save changes',
+    booksDetailSuccess: 'Book updated successfully.',
+    booksDetailError: 'Failed to update book.',
+    booksDetailNotFoundTitle: 'Book not found',
+    booksDetailNotFoundDescription: 'It may have been removed or the link is outdated.',
+    booksDetailNotFoundAction: 'Back to books'
 } as const;

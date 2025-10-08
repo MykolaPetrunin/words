@@ -39,6 +39,7 @@ model Book {
   bookQuestions    BookQuestion[]
   userLevelScores  UserBookLevelScore[]
   bookSubjects     BookSubject[]
+  bookTopics       BookTopic[]
 
   @@map("books")
 }
@@ -66,6 +67,7 @@ model Topic {
   titleEn    String   @map("title_en")
 
   questions Question[]
+  bookTopics BookTopic[]
 
   @@map("topics")
 }
@@ -197,6 +199,22 @@ model BookSubject {
   @@map("book_subjects")
   @@index([bookId])
   @@index([subjectId])
+}
+
+model BookTopic {
+  id        String   @id @default(cuid())
+  bookId    String   @map("book_id")
+  topicId   String   @map("topic_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, topicId])
+  @@map("book_topics")
+  @@index([bookId])
+  @@index([topicId])
 }
 
 model UserSubjectLevelScore {
