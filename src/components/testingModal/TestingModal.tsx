@@ -120,7 +120,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
     return (
         <>
             <Dialog open={isOpen} onOpenChange={theory ? () => setTheory(null) : onClose}>
-                <DialogContent className="w-[90vw] h-[90vh] max-w-none flex flex-col">
+                <DialogContent className="w-[90vw] h-[85vh] max-h-[85vh] sm:h-[90vh] sm:max-h-[90vh] max-w-none flex flex-col">
                     {theory ? (
                         <div className="flex-1 overflow-y-auto max-w-none p-4">
                             <Prose isMD>{theory}</Prose>
@@ -157,7 +157,7 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                                                 </TooltipContent>
                                             </Tooltip>
                                         )}
-                                        <Prose className="text-base" isMD>
+                                        <Prose className="text-base leading-6 text-foreground dark:text-foreground" isMD>
                                             {questionText}
                                         </Prose>
                                         <p className="text-xs text-muted-foreground">{t('books.selectAllCorrect')}</p>
@@ -179,11 +179,11 @@ export default function TestingModal({ isOpen, onClose, questions, locale }: Tes
                                     <p className="text-sm text-muted-foreground">—</p>
                                 )}
                             </div>
-                            <div className="p-4 border-t flex justify-end gap-2">
-                                <Button onClick={handleAnswerClick} disabled={answers.length === 0 || isPending || isAnswered}>
+                            <div className="p-4 border-t flex flex-col gap-2 sm:flex-row sm:justify-end">
+                                <Button className="w-full sm:w-auto" onClick={handleAnswerClick} disabled={answers.length === 0 || isPending || isAnswered}>
                                     {t('books.answerQuestion')}
                                 </Button>
-                                <Button variant="outline" onClick={nextQuestion}>
+                                <Button className="w-full sm:w-auto" variant="outline" onClick={nextQuestion}>
                                     {t('books.nextQuestion')}
                                 </Button>
                             </div>
