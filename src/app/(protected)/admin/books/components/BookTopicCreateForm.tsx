@@ -66,6 +66,10 @@ export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateF
         [onTopicCreated, t]
     );
 
+    const submit = useCallback(() => {
+        void handleSubmit(onSubmit)();
+    }, [handleSubmit, onSubmit]);
+
     return (
         <div className="rounded-lg border border-dashed p-4 space-y-4">
             <div className="space-y-1">
@@ -73,7 +77,7 @@ export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateF
                 <p className="text-xs text-muted-foreground">{t('admin.booksTopicsCreateDescription')}</p>
             </div>
             <Form {...form}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-4" role="form" aria-label={t('admin.booksTopicsCreateHeading')}>
                     <div className="grid gap-4 md:grid-cols-2">
                         <FormField
                             control={control}
@@ -82,7 +86,16 @@ export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateF
                                 <FormItem className="space-y-2">
                                     <FormLabel>{t('admin.booksTopicsCreateTitleUk')}</FormLabel>
                                     <FormControl>
-                                        <Input {...field} disabled={isPending} />
+                                        <Input
+                                            {...field}
+                                            disabled={isPending}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter') {
+                                                    event.preventDefault();
+                                                    submit();
+                                                }
+                                            }}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -95,7 +108,16 @@ export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateF
                                 <FormItem className="space-y-2">
                                     <FormLabel>{t('admin.booksTopicsCreateTitleEn')}</FormLabel>
                                     <FormControl>
-                                        <Input {...field} disabled={isPending} />
+                                        <Input
+                                            {...field}
+                                            disabled={isPending}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter') {
+                                                    event.preventDefault();
+                                                    submit();
+                                                }
+                                            }}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -103,11 +125,11 @@ export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateF
                         />
                     </div>
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={isPending || !formState.isValid}>
+                        <Button type="button" disabled={isPending || !formState.isValid} onClick={submit}>
                             {t('admin.booksTopicsCreateSubmit')}
                         </Button>
                     </div>
-                </form>
+                </div>
             </Form>
         </div>
     );
