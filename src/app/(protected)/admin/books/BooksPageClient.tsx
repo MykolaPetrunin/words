@@ -14,7 +14,6 @@ import { clientLogger } from '@/lib/logger';
 import { getAdminBookPath } from '@/lib/appPaths';
 import type { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import type { DbSubject } from '@/lib/repositories/subjectRepository';
-import type { DbTopic } from '@/lib/repositories/topicRepository';
 
 import { createAdminBook } from './actions';
 import { createBookFormSchema, type BookFormData } from './schemas';
@@ -28,12 +27,10 @@ interface BookFormProps {
     errorMessage: string;
     isOpen: boolean;
     subjects: DbSubject[];
-    topics: DbTopic[];
     onSubmitAction: (values: BookFormData) => Promise<DbBookWithRelations>;
     onClose: () => void;
     onSuccess: (book: DbBookWithRelations) => void;
     showStatusSwitch?: boolean;
-    showTopics?: boolean;
 }
 
 function BookForm({
@@ -43,12 +40,10 @@ function BookForm({
     errorMessage,
     isOpen,
     subjects,
-    topics,
     onSubmitAction,
     onClose,
     onSuccess,
-    showStatusSwitch = true,
-    showTopics = true
+    showStatusSwitch = true
 }: BookFormProps): React.ReactElement {
     const t = useI18n();
     const schema = useMemo(
@@ -106,7 +101,7 @@ function BookForm({
     return (
         <Form {...form}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <BookFormFields control={control} subjects={subjects} topics={topics} showStatusSwitch={showStatusSwitch} showTopics={showTopics} />
+                <BookFormFields control={control} subjects={subjects} showStatusSwitch={showStatusSwitch} />
 
                 <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
@@ -124,10 +119,9 @@ function BookForm({
 interface BooksPageClientProps {
     initialBooks: DbBookWithRelations[];
     subjects: DbSubject[];
-    topics: DbTopic[];
 }
 
-export default function BooksPageClient({ initialBooks, subjects, topics }: BooksPageClientProps): React.ReactElement {
+export default function BooksPageClient({ initialBooks, subjects }: BooksPageClientProps): React.ReactElement {
     const t = useI18n();
     const [books, setBooks] = useState<DbBookWithRelations[]>(() => initialBooks);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -176,12 +170,10 @@ export default function BooksPageClient({ initialBooks, subjects, topics }: Book
                             errorMessage={createCopy.error}
                             isOpen={isCreateOpen}
                             subjects={subjects}
-                            topics={topics}
                             onSubmitAction={createAdminBook}
                             onClose={() => setIsCreateOpen(false)}
                             onSuccess={handleCreateSuccess}
                             showStatusSwitch={false}
-                            showTopics={false}
                         />
                     </DialogContent>
                 </Dialog>

@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache';
 
 import { appPaths, getAdminBookPath } from '@/lib/appPaths';
 import { createBook, updateBook, type BookInput, type DbBookWithRelations } from '@/lib/repositories/bookRepository';
+import { createTopic, type DbTopic } from '@/lib/repositories/topicRepository';
 
-import { bookFormSchema, type BookFormData } from './schemas';
+import { bookFormSchema, bookTopicFormSchema, type BookFormData, type BookTopicFormData } from './schemas';
 
 const mapFormToInput = (data: BookFormData): BookInput => ({
     titleUk: data.titleUk,
@@ -36,4 +37,14 @@ export async function updateAdminBook(bookId: string, data: BookFormData): Promi
     revalidateAdminBooks();
     revalidatePath(getAdminBookPath(bookId));
     return book;
+}
+
+export async function createAdminBookTopic(data: BookTopicFormData): Promise<DbTopic> {
+    const parsed = bookTopicFormSchema.parse(data);
+    const topic = await createTopic({
+        titleUk: parsed.titleUk,
+        titleEn: parsed.titleEn
+    });
+    revalidateAdminBooks();
+    return topic;
 }

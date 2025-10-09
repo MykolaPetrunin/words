@@ -1,0 +1,114 @@
+'use client';
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useI18n } from '@/hooks/useI18n';
+import { clientLogger } from '@/lib/logger';
+import type { DbTopic } from '@/lib/repositories/topicRepository';
+
+import { createAdminBookTopic } from '../actions';
+import { createBookTopicFormSchema, type BookTopicFormData } from '../schemas';
+
+interface BookTopicCreateFormProps {
+    onTopicCreated: (topic: DbTopic) => void;
+}
+
+export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateFormProps): React.ReactElement {
+    const t = useI18n();
+    const schema = useMemo(
+        () =>
+            createBookTopicFormSchema({
+                titleUk: t('admin.booksTopicsCreateTitleUkRequired'),
+                titleEn: t('admin.booksTopicsCreateTitleEnRequired')
+            }),
+        [t]
+    );
+    const defaultValues = useMemo<BookTopicFormData>(() => ({ titleUk: '', titleEn: '' }), []);
+    const form = useForm<BookTopicFormData>({
+        resolver: zodResolver(schema),
+        defaultValues,
+        mode: 'onChange'
+    });
+
+    const { control, handleSubmit, reset, formState } = form;
+    const [initialData, setInitialData] = useState<BookTopicFormData>(defaultValues);
+    const [isPending, setIsPending] = useState(false);
+
+    useEffect(() => {
+        reset(initialData);
+    }, [initialData, reset]);
+
+    const onSubmit = useCallback(
+        async (values: BookTopicFormData) => {
+            setIsPending(true);
+            try {
+                const topic = await createAdminBookTopic(values);
+                const nextInitial: BookTopicFormData = { titleUk: '', titleEn: '' };
+                setInitialData(nextInitial);
+                onTopicCreated(topic);
+                toast.success(t('admin.booksTopicsCreateSuccess'));
+            } catch (error) {
+                clientLogger.error('Form submission failed', error as Error, {
+                    titleUk: values.titleUk,
+                    titleEn: values.titleEn
+                });
+                toast.error(t('admin.booksTopicsCreateError'));
+            } finally {
+                setIsPending(false);
+            }
+        },
+        [onTopicCreated, t]
+    );
+
+    return (
+        <div className="rounded-lg border border-dashed p-4 space-y-4">
+            <div className="space-y-1">
+                <h3 className="text-sm font-medium">{t('admin.booksTopicsCreateHeading')}</h3>
+                <p className="text-xs text-muted-foreground">{t('admin.booksTopicsCreateDescription')}</p>
+            </div>
+            <Form {...form}>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <FormField
+                            control={control}
+                            name="titleUk"
+                            render={({ field }) => (
+                                <FormItem className="space-y-2">
+                                    <FormLabel>{t('admin.booksTopicsCreateTitleUk')}</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} disabled={isPending} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={control}
+                            name="titleEn"
+                            render={({ field }) => (
+                                <FormItem className="space-y-2">
+                                    <FormLabel>{t('admin.booksTopicsCreateTitleEn')}</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} disabled={isPending} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isPending || !formState.isValid}>
+                            {t('admin.booksTopicsCreateSubmit')}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+        </div>
+    );
+}

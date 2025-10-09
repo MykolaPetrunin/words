@@ -7,19 +7,16 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { useI18n } from '@/hooks/useI18n';
 import type { DbSubject } from '@/lib/repositories/subjectRepository';
-import type { DbTopic } from '@/lib/repositories/topicRepository';
 
 import type { BookFormData } from '../schemas';
 
 interface BookFormFieldsProps {
     control: Control<BookFormData>;
     subjects: DbSubject[];
-    topics: DbTopic[];
     showStatusSwitch?: boolean;
-    showTopics?: boolean;
 }
 
-export default function BookFormFields({ control, subjects, topics, showStatusSwitch = true, showTopics = true }: BookFormFieldsProps): React.ReactElement {
+export default function BookFormFields({ control, subjects, showStatusSwitch = true }: BookFormFieldsProps): React.ReactElement {
     const t = useI18n();
 
     return (
@@ -155,50 +152,6 @@ export default function BookFormFields({ control, subjects, topics, showStatusSw
                     </FormItem>
                 )}
             />
-
-            {showTopics ? (
-                <FormField
-                    control={control}
-                    name="topicIds"
-                    render={({ field }) => (
-                        <FormItem className="space-y-2">
-                            <FormLabel>{t('admin.booksFormTopics')}</FormLabel>
-                            {topics.length === 0 ? (
-                                <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{t('admin.booksFormTopicsEmpty')}</p>
-                            ) : (
-                                <div className="grid gap-2">
-                                    {topics.map((topic) => {
-                                        const checked = field.value.includes(topic.id);
-                                        return (
-                                            <label key={topic.id} className="flex items-center justify-between rounded-md border border-dashed p-3">
-                                                <div>
-                                                    <p className="text-sm font-medium">{topic.titleUk}</p>
-                                                    <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
-                                                </div>
-                                                <input
-                                                    type="checkbox"
-                                                    value={topic.id}
-                                                    checked={checked}
-                                                    onChange={(event) => {
-                                                        const { checked: isChecked } = event.target;
-                                                        if (isChecked) {
-                                                            field.onChange([...field.value, topic.id]);
-                                                        } else {
-                                                            field.onChange(field.value.filter((id) => id !== topic.id));
-                                                        }
-                                                    }}
-                                                    className="h-4 w-4 rounded border border-input"
-                                                />
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            ) : null}
         </div>
     );
 }
