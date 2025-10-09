@@ -1,3 +1,4 @@
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
@@ -6,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import ReduxProvider from '@/lib/redux/ReduxProvider';
 import ThemeProvider from '@/lib/theme/ThemeProvider';
+
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -30,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         </AuthProvider>
                     </ReduxProvider>
                 </ThemeProvider>
+                <SpeedInsights />
             </body>
         </html>
     );
