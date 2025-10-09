@@ -13,9 +13,10 @@ interface BookTopicsFieldProps {
     control: Control<BookFormData>;
     topics: readonly DbTopic[];
     disabled?: boolean;
+    actions?: React.ReactNode;
 }
 
-export default function BookTopicsField({ control, topics, disabled = false }: BookTopicsFieldProps): React.ReactElement {
+export default function BookTopicsField({ control, topics, disabled = false, actions }: BookTopicsFieldProps): React.ReactElement {
     const t = useI18n();
 
     return (
@@ -24,7 +25,10 @@ export default function BookTopicsField({ control, topics, disabled = false }: B
             name="topicIds"
             render={({ field }) => (
                 <FormItem className="space-y-2">
-                    <FormLabel>{t('admin.booksFormTopics')}</FormLabel>
+                    <div className="flex items-center justify-between gap-2">
+                        <FormLabel className="text-base leading-none">{t('admin.booksFormTopics')}</FormLabel>
+                        {actions}
+                    </div>
                     {topics.length === 0 ? (
                         <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{t('admin.booksFormTopicsEmpty')}</p>
                     ) : (
