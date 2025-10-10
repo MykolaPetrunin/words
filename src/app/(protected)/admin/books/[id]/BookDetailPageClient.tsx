@@ -49,15 +49,13 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         mode: 'onChange'
     });
 
-    const { control, handleSubmit, reset, formState, setValue, getValues, watch } = form;
+    const { control, handleSubmit, reset, formState, setValue, getValues } = form;
     const router = useRouter();
     const [isPending, setIsPending] = useState(false);
     const collator = useMemo(() => new Intl.Collator('uk', { sensitivity: 'base' }), []);
     const sortedTopics = useMemo(() => [...topics].sort((a, b) => collator.compare(a.titleUk, b.titleUk)), [collator, topics]);
     const [availableTopics, setAvailableTopics] = useState<DbTopic[]>(sortedTopics);
     const [pendingTopics, setPendingTopics] = useState<TopicSuggestionNew[]>([]);
-    const topicIds = watch('topicIds') ?? [];
-
     useEffect(() => {
         setAvailableTopics((prev) => {
             const merged = [...prev];
@@ -179,7 +177,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                             control={control}
                             topics={availableTopics}
                             disabled={isPending}
-                            actions={<BookTopicSuggestionsDialog bookId={book.id} selectedTopicIds={topicIds} onApply={handleSuggestionApply} />}
+                            actions={<BookTopicSuggestionsDialog bookId={book.id} onApply={handleSuggestionApply} />}
                         />
                         <BookPendingTopicsList topics={pendingTopics} onRemove={handlePendingTopicRemove} disabled={isPending} />
                         <BookTopicCreateForm onTopicCreated={handleTopicCreated} />

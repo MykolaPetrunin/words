@@ -22,7 +22,6 @@ import {
 
 interface BookTopicSuggestionsDialogProps {
     bookId: string;
-    selectedTopicIds: readonly string[];
     onApply: (result: { existingTopics: TopicSuggestionExisting[]; newTopics: TopicSuggestionNew[] }) => void;
 }
 
@@ -43,7 +42,7 @@ const priorityLabelMap: Record<TopicSuggestionPriority, I18nKey> = {
     optional: 'admin.booksTopicsSuggestPriorityOptional'
 } as const;
 
-export default function BookTopicSuggestionsDialog({ bookId, selectedTopicIds, onApply }: BookTopicSuggestionsDialogProps): React.ReactElement {
+export default function BookTopicSuggestionsDialog({ bookId, onApply }: BookTopicSuggestionsDialogProps): React.ReactElement {
     const t = useI18n();
     const [open, setOpen] = useState(false);
     const [suggestions, setSuggestions] = useState<TopicSuggestions | null>(null);
@@ -92,7 +91,7 @@ export default function BookTopicSuggestionsDialog({ bookId, selectedTopicIds, o
                 setOpen(false);
             }
         });
-    }, [bookId, selectedTopicIds, t]);
+    }, [bookId, t]);
 
     const handleOpenChange = useCallback(
         (nextOpen: boolean) => {

@@ -17,6 +17,7 @@ import type { UserLocale } from '@/lib/types/user';
 
 import { updateAdminQuestion } from '../../actions';
 
+import QuestionAiActions from './components/questionAiActions/QuestionAiActions';
 import { buildQuestionFormSchema, type QuestionFormData } from './schemas';
 
 interface TopicMockAnswer {
@@ -339,9 +340,12 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
 
     return (
         <div className="space-y-6 p-6">
-            <div className="space-y-1">
-                <h1 className="text-2xl font-semibold">{t('questions.detailTitle')}</h1>
-                <p className="text-sm text-muted-foreground">{t('questions.detailSubtitle')}</p>
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-semibold">{t('questions.detailTitle')}</h1>
+                    <p className="text-sm text-muted-foreground">{t('questions.detailSubtitle')}</p>
+                </div>
+                <QuestionAiActions questionId={question.id} form={form} />
             </div>
 
             <Form {...form}>

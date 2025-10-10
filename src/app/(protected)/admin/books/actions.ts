@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { appPaths, getAdminBookPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
+import { requestChatCompletion, type ChatCompletionMessage } from '@/lib/openai/chatCompletion';
 import { createBook, getBookWithRelations, updateBook, type BookInput, type DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import { createTopic, type DbTopic } from '@/lib/repositories/topicRepository';
 
@@ -181,53 +182,34 @@ export async function generateAdminBookTopicSuggestions(bookId: string): Promise
         }
     };
 
-    const apiUrl = process.env.OPENAI_API_URL!;
+    const apiUrl = (process.env.OPENAI_API_URL ?? 'https://api.openai.com/v1/chat/completions').trim();
     const payloadJson = JSON.stringify(payload);
     const userMessage = `Return a compact JSON object that strictly matches the schema. Do not include markdown fences or commentary. Provide at most five new topics. Mark each topic as \"strong\" if it is essential for senior-level coverage, otherwise \"optional\". If the book is already fully covered, set status to \"covered\" and leave arrays empty.\nSchema: { "status": "needs_topics" | "covered", "existingTopics": [{ "id": string, "reason": string, "priority": "strong" | "optional" }], "newTopics": [{ "titleUk": string, "titleEn": string, "reason": string, "priority": "strong" | "optional" }] }\nData: ${payloadJson}`;
 
-    const requestTimeoutMs = 240000;
     const completionBudgets: readonly number[] = [2048, 3072];
     let lastTruncationContext: Record<string, unknown> | undefined;
 
-    const executeRequest = async (maxTokens: number): Promise<Response> => {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
-        try {
-            return await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'gpt-5-mini',
-                    messages: [
-                        {
-                            role: 'system',
-                            content:
-                                'You are an experienced senior software engineer who curates learning roadmaps. Respond ONLY with a compact JSON object that matches the provided schema.'
-                        },
-                        {
-                            role: 'user',
-                            content: userMessage
-                        }
-                    ],
-                    response_format: {
-                        type: 'json_object'
-                    },
-                    max_completion_tokens: maxTokens
-                }),
-                signal: controller.signal
-            });
-        } finally {
-            clearTimeout(timeout);
+    const messages: ChatCompletionMessage[] = [
+        {
+            role: 'system',
+            content:
+                'You are an experienced senior software engineer who curates learning roadmaps. Respond ONLY with a compact JSON object that matches the provided schema.'
+        },
+        {
+            role: 'user',
+            content: userMessage
         }
-    };
+    ];
 
     for (const maxTokens of completionBudgets) {
         let response: Response;
         try {
-            response = await executeRequest(maxTokens);
+            response = await requestChatCompletion({
+                apiUrl,
+                apiKey,
+                messages,
+                maxCompletionTokens: maxTokens
+            });
         } catch (error) {
             return fail({ code: 'request_failed', message: 'Failed to generate topic suggestions.', error: error as Error });
         }
