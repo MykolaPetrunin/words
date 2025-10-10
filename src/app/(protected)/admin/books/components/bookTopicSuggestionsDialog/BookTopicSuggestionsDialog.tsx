@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useI18n } from '@/hooks/useI18n';
 import type { I18nKey } from '@/lib/i18n/types';
 import { clientLogger } from '@/lib/logger';
+import type { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 
 import {
     generateAdminBookTopicSuggestions,
@@ -18,10 +19,10 @@ import {
     type TopicSuggestionPriority,
     type TopicSuggestionStatus,
     type TopicSuggestions
-} from '../actions';
+} from '../../actions';
 
 interface BookTopicSuggestionsDialogProps {
-    bookId: string;
+    book: DbBookWithRelations;
     onApply: (result: { existingTopics: TopicSuggestionExisting[]; newTopics: TopicSuggestionNew[] }) => void;
 }
 
@@ -42,7 +43,7 @@ const priorityLabelMap: Record<TopicSuggestionPriority, I18nKey> = {
     optional: 'admin.booksTopicsSuggestPriorityOptional'
 } as const;
 
-export default function BookTopicSuggestionsDialog({ bookId, onApply }: BookTopicSuggestionsDialogProps): React.ReactElement {
+export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicSuggestionsDialogProps): React.ReactElement {
     const t = useI18n();
     const [open, setOpen] = useState(false);
     const [suggestions, setSuggestions] = useState<TopicSuggestions | null>(null);
@@ -63,12 +64,12 @@ export default function BookTopicSuggestionsDialog({ bookId, onApply }: BookTopi
     const loadSuggestions = useCallback(() => {
         startTransition(async () => {
             try {
-                const result = await generateAdminBookTopicSuggestions(bookId);
+                const result = await generateAdminBookTopicSuggestions(book.id);
                 if (!result.success) {
                     const fallbackKey: I18nKey = 'admin.booksTopicsSuggestError';
                     const messageKey = suggestionErrorMessageMap[result.code] ?? fallbackKey;
                     clientLogger.error('Topic suggestion failed', undefined, {
-                        bookId,
+                        bookId: book.id,
                         code: result.code,
                         details: result.details
                     });
@@ -86,12 +87,12 @@ export default function BookTopicSuggestionsDialog({ bookId, onApply }: BookTopi
                     toast.info(t('admin.booksTopicsSuggestCoveredToast'));
                 }
             } catch (error) {
-                clientLogger.error('Topic suggestion failed', error as Error, { bookId });
+                clientLogger.error('Topic suggestion failed', error as Error, { bookId: book.id });
                 toast.error(t('admin.booksTopicsSuggestError'));
                 setOpen(false);
             }
         });
-    }, [bookId, t]);
+    }, [book.id, t]);
 
     const handleOpenChange = useCallback(
         (nextOpen: boolean) => {

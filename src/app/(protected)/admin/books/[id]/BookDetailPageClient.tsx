@@ -20,7 +20,7 @@ import BookFormFields from '../components/BookFormFields';
 import BookPendingTopicsList from '../components/BookPendingTopicsList';
 import BookTopicCreateForm from '../components/BookTopicCreateForm';
 import BookTopicsField from '../components/BookTopicsField';
-import BookTopicSuggestionsDialog from '../components/BookTopicSuggestionsDialog';
+import BookTopicSuggestionsDialog from '../components/bookTopicSuggestionsDialog/BookTopicSuggestionsDialog';
 import { createBookFormSchema, type BookFormData } from '../schemas';
 import { mapBookToFormData } from '../utils';
 
@@ -177,7 +177,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                             control={control}
                             topics={availableTopics}
                             disabled={isPending}
-                            actions={<BookTopicSuggestionsDialog bookId={book.id} onApply={handleSuggestionApply} />}
+                            actions={<BookTopicSuggestionsDialog book={book} onApply={handleSuggestionApply} />}
                         />
                         <BookPendingTopicsList topics={pendingTopics} onRemove={handlePendingTopicRemove} disabled={isPending} />
                         <BookTopicCreateForm onTopicCreated={handleTopicCreated} />
