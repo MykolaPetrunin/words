@@ -1,6 +1,7 @@
 export const uk = {
     save: 'Зберегти',
     cancel: 'Скасувати',
+    back: 'Назад',
     dashboard: 'Панель керування',
     subjects: 'Предмети',
     adminPanel: 'Адмін панель',
@@ -12,6 +13,7 @@ export const uk = {
 export const en = {
     save: 'Save',
     cancel: 'Cancel',
+    back: 'Back',
     dashboard: 'Dashboard',
     subjects: 'Subjects',
     adminPanel: 'Admin Panel',

@@ -48,6 +48,18 @@ export async function getTopicsForBook(bookId: string): Promise<DbTopic[]> {
     return rows.map((topic) => mapToDbTopic(topic));
 }
 
+export async function getTopicById(topicId: string): Promise<DbTopic | null> {
+    const topic = await prisma.topic.findUnique({
+        where: {
+            id: topicId
+        }
+    });
+    if (!topic) {
+        return null;
+    }
+    return mapToDbTopic(topic);
+}
+
 export async function createTopic(input: TopicInput): Promise<DbTopic> {
     const topic = await prisma.topic.create({
         data: {
