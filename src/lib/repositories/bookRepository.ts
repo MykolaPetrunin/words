@@ -23,6 +23,7 @@ export interface BookSubjectInfo {
 
 export interface BookTopicInfo {
     id: string;
+    bookId: string;
     titleUk: string;
     titleEn: string;
 }
@@ -71,17 +72,16 @@ type BookSubjectRow = {
     };
 };
 
-type BookTopicRow = {
-    topic: {
-        id: string;
-        titleUk: string;
-        titleEn: string;
-    };
+type TopicRow = {
+    bookId: string | null;
+    id: string;
+    titleUk: string;
+    titleEn: string;
 };
 
 type BookWithRelationsRow = BookBaseRow & {
     bookSubjects: BookSubjectRow[];
-    bookTopics: BookTopicRow[];
+    topics: TopicRow[];
 };
 
 const mapToDbBook = (book: BookBaseRow): DbBook => ({
@@ -102,11 +102,14 @@ const mapToDbBookWithRelations = (book: BookWithRelationsRow): DbBookWithRelatio
         nameUk: item.subject.nameUk,
         nameEn: item.subject.nameEn
     })),
-    topics: book.bookTopics.map((item) => ({
-        id: item.topic.id,
-        titleUk: item.topic.titleUk,
-        titleEn: item.topic.titleEn
-    }))
+    topics: book.topics
+        .filter((topic): topic is TopicRow & { bookId: string } => typeof topic.bookId === 'string')
+        .map((topic) => ({
+            id: topic.id,
+            bookId: topic.bookId,
+            titleUk: topic.titleUk,
+            titleEn: topic.titleEn
+        }))
 });
 
 export async function getAllBooks(): Promise<DbBookWithRelations[]> {
@@ -124,15 +127,12 @@ export async function getAllBooks(): Promise<DbBookWithRelations[]> {
                     }
                 }
             },
-            bookTopics: {
-                include: {
-                    topic: {
-                        select: {
-                            id: true,
-                            titleUk: true,
-                            titleEn: true
-                        }
-                    }
+            topics: {
+                select: {
+                    bookId: true,
+                    id: true,
+                    titleUk: true,
+                    titleEn: true
                 }
             }
         }
@@ -155,15 +155,12 @@ export async function getBookWithRelations(id: string): Promise<DbBookWithRelati
                     }
                 }
             },
-            bookTopics: {
-                include: {
-                    topic: {
-                        select: {
-                            id: true,
-                            titleUk: true,
-                            titleEn: true
-                        }
-                    }
+            topics: {
+                select: {
+                    bookId: true,
+                    id: true,
+                    titleUk: true,
+                    titleEn: true
                 }
             }
         }
@@ -184,9 +181,6 @@ export async function createBook(input: BookInput): Promise<DbBookWithRelations>
             isActive: input.isActive,
             bookSubjects: {
                 create: input.subjectIds.map((subjectId) => ({ subjectId }))
-            },
-            bookTopics: {
-                create: input.topicIds.map((topicId) => ({ topicId }))
             }
         },
         include: {
@@ -201,15 +195,12 @@ export async function createBook(input: BookInput): Promise<DbBookWithRelations>
                     }
                 }
             },
-            bookTopics: {
-                include: {
-                    topic: {
-                        select: {
-                            id: true,
-                            titleUk: true,
-                            titleEn: true
-                        }
-                    }
+            topics: {
+                select: {
+                    bookId: true,
+                    id: true,
+                    titleUk: true,
+                    titleEn: true
                 }
             }
         }
@@ -218,23 +209,41 @@ export async function createBook(input: BookInput): Promise<DbBookWithRelations>
 }
 
 export async function updateBook(id: string, input: BookInput): Promise<DbBookWithRelations> {
-    const book = await prisma.book.update({
-        where: { id },
-        data: {
-            titleUk: input.titleUk,
-            titleEn: input.titleEn,
-            descriptionUk: input.descriptionUk,
-            descriptionEn: input.descriptionEn,
-            isActive: input.isActive,
-            bookSubjects: {
-                deleteMany: {},
-                create: input.subjectIds.map((subjectId) => ({ subjectId }))
-            },
-            bookTopics: {
-                deleteMany: {},
-                create: input.topicIds.map((topicId) => ({ topicId }))
+    await prisma.$transaction(async (tx) => {
+        await tx.book.update({
+            where: { id },
+            data: {
+                titleUk: input.titleUk,
+                titleEn: input.titleEn,
+                descriptionUk: input.descriptionUk,
+                descriptionEn: input.descriptionEn,
+                isActive: input.isActive,
+                bookSubjects: {
+                    deleteMany: {},
+                    create: input.subjectIds.map((subjectId) => ({ subjectId }))
+                }
             }
-        },
+        });
+
+        if (input.topicIds.length === 0) {
+            await tx.topic.deleteMany({
+                where: { bookId: id }
+            });
+            return;
+        }
+
+        await tx.topic.deleteMany({
+            where: {
+                bookId: id,
+                id: {
+                    notIn: [...input.topicIds]
+                }
+            }
+        });
+    });
+
+    const updated = await prisma.book.findUnique({
+        where: { id },
         include: {
             bookSubjects: {
                 include: {
@@ -247,20 +256,22 @@ export async function updateBook(id: string, input: BookInput): Promise<DbBookWi
                     }
                 }
             },
-            bookTopics: {
-                include: {
-                    topic: {
-                        select: {
-                            id: true,
-                            titleUk: true,
-                            titleEn: true
-                        }
-                    }
+            topics: {
+                select: {
+                    bookId: true,
+                    id: true,
+                    titleUk: true,
+                    titleEn: true
                 }
             }
         }
     });
-    return mapToDbBookWithRelations(book);
+
+    if (!updated) {
+        throw new Error('Book not found after update');
+    }
+
+    return mapToDbBookWithRelations(updated);
 }
 
 export async function getBooksBySubjectId(subjectId: string, userId?: string): Promise<DbBookWithLearningStatus[]> {
@@ -373,23 +384,19 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
             isActive: true
         },
         include: {
-            bookQuestions: {
+            questions: {
                 include: {
-                    question: {
-                        include: {
-                            level: true,
-                            userScores: userId
-                                ? {
-                                      where: {
-                                          userId
-                                      }
-                                  }
-                                : false
-                        }
-                    }
+                    level: true,
+                    userScores: userId
+                        ? {
+                              where: {
+                                  userId
+                              }
+                          }
+                        : undefined
                 },
                 orderBy: {
-                    orderIndex: 'asc'
+                    createdAt: 'asc'
                 }
             },
             userLevelScores: userId
@@ -433,20 +440,19 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
                   totalQuestions: uls.totalQuestions
               }))
             : undefined,
-        questions: book.bookQuestions.map((bq) => ({
-            id: bq.question.id,
-            textUk: bq.question.textUk,
-            textEn: bq.question.textEn,
-            theoryUk: bq.question.theoryUk,
-            theoryEn: bq.question.theoryEn,
+        questions: book.questions.map((question) => ({
+            id: question.id,
+            textUk: question.textUk,
+            textEn: question.textEn,
+            theoryUk: question.theoryUk,
+            theoryEn: question.theoryEn,
             level: {
-                id: bq.question.level.id,
-                key: bq.question.level.key,
-                nameUk: bq.question.level.nameUk,
-                nameEn: bq.question.level.nameEn
+                id: question.level.id,
+                key: question.level.key,
+                nameUk: question.level.nameUk,
+                nameEn: question.level.nameEn
             },
-            userScore:
-                'userScores' in bq.question && Array.isArray(bq.question.userScores) && bq.question.userScores.length > 0 ? bq.question.userScores[0]?.score : undefined
+            userScore: userId ? question.userScores?.[0]?.score : undefined
         }))
     };
 }
@@ -456,13 +462,9 @@ export async function startLearningBook(userId: string, bookId: string): Promise
         const book = await tx.book.findUnique({
             where: { id: bookId },
             include: {
-                bookQuestions: {
-                    include: {
-                        question: {
-                            select: {
-                                levelId: true
-                            }
-                        }
+                questions: {
+                    select: {
+                        levelId: true
                     }
                 }
             }
@@ -472,7 +474,7 @@ export async function startLearningBook(userId: string, bookId: string): Promise
             throw new Error('Book not found');
         }
 
-        const levelIds = [...new Set(book.bookQuestions.map((bq) => bq.question.levelId))];
+        const levelIds = [...new Set(book.questions.map((question) => question.levelId))];
 
         for (const levelId of levelIds) {
             await tx.userBookLevelScore.upsert({

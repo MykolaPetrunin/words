@@ -36,10 +36,10 @@ model Book {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  bookQuestions    BookQuestion[]
+  questions        Question[]
   userLevelScores  UserBookLevelScore[]
   bookSubjects     BookSubject[]
-  bookTopics       BookTopic[]
+  topics           Topic[]
 
   @@map("books")
 }
@@ -65,12 +65,13 @@ model Topic {
   id         String   @id @default(cuid())
   titleUk    String   @map("title_uk")
   titleEn    String   @map("title_en")
-  bookId     String?  @map("book_id")
+  bookId     String   @map("book_id")
 
   questions Question[]
-  bookTopics BookTopic[]
+  book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@map("topics")
+  @@index([bookId])
 }
 
 model Question {
@@ -84,13 +85,13 @@ model Question {
   updatedAt DateTime @updatedAt @map("updated_at")
   levelId   String   @map("level_id")
   topicId   String?  @map("topic_id")
-  bookId    String?  @map("book_id")
+  bookId    String   @map("book_id")
 
   answers       Answer[]
-  bookQuestions BookQuestion[]
   userScores    UserQuestionScore[]
   level         Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
   topic         Topic?   @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  book          Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@map("questions")
   @@index([levelId])
@@ -113,24 +114,6 @@ model Answer {
   @@map("answers")
   @@index([questionId])
   @@unique([questionId, orderIndex])
-}
-
-model BookQuestion {
-  id         String   @id @default(cuid())
-  bookId     String   @map("book_id")
-  questionId String   @map("question_id")
-  orderIndex Int      @map("order_index")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  book     Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@unique([bookId, questionId])
-  @@unique([bookId, orderIndex])
-  @@map("book_questions")
-  @@index([bookId])
-  @@index([questionId])
 }
 
 model UserQuestionScore {
@@ -201,22 +184,6 @@ model BookSubject {
   @@map("book_subjects")
   @@index([bookId])
   @@index([subjectId])
-}
-
-model BookTopic {
-  id        String   @id @default(cuid())
-  bookId    String   @map("book_id")
-  topicId   String   @map("topic_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
-
-  @@unique([bookId, topicId])
-  @@map("book_topics")
-  @@index([bookId])
-  @@index([topicId])
 }
 
 model UserSubjectLevelScore {

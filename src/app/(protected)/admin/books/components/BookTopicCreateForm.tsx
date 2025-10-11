@@ -16,10 +16,11 @@ import { createAdminBookTopic } from '../actions';
 import { createBookTopicFormSchema, type BookTopicFormData } from '../schemas';
 
 interface BookTopicCreateFormProps {
+    bookId: string;
     onTopicCreated: (topic: DbTopic) => void;
 }
 
-export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateFormProps): React.ReactElement {
+export default function BookTopicCreateForm({ bookId, onTopicCreated }: BookTopicCreateFormProps): React.ReactElement {
     const t = useI18n();
     const schema = useMemo(
         () =>
@@ -48,7 +49,7 @@ export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateF
         async (values: BookTopicFormData) => {
             setIsPending(true);
             try {
-                const topic = await createAdminBookTopic(values);
+                const topic = await createAdminBookTopic(bookId, values);
                 const nextInitial: BookTopicFormData = { titleUk: '', titleEn: '' };
                 setInitialData(nextInitial);
                 onTopicCreated(topic);
@@ -63,7 +64,7 @@ export default function BookTopicCreateForm({ onTopicCreated }: BookTopicCreateF
                 setIsPending(false);
             }
         },
-        [onTopicCreated, t]
+        [bookId, onTopicCreated, t]
     );
 
     const submit = useCallback(() => {

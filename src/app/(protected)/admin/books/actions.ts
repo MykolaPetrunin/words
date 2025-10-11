@@ -41,9 +41,10 @@ export async function updateAdminBook(bookId: string, data: BookFormData): Promi
     return book;
 }
 
-export async function createAdminBookTopic(data: BookTopicFormData): Promise<DbTopic> {
+export async function createAdminBookTopic(bookId: string, data: BookTopicFormData): Promise<DbTopic> {
     const parsed = bookTopicFormSchema.parse(data);
     const topic = await createTopic({
+        bookId,
         titleUk: parsed.titleUk,
         titleEn: parsed.titleEn
     });
@@ -162,7 +163,7 @@ export async function generateAdminBookTopicSuggestions(bookId: string): Promise
     }
 }
 
-export async function createAdminBookTopics(data: readonly BookTopicFormData[]): Promise<DbTopic[]> {
+export async function createAdminBookTopics(bookId: string, data: readonly BookTopicFormData[]): Promise<DbTopic[]> {
     if (data.length === 0) {
         return [];
     }
@@ -171,6 +172,7 @@ export async function createAdminBookTopics(data: readonly BookTopicFormData[]):
     for (const item of data) {
         const parsed = bookTopicFormSchema.parse(item);
         const topic = await createTopic({
+            bookId,
             titleUk: parsed.titleUk,
             titleEn: parsed.titleEn
         });

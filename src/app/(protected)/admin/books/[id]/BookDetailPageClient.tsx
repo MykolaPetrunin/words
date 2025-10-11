@@ -55,6 +55,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     const collator = useMemo(() => new Intl.Collator('uk', { sensitivity: 'base' }), []);
     const sortedTopics = useMemo(() => [...topics].sort((a, b) => collator.compare(a.titleUk, b.titleUk)), [collator, topics]);
     const [availableTopics, setAvailableTopics] = useState<DbTopic[]>(sortedTopics);
+    const bookId = book.id;
     const [pendingTopics, setPendingTopics] = useState<TopicSuggestionNew[]>([]);
     useEffect(() => {
         setAvailableTopics((prev) => {
@@ -80,7 +81,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                     titleUk: topic.titleUk,
                     titleEn: topic.titleEn
                 }));
-                const createdTopics = topicsToCreate.length > 0 ? await createAdminBookTopics(topicsToCreate) : [];
+                const createdTopics = topicsToCreate.length > 0 ? await createAdminBookTopics(book.id, topicsToCreate) : [];
                 const nextTopicIds = Array.from(new Set([...values.topicIds, ...createdTopics.map((topic) => topic.id)]));
                 const updated = await updateAdminBook(book.id, { ...values, topicIds: nextTopicIds });
                 const nextInitial = mapBookToFormData(updated);
@@ -128,7 +129,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                     const map = new Map(prev.map((topic) => [topic.id, topic]));
                     existingTopics.forEach((topic) => {
                         if (!map.has(topic.id)) {
-                            map.set(topic.id, { id: topic.id, titleUk: topic.titleUk, titleEn: topic.titleEn });
+                            map.set(topic.id, { id: topic.id, bookId, titleUk: topic.titleUk, titleEn: topic.titleEn });
                         }
                     });
                     return Array.from(map.values()).sort((a, b) => collator.compare(a.titleUk, b.titleUk));
@@ -153,7 +154,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 });
             }
         },
-        [collator, getValues, setValue]
+        [bookId, collator, getValues, setValue]
     );
 
     const handlePendingTopicRemove = useCallback((topic: TopicSuggestionNew) => {
@@ -180,7 +181,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                             actions={<BookTopicSuggestionsDialog book={book} onApply={handleSuggestionApply} />}
                         />
                         <BookPendingTopicsList topics={pendingTopics} onRemove={handlePendingTopicRemove} disabled={isPending} />
-                        <BookTopicCreateForm onTopicCreated={handleTopicCreated} />
+                        <BookTopicCreateForm bookId={book.id} onTopicCreated={handleTopicCreated} />
                     </div>
                     <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <Button type="button" variant="outline" onClick={handleCancel}>

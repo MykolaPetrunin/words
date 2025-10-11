@@ -24,14 +24,6 @@ interface SeedQuestionsParams {
 export async function seedQuestions({ prisma, questions, levelIds, bookId, topicName = 'Questions' }: SeedQuestionsParams): Promise<void> {
     console.log(`❓ Seeding ${topicName}...`);
 
-    // Get the highest order index for this book
-    const lastQuestion = await prisma.bookQuestion.findFirst({
-        where: { bookId },
-        orderBy: { orderIndex: 'desc' }
-    });
-
-    let questionOrderIndex = lastQuestion ? lastQuestion.orderIndex + 1 : 1;
-
     const topicId = generateId(`topic-${questions.titleEN}`);
 
     await prisma.topic.upsert({
@@ -42,6 +34,7 @@ export async function seedQuestions({ prisma, questions, levelIds, bookId, topic
         },
         create: {
             id: topicId,
+            bookId,
             titleUk: questions.titleUK,
             titleEn: questions.titleEN
         }
@@ -58,6 +51,7 @@ export async function seedQuestions({ prisma, questions, levelIds, bookId, topic
                 theoryUk: testQuestion.theoryUK,
                 theoryEn: testQuestion.theoryEN,
                 isActive: true,
+                bookId,
                 topicId,
                 levelId: levelIds[testQuestion.level]
             },
@@ -68,6 +62,7 @@ export async function seedQuestions({ prisma, questions, levelIds, bookId, topic
                 theoryUk: testQuestion.theoryUK,
                 theoryEn: testQuestion.theoryEN,
                 isActive: true,
+                bookId,
                 topicId,
                 levelId: levelIds[testQuestion.level]
             }
@@ -93,26 +88,6 @@ export async function seedQuestions({ prisma, questions, levelIds, bookId, topic
         });
 
         console.log(`💡 ${answersData.length} answers seeded for question`);
-
-        // Add question to book
-        await prisma.bookQuestion.upsert({
-            where: {
-                bookId_questionId: {
-                    bookId: bookId,
-                    questionId: questionId
-                }
-            },
-            update: {
-                orderIndex: questionOrderIndex
-            },
-            create: {
-                bookId: bookId,
-                questionId: questionId,
-                orderIndex: questionOrderIndex
-            }
-        });
-
-        questionOrderIndex++;
     }
 
     console.log(`✅ ${questions.questions.length} ${topicName} seeded`);

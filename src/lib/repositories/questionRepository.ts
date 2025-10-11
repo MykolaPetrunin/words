@@ -126,25 +126,23 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
     }
 
     if (bookIds.length > 0 || subjectIds.length > 0) {
-        const bookQuestionFilter: Prisma.BookQuestionListRelationFilter = {
-            some: {}
-        };
+        const bookFilter: Prisma.BookWhereInput = {};
 
         if (bookIds.length > 0) {
-            (bookQuestionFilter.some as Prisma.BookQuestionWhereInput).bookId = { in: bookIds };
+            bookFilter.id = { in: bookIds };
         }
 
         if (subjectIds.length > 0) {
-            (bookQuestionFilter.some as Prisma.BookQuestionWhereInput).book = {
-                bookSubjects: {
-                    some: {
-                        subjectId: { in: subjectIds }
-                    }
+            bookFilter.bookSubjects = {
+                some: {
+                    subjectId: { in: subjectIds }
                 }
             };
         }
 
-        where.bookQuestions = bookQuestionFilter;
+        where.book = {
+            is: bookFilter
+        };
     }
 
     const questions = await prisma.question.findMany({
@@ -152,15 +150,11 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
         include: {
             level: true,
             topic: true,
-            bookQuestions: {
+            book: {
                 include: {
-                    book: {
+                    bookSubjects: {
                         include: {
-                            bookSubjects: {
-                                include: {
-                                    subject: true
-                                }
-                            }
+                            subject: true
                         }
                     }
                 }
@@ -172,39 +166,33 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
     });
 
     return questions.map((question) => {
-        const booksMap = new Map<string, QuestionListBook>();
+        const books: QuestionListBook[] = [];
 
-        for (const bookQuestion of question.bookQuestions) {
-            const book = bookQuestion.book;
+        const book = question.book;
 
-            if (!book.isActive) {
-                continue;
-            }
+        if (book && book.isActive) {
+            const subjectsMap = new Map<string, QuestionListSubject>();
 
-            if (!booksMap.has(book.id)) {
-                const subjectsMap = new Map<string, QuestionListSubject>();
+            for (const bookSubject of book.bookSubjects) {
+                const subject = bookSubject.subject;
 
-                for (const bookSubject of book.bookSubjects) {
-                    const subject = bookSubject.subject;
-
-                    if (!subject.isActive || subjectsMap.has(subject.id)) {
-                        continue;
-                    }
-
-                    subjectsMap.set(subject.id, {
-                        id: subject.id,
-                        nameUk: subject.nameUk,
-                        nameEn: subject.nameEn
-                    });
+                if (!subject.isActive || subjectsMap.has(subject.id)) {
+                    continue;
                 }
 
-                booksMap.set(book.id, {
-                    id: book.id,
-                    titleUk: book.titleUk,
-                    titleEn: book.titleEn,
-                    subjects: Array.from(subjectsMap.values()).sort((a, b) => a.nameEn.localeCompare(b.nameEn))
+                subjectsMap.set(subject.id, {
+                    id: subject.id,
+                    nameUk: subject.nameUk,
+                    nameEn: subject.nameEn
                 });
             }
+
+            books.push({
+                id: book.id,
+                titleUk: book.titleUk,
+                titleEn: book.titleEn,
+                subjects: Array.from(subjectsMap.values()).sort((a, b) => a.nameEn.localeCompare(b.nameEn))
+            });
         }
 
         return {
@@ -225,7 +213,7 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
                       titleEn: question.topic.titleEn
                   }
                 : null,
-            books: Array.from(booksMap.values()).sort((a, b) => a.titleEn.localeCompare(b.titleEn))
+            books: books.sort((a, b) => a.titleEn.localeCompare(b.titleEn))
         };
     });
 }
@@ -307,13 +295,12 @@ export async function getQuestionFiltersTree(): Promise<QuestionFiltersTree> {
                 include: {
                     book: {
                         include: {
-                            bookQuestions: {
+                            questions: {
+                                where: {
+                                    isActive: true
+                                },
                                 include: {
-                                    question: {
-                                        include: {
-                                            topic: true
-                                        }
-                                    }
+                                    topic: true
                                 }
                             }
                         }
@@ -349,11 +336,8 @@ export async function getQuestionFiltersTree(): Promise<QuestionFiltersTree> {
 
             const topicMap = new Map(bookEntry.topics.map((topic) => [topic.value, topic] as const));
 
-            for (const bookQuestion of book.bookQuestions) {
-                if (!bookQuestion.question.isActive) {
-                    continue;
-                }
-                const topic = bookQuestion.question.topic;
+            for (const question of book.questions) {
+                const topic = question.topic;
 
                 if (!topic || topicMap.has(topic.id)) {
                     continue;
