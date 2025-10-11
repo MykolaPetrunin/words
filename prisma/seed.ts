@@ -95,37 +95,69 @@ async function main(): Promise<void> {
 
     console.log('📖 Seeding books...');
 
-    const books = [
+    interface SeedBook {
+        id: string;
+        titleUk: string;
+        titleEn: string;
+        descriptionUk: string;
+        descriptionEn: string;
+        isActive: boolean;
+        subjectIds: string[];
+    }
+
+    const books: SeedBook[] = [
         {
             id: generateId('book-javascript-frontend'),
             titleUk: 'Javascript для Front-End розробника',
             titleEn: 'Javascript for Front-End Developer',
             descriptionUk: 'Повний курс JavaScript для frontend розробки з практичними прикладами та завданнями',
             descriptionEn: 'Complete JavaScript course for frontend development with practical examples and tasks',
-            isActive: true
+            isActive: true,
+            subjectIds: [subjects[0].id]
         }
     ];
 
-    await prisma.book.createMany({
-        data: books,
-        skipDuplicates: true
-    });
+    for (const book of books) {
+        await prisma.book.upsert({
+            where: { id: book.id },
+            update: {
+                titleUk: book.titleUk,
+                titleEn: book.titleEn,
+                descriptionUk: book.descriptionUk,
+                descriptionEn: book.descriptionEn,
+                isActive: book.isActive,
+                bookSubjects: {
+                    connectOrCreate: book.subjectIds.map((subjectId) => ({
+                        where: {
+                            bookId_subjectId: {
+                                bookId: book.id,
+                                subjectId
+                            }
+                        },
+                        create: {
+                            subjectId
+                        }
+                    }))
+                }
+            },
+            create: {
+                id: book.id,
+                titleUk: book.titleUk,
+                titleEn: book.titleEn,
+                descriptionUk: book.descriptionUk,
+                descriptionEn: book.descriptionEn,
+                isActive: book.isActive,
+                bookSubjects: {
+                    create: book.subjectIds.map((subjectId) => ({
+                        subjectId
+                    }))
+                }
+            }
+        });
+    }
+
     console.log(`✅ ${books.length} books seeded`);
-
-    console.log('🔗 Seeding book-subject relations...');
-
-    const bookSubjectRelations = [
-        {
-            bookId: books[0].id,
-            subjectId: generateId('subject-frontend')
-        }
-    ];
-
-    await prisma.bookSubject.createMany({
-        data: bookSubjectRelations,
-        skipDuplicates: true
-    });
-    console.log(`✅ ${bookSubjectRelations.length} book-subject relations seeded`);
+    console.log(`✅ ${books.reduce((total, book) => total + book.subjectIds.length, 0)} book-subject relations ensured`);
 
     const bookId = books[0].id;
 

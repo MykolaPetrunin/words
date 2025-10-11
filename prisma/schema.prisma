@@ -65,6 +65,7 @@ model Topic {
   id         String   @id @default(cuid())
   titleUk    String   @map("title_uk")
   titleEn    String   @map("title_en")
+  bookId     String?  @map("book_id")
 
   questions Question[]
   bookTopics BookTopic[]
@@ -83,6 +84,7 @@ model Question {
   updatedAt DateTime @updatedAt @map("updated_at")
   levelId   String   @map("level_id")
   topicId   String?  @map("topic_id")
+  bookId    String?  @map("book_id")
 
   answers       Answer[]
   bookQuestions BookQuestion[]
