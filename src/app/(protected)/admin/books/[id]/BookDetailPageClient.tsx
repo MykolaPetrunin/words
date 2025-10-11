@@ -52,22 +52,17 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     const { control, handleSubmit, reset, formState, setValue, getValues } = form;
     const router = useRouter();
     const [isPending, setIsPending] = useState(false);
-    const collator = useMemo(() => new Intl.Collator('uk', { sensitivity: 'base' }), []);
-    const sortedTopics = useMemo(() => [...topics].sort((a, b) => collator.compare(a.titleUk, b.titleUk)), [collator, topics]);
-    const [availableTopics, setAvailableTopics] = useState<DbTopic[]>(sortedTopics);
     const bookId = book.id;
+    const collator = useMemo(() => new Intl.Collator('uk', { sensitivity: 'base' }), []);
+    const sortedTopics = useMemo(
+        () => topics.filter((topic) => topic.bookId === bookId).sort((a, b) => collator.compare(a.titleUk, b.titleUk)),
+        [bookId, collator, topics]
+    );
+    const [availableTopics, setAvailableTopics] = useState<DbTopic[]>(sortedTopics);
     const [pendingTopics, setPendingTopics] = useState<TopicSuggestionNew[]>([]);
     useEffect(() => {
-        setAvailableTopics((prev) => {
-            const merged = [...prev];
-            sortedTopics.forEach((topic) => {
-                if (!merged.some((item) => item.id === topic.id)) {
-                    merged.push(topic);
-                }
-            });
-            return merged.sort((a, b) => collator.compare(a.titleUk, b.titleUk));
-        });
-    }, [collator, sortedTopics]);
+        setAvailableTopics(sortedTopics);
+    }, [sortedTopics]);
 
     const handleCancel = useCallback(() => {
         router.push(appPaths.adminBooks);
@@ -81,34 +76,29 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                     titleUk: topic.titleUk,
                     titleEn: topic.titleEn
                 }));
-                const createdTopics = topicsToCreate.length > 0 ? await createAdminBookTopics(book.id, topicsToCreate) : [];
+                const createdTopics = topicsToCreate.length > 0 ? await createAdminBookTopics(bookId, topicsToCreate) : [];
                 const nextTopicIds = Array.from(new Set([...values.topicIds, ...createdTopics.map((topic) => topic.id)]));
-                const updated = await updateAdminBook(book.id, { ...values, topicIds: nextTopicIds });
+                const updated = await updateAdminBook(bookId, { ...values, topicIds: nextTopicIds });
                 const nextInitial = mapBookToFormData(updated);
                 reset(nextInitial);
-                setAvailableTopics((prev) => {
-                    const merged = [...prev];
-                    updated.topics.forEach((topic) => {
-                        if (!merged.some((item) => item.id === topic.id)) {
-                            merged.push(topic);
-                        }
-                    });
-                    return merged.sort((a, b) => collator.compare(a.titleUk, b.titleUk));
-                });
+                setAvailableTopics(updated.topics.filter((topic) => topic.bookId === bookId).sort((a, b) => collator.compare(a.titleUk, b.titleUk)));
                 setPendingTopics([]);
                 toast.success(t('admin.booksDetailSuccess'));
             } catch (error) {
-                clientLogger.error('Form submission failed', error as Error, { bookId: book.id });
+                clientLogger.error('Form submission failed', error as Error, { bookId });
                 toast.error(t('admin.booksDetailError'));
             } finally {
                 setIsPending(false);
             }
         },
-        [book.id, collator, pendingTopics, reset, t]
+        [bookId, collator, pendingTopics, reset, t]
     );
 
     const handleTopicCreated = useCallback(
         (topic: DbTopic) => {
+            if (topic.bookId !== bookId) {
+                return;
+            }
             setAvailableTopics((prev) => {
                 if (prev.some((item) => item.id === topic.id)) {
                     return prev;
@@ -119,23 +109,17 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
             const nextSelected = Array.from(new Set([...getValues('topicIds'), topic.id]));
             setValue('topicIds', nextSelected, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
         },
-        [collator, getValues, setValue]
+        [bookId, collator, getValues, setValue]
     );
 
     const handleSuggestionApply = useCallback(
         ({ existingTopics, newTopics }: { existingTopics: TopicSuggestionExisting[]; newTopics: TopicSuggestionNew[] }) => {
             if (existingTopics.length > 0) {
-                setAvailableTopics((prev) => {
-                    const map = new Map(prev.map((topic) => [topic.id, topic]));
-                    existingTopics.forEach((topic) => {
-                        if (!map.has(topic.id)) {
-                            map.set(topic.id, { id: topic.id, bookId, titleUk: topic.titleUk, titleEn: topic.titleEn });
-                        }
-                    });
-                    return Array.from(map.values()).sort((a, b) => collator.compare(a.titleUk, b.titleUk));
-                });
-                const nextTopicIds = Array.from(new Set([...getValues('topicIds'), ...existingTopics.map((topic) => topic.id)]));
-                setValue('topicIds', nextTopicIds, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                const ids = existingTopics.map((topic) => topic.id).filter((id) => availableTopics.some((item) => item.id === id && item.bookId === bookId));
+                if (ids.length > 0) {
+                    const nextTopicIds = Array.from(new Set([...getValues('topicIds'), ...ids]));
+                    setValue('topicIds', nextTopicIds, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                }
             }
             if (newTopics.length > 0) {
                 setPendingTopics((prev) => {
@@ -154,7 +138,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 });
             }
         },
-        [bookId, collator, getValues, setValue]
+        [availableTopics, bookId, getValues, setValue]
     );
 
     const handlePendingTopicRemove = useCallback((topic: TopicSuggestionNew) => {
@@ -177,11 +161,10 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                         <BookTopicsField
                             control={control}
                             topics={availableTopics}
-                            disabled={isPending}
                             actions={<BookTopicSuggestionsDialog book={book} onApply={handleSuggestionApply} />}
                         />
                         <BookPendingTopicsList topics={pendingTopics} onRemove={handlePendingTopicRemove} disabled={isPending} />
-                        <BookTopicCreateForm bookId={book.id} onTopicCreated={handleTopicCreated} />
+                        <BookTopicCreateForm bookId={bookId} onTopicCreated={handleTopicCreated} />
                     </div>
                     <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <Button type="button" variant="outline" onClick={handleCancel}>

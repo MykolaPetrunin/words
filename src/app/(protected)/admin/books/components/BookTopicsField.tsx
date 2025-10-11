@@ -12,58 +12,41 @@ import type { BookFormData } from '../schemas';
 interface BookTopicsFieldProps {
     control: Control<BookFormData>;
     topics: readonly DbTopic[];
-    disabled?: boolean;
     actions?: React.ReactNode;
 }
 
-export default function BookTopicsField({ control, topics, disabled = false, actions }: BookTopicsFieldProps): React.ReactElement {
+export default function BookTopicsField({ control, topics, actions }: BookTopicsFieldProps): React.ReactElement {
     const t = useI18n();
 
     return (
         <FormField
             control={control}
             name="topicIds"
-            render={({ field }) => (
-                <FormItem className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                        <FormLabel className="text-base leading-none">{t('admin.booksFormTopics')}</FormLabel>
-                        {actions}
-                    </div>
-                    {topics.length === 0 ? (
-                        <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{t('admin.booksFormTopicsEmpty')}</p>
-                    ) : (
-                        <div className="grid gap-2">
-                            {topics.map((topic) => {
-                                const checked = field.value.includes(topic.id);
-                                return (
-                                    <label key={topic.id} className="flex items-center justify-between rounded-md border border-dashed p-3">
-                                        <div>
-                                            <p className="text-sm font-medium">{topic.titleUk}</p>
-                                            <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
-                                        </div>
-                                        <input
-                                            type="checkbox"
-                                            value={topic.id}
-                                            checked={checked}
-                                            disabled={disabled}
-                                            onChange={(event) => {
-                                                const { checked: isChecked } = event.target;
-                                                if (isChecked) {
-                                                    field.onChange([...field.value, topic.id]);
-                                                } else {
-                                                    field.onChange(field.value.filter((id) => id !== topic.id));
-                                                }
-                                            }}
-                                            className="h-4 w-4 rounded border border-input"
-                                        />
-                                    </label>
-                                );
-                            })}
+            render={({ field }) => {
+                const selected = new Set(field.value);
+                const selectedTopics = topics.filter((topic) => selected.has(topic.id));
+                return (
+                    <FormItem className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <FormLabel className="text-base leading-none">{t('admin.booksFormTopics')}</FormLabel>
+                            {actions}
                         </div>
-                    )}
-                    <FormMessage />
-                </FormItem>
-            )}
+                        {selectedTopics.length === 0 ? (
+                            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{t('admin.booksFormTopicsEmpty')}</p>
+                        ) : (
+                            <div className="grid gap-2">
+                                {selectedTopics.map((topic) => (
+                                    <div key={topic.id} className="rounded-md border border-dashed p-3">
+                                        <p className="text-sm font-medium">{topic.titleUk}</p>
+                                        <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <FormMessage />
+                    </FormItem>
+                );
+            }}
         />
     );
 }
