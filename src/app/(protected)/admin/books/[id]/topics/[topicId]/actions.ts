@@ -71,7 +71,7 @@ export const createTopicQuestionsFromSuggestions = async ({ bookId, topicId, sug
                         bookId,
                         topicId,
                         levelId,
-                        isActive: true
+                        isActive: false
                     }
                 });
             }
