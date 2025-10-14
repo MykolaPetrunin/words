@@ -1,6 +1,6 @@
 import { OpenAI } from 'openai';
 
-import { serverLogger } from '../../../../../../../lib/logger';
+import { serverLogger } from '@/lib/logger';
 
 interface QuestionAnswersSuggestionsProps {
     book: {
