@@ -24,8 +24,7 @@ interface TopicQuestionsSuggestionsProps {
 export interface TopicQuestionSuggestion {
     readonly textUk: string;
     readonly textEn: string;
-    readonly theoryUk: string;
-    readonly theoryEn: string;
+    readonly optional: boolean;
     readonly level: 'junior' | 'middle' | 'senior';
 }
 
@@ -54,17 +53,15 @@ export const getTopicQuestionsSuggestions = async (data: TopicQuestionsSuggestio
             suggestion.newQuestions as {
                 textUk?: string;
                 textEn?: string;
-                theoryUk?: string;
-                theoryEn?: string;
                 level?: 'junior' | 'middle' | 'senior';
+                optional?: boolean;
             }[]
         ).reduce<TopicQuestionSuggestion[]>((acc, question) => {
-            if (question.textUk && question.textEn && question.theoryUk && question.theoryEn && question.level) {
+            if (question.textUk && question.textEn && question.level && Object.hasOwn(question, 'optional')) {
                 acc.push({
                     textUk: question.textUk,
                     textEn: question.textEn,
-                    theoryUk: question.theoryUk,
-                    theoryEn: question.theoryEn,
+                    optional: !!question.optional,
                     level: question.level
                 });
             }

@@ -66,8 +66,8 @@ export const createTopicQuestionsFromSuggestions = async ({ bookId, topicId, sug
                     data: {
                         textUk: suggestion.textUk,
                         textEn: suggestion.textEn,
-                        theoryUk: null,
-                        theoryEn: null,
+                        theoryUk: '',
+                        theoryEn: '',
                         bookId,
                         topicId,
                         levelId,
