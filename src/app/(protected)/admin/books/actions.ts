@@ -5,10 +5,10 @@ import { revalidatePath } from 'next/cache';
 import { appPaths, getAdminBookPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
 import { createBook, getBookWithRelations, updateBook, type BookInput, type DbBookWithRelations } from '@/lib/repositories/bookRepository';
-import { createTopic, type DbTopic } from '@/lib/repositories/topicRepository';
+import { createTopic, deleteTopicWithQuestions, getTopicById, type DbTopic } from '@/lib/repositories/topicRepository';
 
-import { bookFormSchema, bookTopicFormSchema, type BookFormData, type BookTopicFormData } from './schemas';
 import { getBookTopicsSuggestions } from './components/bookTopicSuggestionsDialog/aiActions';
+import { bookFormSchema, bookTopicFormSchema, type BookFormData, type BookTopicFormData } from './schemas';
 
 const mapFormToInput = (data: BookFormData): BookInput => ({
     titleUk: data.titleUk,
@@ -180,4 +180,20 @@ export async function createAdminBookTopics(bookId: string, data: readonly BookT
     }
     revalidateAdminBooks();
     return createdTopics;
+}
+
+export async function deleteAdminBookTopic(bookId: string, topicId: string): Promise<void> {
+    const topic = await getTopicById(topicId);
+    if (!topic || topic.bookId !== bookId) {
+        serverLogger.error('Topic delete failed', undefined, { bookId, topicId, reason: 'not_found' });
+        throw new Error('Topic not found');
+    }
+    try {
+        await deleteTopicWithQuestions(topicId);
+    } catch (error) {
+        serverLogger.error('Topic delete failed', error as Error, { bookId, topicId });
+        throw error;
+    }
+    revalidateAdminBooks();
+    revalidatePath(getAdminBookPath(bookId));
 }

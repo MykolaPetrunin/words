@@ -6,8 +6,6 @@ import { serverLogger } from '@/lib/logger';
 
 import { QuestionFormData } from '../../schemas';
 
-import { questionClarityPrompt, questionClarityResponseFormat, questionTheoryCheckPrompt, questionTheotyCheckResponseFormat } from './configs';
-
 const client = new OpenAI({
     apiKey: process.env['OPENAI_API_KEY']
 });
@@ -42,37 +40,18 @@ interface PossibleQuestionTheoryChanges {
 }
 export async function reviewQuestionClarity(data: QuestionFormData): Promise<PossibleQuestionTextChanges | null> {
     try {
-        const completion = await client.chat.completions.create({
-            model: 'gpt-5-mini',
-            response_format: questionClarityResponseFormat,
-            messages: [
-                {
-                    role: 'system',
-                    content: questionClarityPrompt
-                },
-                {
-                    role: 'user',
-                    content: JSON.stringify({
-                        question: {
-                            textUk: data.textUk,
-                            textEn: data.textEn,
-                            answers: data.answers.map((answer: QuestionFormData['answers'][number]) => ({
-                                id: answer.id,
-                                textUk: answer.textUk,
-                                textEn: answer.textEn,
-                                isCorrect: answer.isCorrect
-                            }))
-                        }
-                    })
-                }
-            ]
+        const response = await client.responses.create({
+            prompt: {
+                id: 'pmpt_68e8f8dac280819787521e56c03187a10d27a8d5e2372e7e'
+            },
+            input: JSON.stringify(data)
         });
 
-        if (!completion.choices[0].message.content) {
+        if (!response.output_text) {
             return null;
         }
 
-        const suggestion = JSON.parse(completion.choices[0].message.content);
+        const suggestion = JSON.parse(response.output_text);
 
         const result: PossibleQuestionTextChanges = {};
 
@@ -116,41 +95,18 @@ export async function reviewQuestionClarity(data: QuestionFormData): Promise<Pos
 
 export async function reviewQuestionTheory(data: QuestionFormData): Promise<PossibleQuestionTheoryChanges | null> {
     try {
-        const completion = await client.chat.completions.create({
-            model: 'gpt-5-mini',
-            response_format: questionTheotyCheckResponseFormat,
-            messages: [
-                {
-                    role: 'system',
-                    content: questionTheoryCheckPrompt
-                },
-                {
-                    role: 'user',
-                    content: JSON.stringify({
-                        question: {
-                            textUk: data.textUk,
-                            textEn: data.textEn,
-                            theoryUk: data.theoryUk,
-                            theoryEn: data.theoryEn,
-                            answers: data.answers.map((answer: QuestionFormData['answers'][number]) => ({
-                                id: answer.id,
-                                textUk: answer.textUk,
-                                textEn: answer.textEn,
-                                theoryUk: answer.theoryUk,
-                                theoryEn: answer.theoryEn,
-                                isCorrect: answer.isCorrect
-                            }))
-                        }
-                    })
-                }
-            ]
+        const response = await client.responses.create({
+            prompt: {
+                id: 'pmpt_68ec022d109081908b80310657eb4d990c61dbc472de724e'
+            },
+            input: JSON.stringify(data)
         });
 
-        if (!completion.choices[0].message.content) {
+        if (!response.output_text) {
             return null;
         }
 
-        const suggestion = JSON.parse(completion.choices[0].message.content);
+        const suggestion = JSON.parse(response.output_text);
 
         const result: PossibleQuestionTheoryChanges = {};
 

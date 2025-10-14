@@ -5,7 +5,7 @@ import { getBookWithRelations } from '@/lib/repositories/bookRepository';
 import { getAllQuestions } from '@/lib/repositories/questionRepository';
 import { getTopicById } from '@/lib/repositories/topicRepository';
 
-import TopicQuestionsPageClient from './TopicQuestionsPageClient';
+import TopicQuestionsPageClient from './components/topicQuestionsPageClient/TopicQuestionsPageClient';
 
 interface AdminBookTopicParams {
     readonly id: string;
@@ -23,7 +23,13 @@ export default async function AdminBookTopicPage({ params }: { params: Promise<A
 
     return (
         <TopicQuestionsPageClient
-            book={{ id: book.id, titleUk: book.titleUk, titleEn: book.titleEn }}
+            book={{
+                id: book.id,
+                titleUk: book.titleUk,
+                titleEn: book.titleEn,
+                descriptionUk: book.descriptionUk ?? '',
+                descriptionEn: book.descriptionEn ?? ''
+            }}
             topic={{ id: topic.id, titleUk: topic.titleUk, titleEn: topic.titleEn }}
             questions={questions}
         />

@@ -23,7 +23,7 @@ import {
 
 interface BookTopicSuggestionsDialogProps {
     book: DbBookWithRelations;
-    onApply: (result: { existingTopics: TopicSuggestionExisting[]; newTopics: TopicSuggestionNew[] }) => void;
+    onApply: (result: { existingTopics: TopicSuggestionExisting[]; newTopics: TopicSuggestionNew[] }) => Promise<void>;
 }
 
 const getNewTopicKey = (topic: TopicSuggestionNew): string => `${topic.titleUk.toLowerCase()}|${topic.titleEn.toLowerCase()}`;
@@ -49,6 +49,8 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
     const [suggestions, setSuggestions] = useState<TopicSuggestions | null>(null);
     const [selectedNewKeys, setSelectedNewKeys] = useState<Set<string>>(new Set());
     const [isPending, startTransition] = useTransition();
+    const [isApplying, setIsApplying] = useState(false);
+    const [errorKey, setErrorKey] = useState<I18nKey | null>(null);
 
     const renderPriorityBadge = useCallback(
         (priority: TopicSuggestionPriority) => {
@@ -74,12 +76,14 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
                         details: result.details
                     });
                     toast.error(t(messageKey));
-                    setOpen(false);
+                    setErrorKey(messageKey);
+                    setSuggestions(null);
                     return;
                 }
 
                 const data = result.data;
                 setSuggestions(data);
+                setErrorKey(null);
                 const strongDefaults = data.newTopics.filter((topic) => topic.priority === 'strong');
                 const newSelection = new Set(strongDefaults.map((topic) => getNewTopicKey(topic)));
                 setSelectedNewKeys(newSelection);
@@ -89,7 +93,8 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
             } catch (error) {
                 clientLogger.error('Topic suggestion failed', error as Error, { bookId: book.id });
                 toast.error(t('admin.booksTopicsSuggestError'));
-                setOpen(false);
+                setErrorKey('admin.booksTopicsSuggestError');
+                setSuggestions(null);
             }
         });
     }, [book.id, t]);
@@ -98,6 +103,9 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
         (nextOpen: boolean) => {
             setOpen(nextOpen);
             if (nextOpen) {
+                setSuggestions(null);
+                setSelectedNewKeys(new Set());
+                setErrorKey(null);
                 loadSuggestions();
             }
         },
@@ -108,7 +116,7 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
     const newSuggestions = useMemo(() => suggestions?.newTopics ?? [], [suggestions]);
     const suggestionStatus: TopicSuggestionStatus = suggestions?.status ?? 'needs_topics';
     const isCovered = suggestionStatus === 'covered';
-    const applyDisabled = isPending || !suggestions || (!isCovered && selectedNewKeys.size === 0);
+    const applyDisabled = isPending || isApplying || !suggestions || errorKey !== null || (!isCovered && selectedNewKeys.size === 0);
     const applyLabelKey: I18nKey = isCovered ? 'admin.booksTopicsSuggestClose' : 'admin.booksTopicsSuggestApply';
     const applyLabel = t(applyLabelKey);
 
@@ -137,10 +145,21 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
             toast.error(t('admin.booksTopicsSuggestEmptySelection'));
             return;
         }
-        onApply({ existingTopics: suggestions.existingTopics, newTopics: pickedNew });
-        toast.success(t('admin.booksTopicsSuggestSuccess'));
-        setOpen(false);
-    }, [onApply, selectedNewKeys, suggestions, t]);
+        setIsApplying(true);
+        const payload = { existingTopics: suggestions.existingTopics, newTopics: pickedNew };
+        void (async () => {
+            try {
+                await onApply(payload);
+                toast.success(t('admin.booksTopicsSuggestSuccess'));
+                setOpen(false);
+            } catch (error) {
+                clientLogger.error('Topic suggestion apply failed', error as Error, { bookId: book.id });
+                toast.error(t('admin.booksTopicsSuggestError'));
+            } finally {
+                setIsApplying(false);
+            }
+        })();
+    }, [book.id, onApply, selectedNewKeys, suggestions, t]);
 
     return (
         <>
@@ -149,7 +168,7 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
                 {t('admin.booksTopicsSuggestButton')}
             </Button>
             <Dialog open={open} onOpenChange={handleOpenChange}>
-                <DialogContent className="max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-h-[80vh] w-[80vw] overflow-y-auto max-w-[1024px]">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Sparkles className="h-5 w-5" />
@@ -164,74 +183,82 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
                     )}
                     {!isPending && (
                         <div className="space-y-6">
-                            {isCovered && (
-                                <div className="rounded-md border border-dashed bg-muted/40 p-3 text-sm text-muted-foreground">
-                                    {t('admin.booksTopicsSuggestStatusCovered')}
-                                </div>
-                            )}
-                            <div className="space-y-3">
-                                <h3 className="text-sm font-semibold">{t('admin.booksTopicsSuggestExistingHeading')}</h3>
-                                {existingSuggestions.length === 0 ? (
-                                    <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{t('admin.booksTopicsSuggestExistingEmpty')}</p>
-                                ) : (
-                                    <div className="grid gap-3">
-                                        {existingSuggestions.map((topic) => (
-                                            <div key={topic.id} className="flex flex-col gap-1 rounded-md border p-3">
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <div>
-                                                        <p className="text-sm font-medium">{topic.titleUk}</p>
-                                                        <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
-                                                    </div>
-                                                    {renderPriorityBadge(topic.priority)}
-                                                </div>
-                                                <p className="text-xs text-muted-foreground">{topic.reason}</p>
-                                                <p className="text-xs text-primary">{t('admin.booksTopicsSuggestAlreadyAdded')}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="space-y-3">
-                                <h3 className="text-sm font-semibold">{t('admin.booksTopicsSuggestNewHeading')}</h3>
-                                {newSuggestions.length === 0 ? (
-                                    <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{t('admin.booksTopicsSuggestNewEmpty')}</p>
-                                ) : (
-                                    <div className="grid gap-3">
-                                        {newSuggestions.map((topic) => {
-                                            const key = getNewTopicKey(topic);
-                                            const checked = selectedNewKeys.has(key);
-                                            return (
-                                                <label key={key} className="flex flex-col gap-1 rounded-md border p-3">
-                                                    <div className="flex items-center justify-between gap-2">
-                                                        <div>
-                                                            <p className="text-sm font-medium">{topic.titleUk}</p>
-                                                            <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
+                            {errorKey && <div className="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">{t(errorKey)}</div>}
+                            {suggestions && (
+                                <>
+                                    {isCovered && (
+                                        <div className="rounded-md border border-dashed bg-muted/40 p-3 text-sm text-muted-foreground">
+                                            {t('admin.booksTopicsSuggestStatusCovered')}
+                                        </div>
+                                    )}
+                                    <div className="space-y-3">
+                                        <h3 className="text-sm font-semibold">{t('admin.booksTopicsSuggestExistingHeading')}</h3>
+                                        {existingSuggestions.length === 0 ? (
+                                            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                                                {t('admin.booksTopicsSuggestExistingEmpty')}
+                                            </p>
+                                        ) : (
+                                            <div className="grid gap-3">
+                                                {existingSuggestions.map((topic) => (
+                                                    <div key={topic.id} className="flex flex-col gap-1 rounded-md border p-3">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <div>
+                                                                <p className="text-sm font-medium">{topic.titleUk}</p>
+                                                                <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
+                                                            </div>
                                                             {renderPriorityBadge(topic.priority)}
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={checked}
-                                                                onChange={() => toggleNew(key)}
-                                                                className="h-4 w-4 rounded border border-input"
-                                                                disabled={isCovered}
-                                                            />
                                                         </div>
+                                                        <p className="text-xs text-muted-foreground">{topic.reason}</p>
+                                                        <p className="text-xs text-primary">{t('admin.booksTopicsSuggestAlreadyAdded')}</p>
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground">{topic.reason}</p>
-                                                </label>
-                                            );
-                                        })}
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+                                    <div className="space-y-3">
+                                        <h3 className="text-sm font-semibold">{t('admin.booksTopicsSuggestNewHeading')}</h3>
+                                        {newSuggestions.length === 0 ? (
+                                            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{t('admin.booksTopicsSuggestNewEmpty')}</p>
+                                        ) : (
+                                            <div className="grid gap-3">
+                                                {newSuggestions.map((topic) => {
+                                                    const key = getNewTopicKey(topic);
+                                                    const checked = selectedNewKeys.has(key);
+                                                    return (
+                                                        <label key={key} className="flex flex-col gap-1 rounded-md border p-3">
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <div>
+                                                                    <p className="text-sm font-medium">{topic.titleUk}</p>
+                                                                    <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    {renderPriorityBadge(topic.priority)}
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={checked}
+                                                                        onChange={() => toggleNew(key)}
+                                                                        className="h-4 w-4 rounded border border-input"
+                                                                        disabled={isCovered}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground">{topic.reason}</p>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                     <DialogFooter className="sm:justify-end">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             {t('common.cancel')}
                         </Button>
-                        <Button type="button" onClick={handleApply} disabled={applyDisabled}>
+                        <Button type="button" onClick={handleApply} disabled={applyDisabled} className="inline-flex items-center gap-2">
+                            {isApplying && <Loader2 className="h-4 w-4 animate-spin" />}
                             {applyLabel}
                         </Button>
                     </DialogFooter>

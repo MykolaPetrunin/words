@@ -1,12 +1,14 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { useI18n } from '@/hooks/useI18n';
 import { appPaths } from '@/lib/appPaths';
@@ -15,9 +17,8 @@ import type { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import type { DbSubject } from '@/lib/repositories/subjectRepository';
 import type { DbTopic } from '@/lib/repositories/topicRepository';
 
-import { createAdminBookTopics, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
+import { createAdminBookTopics, deleteAdminBookTopic, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
 import BookFormFields from '../components/BookFormFields';
-import BookPendingTopicsList from '../components/BookPendingTopicsList';
 import BookTopicCreateForm from '../components/BookTopicCreateForm';
 import BookTopicsField from '../components/BookTopicsField';
 import BookTopicSuggestionsDialog from '../components/bookTopicSuggestionsDialog/BookTopicSuggestionsDialog';
@@ -59,7 +60,8 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         [bookId, collator, topics]
     );
     const [availableTopics, setAvailableTopics] = useState<DbTopic[]>(sortedTopics);
-    const [pendingTopics, setPendingTopics] = useState<TopicSuggestionNew[]>([]);
+    const [topicToDelete, setTopicToDelete] = useState<DbTopic | null>(null);
+    const [isDeletingTopic, setIsDeletingTopic] = useState(false);
     useEffect(() => {
         setAvailableTopics(sortedTopics);
     }, [sortedTopics]);
@@ -68,21 +70,27 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         router.push(appPaths.adminBooks);
     }, [router]);
 
+    const handleDeleteDialogOpenChange = useCallback(
+        (nextOpen: boolean) => {
+            if (!nextOpen && !isDeletingTopic) {
+                setTopicToDelete(null);
+            }
+        },
+        [isDeletingTopic]
+    );
+
+    const handleTopicDeleteRequest = useCallback((topic: DbTopic) => {
+        setTopicToDelete(topic);
+    }, []);
+
     const onSubmit = useCallback(
         async (values: BookFormData) => {
             setIsPending(true);
             try {
-                const topicsToCreate = pendingTopics.map((topic) => ({
-                    titleUk: topic.titleUk,
-                    titleEn: topic.titleEn
-                }));
-                const createdTopics = topicsToCreate.length > 0 ? await createAdminBookTopics(bookId, topicsToCreate) : [];
-                const nextTopicIds = Array.from(new Set([...values.topicIds, ...createdTopics.map((topic) => topic.id)]));
-                const updated = await updateAdminBook(bookId, { ...values, topicIds: nextTopicIds });
+                const updated = await updateAdminBook(bookId, values);
                 const nextInitial = mapBookToFormData(updated);
                 reset(nextInitial);
                 setAvailableTopics(updated.topics.filter((topic) => topic.bookId === bookId).sort((a, b) => collator.compare(a.titleUk, b.titleUk)));
-                setPendingTopics([]);
                 toast.success(t('admin.booksDetailSuccess'));
             } catch (error) {
                 clientLogger.error('Form submission failed', error as Error, { bookId });
@@ -91,7 +99,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 setIsPending(false);
             }
         },
-        [bookId, collator, pendingTopics, reset, t]
+        [bookId, collator, reset, t]
     );
 
     const handleTopicCreated = useCallback(
@@ -112,8 +120,28 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         [bookId, collator, getValues, setValue]
     );
 
+    const handleConfirmTopicDelete = useCallback(async () => {
+        if (!topicToDelete) {
+            return;
+        }
+        setIsDeletingTopic(true);
+        try {
+            await deleteAdminBookTopic(bookId, topicToDelete.id);
+            setAvailableTopics((prev) => prev.filter((topic) => topic.id !== topicToDelete.id));
+            const nextTopicIds = getValues('topicIds').filter((id) => id !== topicToDelete.id);
+            setValue('topicIds', nextTopicIds, { shouldDirty: false, shouldTouch: false, shouldValidate: true });
+            toast.success(t('admin.booksTopicsDeleteSuccess'));
+            setTopicToDelete(null);
+        } catch (error) {
+            clientLogger.error('Topic deletion failed', error as Error, { bookId, topicId: topicToDelete.id });
+            toast.error(t('admin.booksTopicsDeleteError'));
+        } finally {
+            setIsDeletingTopic(false);
+        }
+    }, [bookId, getValues, setValue, t, topicToDelete]);
+
     const handleSuggestionApply = useCallback(
-        ({ existingTopics, newTopics }: { existingTopics: TopicSuggestionExisting[]; newTopics: TopicSuggestionNew[] }) => {
+        async ({ existingTopics, newTopics }: { existingTopics: TopicSuggestionExisting[]; newTopics: TopicSuggestionNew[] }) => {
             if (existingTopics.length > 0) {
                 const ids = existingTopics.map((topic) => topic.id).filter((id) => availableTopics.some((item) => item.id === id && item.bookId === bookId));
                 if (ids.length > 0) {
@@ -122,30 +150,42 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 }
             }
             if (newTopics.length > 0) {
-                setPendingTopics((prev) => {
-                    const map = new Map<string, TopicSuggestionNew>();
-                    prev.forEach((topic) => {
-                        map.set(`${topic.titleUk.toLowerCase()}|${topic.titleEn.toLowerCase()}`, topic);
+                const existingKeys = new Set(availableTopics.map((topic) => `${topic.titleUk.toLowerCase()}|${topic.titleEn.toLowerCase()}`));
+                const payload = newTopics
+                    .filter((topic) => !existingKeys.has(`${topic.titleUk.toLowerCase()}|${topic.titleEn.toLowerCase()}`))
+                    .map((topic) => ({
+                        titleUk: topic.titleUk,
+                        titleEn: topic.titleEn
+                    }));
+                if (payload.length === 0) {
+                    return;
+                }
+                try {
+                    const createdTopics = await createAdminBookTopics(bookId, payload);
+                    if (createdTopics.length === 0) {
+                        return;
+                    }
+                    setAvailableTopics((prev) => {
+                        const ids = new Set(prev.map((item) => item.id));
+                        const merged = [...prev];
+                        createdTopics.forEach((topic) => {
+                            if (!ids.has(topic.id)) {
+                                merged.push(topic);
+                                ids.add(topic.id);
+                            }
+                        });
+                        return merged.sort((a, b) => collator.compare(a.titleUk, b.titleUk));
                     });
-                    newTopics.forEach((topic) => {
-                        const key = `${topic.titleUk.toLowerCase()}|${topic.titleEn.toLowerCase()}`;
-                        const existing = map.get(key);
-                        if (!existing || (existing.priority === 'optional' && topic.priority === 'strong')) {
-                            map.set(key, topic);
-                        }
-                    });
-                    return Array.from(map.values());
-                });
+                    const nextTopicIds = Array.from(new Set([...getValues('topicIds'), ...createdTopics.map((topic) => topic.id)]));
+                    setValue('topicIds', nextTopicIds, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                } catch (error) {
+                    clientLogger.error('Topic suggestion apply failed', error as Error, { bookId });
+                    throw error;
+                }
             }
         },
-        [availableTopics, bookId, getValues, setValue]
+        [availableTopics, bookId, collator, getValues, setValue]
     );
-
-    const handlePendingTopicRemove = useCallback((topic: TopicSuggestionNew) => {
-        setPendingTopics((prev) =>
-            prev.filter((item) => item.titleUk.toLowerCase() !== topic.titleUk.toLowerCase() || item.titleEn.toLowerCase() !== topic.titleEn.toLowerCase())
-        );
-    }, []);
 
     return (
         <div className="space-y-6">
@@ -162,8 +202,9 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                             control={control}
                             topics={availableTopics}
                             actions={<BookTopicSuggestionsDialog book={book} onApply={handleSuggestionApply} />}
+                            onDeleteTopic={handleTopicDeleteRequest}
+                            deleteDisabled={isDeletingTopic}
                         />
-                        <BookPendingTopicsList topics={pendingTopics} onRemove={handlePendingTopicRemove} disabled={isPending} />
                         <BookTopicCreateForm bookId={bookId} onTopicCreated={handleTopicCreated} />
                     </div>
                     <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -176,6 +217,29 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                     </div>
                 </form>
             </Form>
+            <Dialog open={Boolean(topicToDelete)} onOpenChange={handleDeleteDialogOpenChange}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('admin.booksTopicsDeleteConfirmTitle')}</DialogTitle>
+                        <DialogDescription>{t('admin.booksTopicsDeleteConfirmDescription')}</DialogDescription>
+                    </DialogHeader>
+                    {topicToDelete && (
+                        <div className="space-y-1 rounded-md border border-dashed p-3">
+                            <p className="text-sm font-medium">{topicToDelete.titleUk}</p>
+                            <p className="text-xs text-muted-foreground">{topicToDelete.titleEn}</p>
+                        </div>
+                    )}
+                    <DialogFooter className="sm:justify-end">
+                        <Button type="button" variant="outline" onClick={() => setTopicToDelete(null)} disabled={isDeletingTopic}>
+                            {t('admin.booksTopicsDeleteConfirmCancel')}
+                        </Button>
+                        <Button type="button" variant="destructive" onClick={handleConfirmTopicDelete} disabled={isDeletingTopic}>
+                            {isDeletingTopic && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {t('admin.booksTopicsDeleteConfirmSubmit')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

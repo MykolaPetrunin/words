@@ -70,3 +70,18 @@ export async function createTopic(input: TopicInput): Promise<DbTopic> {
     });
     return mapToDbTopic(topic);
 }
+
+export async function deleteTopicWithQuestions(topicId: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+        await tx.question.deleteMany({
+            where: {
+                topicId
+            }
+        });
+        await tx.topic.delete({
+            where: {
+                id: topicId
+            }
+        });
+    });
+}

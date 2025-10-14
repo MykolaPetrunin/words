@@ -1,9 +1,7 @@
 import OpenAI from 'openai';
 
-import { serverLogger } from '../../../../../../lib/logger';
-import { DbBookWithRelations } from '../../../../../../lib/repositories/bookRepository';
-
-import { topicSuggestionPrompt, topicSuggestionResponseFormat } from './configs';
+import { serverLogger } from '@/lib/logger';
+import { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 
 const client = new OpenAI({
     apiKey: process.env['OPENAI_API_KEY']
@@ -18,35 +16,18 @@ interface PossibleTopicSuggestion {
 
 export async function getBookTopicsSuggestions(data: DbBookWithRelations): Promise<PossibleTopicSuggestion[] | null> {
     try {
-        const completion = await client.chat.completions.create({
-            model: 'gpt-5-mini',
-            response_format: topicSuggestionResponseFormat,
-            messages: [
-                {
-                    role: 'system',
-                    content: topicSuggestionPrompt
-                },
-                {
-                    role: 'user',
-                    content: JSON.stringify({
-                        titleUk: data.titleUk,
-                        titleEn: data.titleEn,
-                        descriptionUk: data.descriptionUk,
-                        descriptionEn: data.descriptionEn,
-                        existingTopics: data.topics.map((topic) => ({
-                            titleUk: topic.titleUk,
-                            titleEn: topic.titleEn
-                        }))
-                    })
-                }
-            ]
+        const response = await client.responses.create({
+            prompt: {
+                id: 'pmpt_68ec0444633481958823ee9ce3db0c5b0dd7347e96147e92'
+            },
+            input: JSON.stringify(data)
         });
 
-        if (!completion.choices[0].message.content) {
+        if (!response.output_text) {
             return null;
         }
 
-        const suggestion = JSON.parse(completion.choices[0].message.content);
+        const suggestion = JSON.parse(response.output_text);
 
         if (!suggestion.newTopics || !Array.isArray(suggestion.newTopics) || suggestion.newTopics.length === 0) {
             return null;
