@@ -25,6 +25,7 @@ export async function updateAdminQuestion(questionId: string, data: QuestionForm
         textEn: parsed.textEn,
         theoryUk: trimOrNull(parsed.theoryUk),
         theoryEn: trimOrNull(parsed.theoryEn),
+        isActive: parsed.isActive,
         topicId: parsed.topicId ?? null,
         answers: parsed.answers.map((answer) => ({
             id: answer.id,

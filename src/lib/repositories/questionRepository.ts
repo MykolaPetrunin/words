@@ -88,6 +88,7 @@ export interface QuestionDetail {
     textEn: string;
     theoryUk: string | null;
     theoryEn: string | null;
+    isActive: boolean;
     topicId: string | null;
     level: QuestionDetailLevel;
     topic: QuestionListTopic | null;
@@ -108,6 +109,7 @@ export interface UpdateQuestionInput {
     textEn: string;
     theoryUk?: string | null;
     theoryEn?: string | null;
+    isActive: boolean;
     topicId?: string | null;
     answers: QuestionAnswerUpdateInput[];
 }
@@ -242,6 +244,7 @@ export async function getQuestionDetailById(questionId: string): Promise<Questio
         textEn: question.textEn,
         theoryUk: question.theoryUk,
         theoryEn: question.theoryEn,
+        isActive: question.isActive,
         topicId: question.topicId,
         level: {
             id: question.level.id,
@@ -391,6 +394,7 @@ export async function updateQuestionDetail(questionId: string, input: UpdateQues
                 textEn: input.textEn,
                 theoryUk: input.theoryUk ?? null,
                 theoryEn: input.theoryEn ?? null,
+                isActive: input.isActive,
                 topicId: input.topicId ?? null
             }
         });

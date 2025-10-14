@@ -17,6 +17,7 @@ import type { UserLocale } from '@/lib/types/user';
 
 import { updateAdminQuestion } from '../../actions';
 
+import QuestionAnswersDialog from './components/questionAnswers/QuestionAnswersDialog';
 import { buildQuestionFormSchema, type QuestionFormData } from './schemas';
 
 interface TopicMockAnswer {
@@ -72,6 +73,7 @@ const mapQuestionToFormData = (question: QuestionDetail): QuestionFormData => ({
     textEn: question.textEn,
     theoryUk: question.theoryUk ?? '',
     theoryEn: question.theoryEn ?? '',
+    isActive: question.isActive,
     topicId: question.topicId ?? null,
     answers: question.answers
         .slice()
@@ -93,11 +95,12 @@ const normalizeLevel = (key: string): TopicMockLevel => {
     return 'junior';
 };
 
-const mapMockToFormData = (mock: QuestionMock, topicId: string | null): QuestionFormData => ({
+const mapMockToFormData = (mock: QuestionMock, topicId: string | null, isActive: boolean): QuestionFormData => ({
     textUk: mock.textUK,
     textEn: mock.textEN,
     theoryUk: mock.theoryUK,
     theoryEn: mock.theoryEN,
+    isActive,
     topicId,
     answers: mock.answers.map((answer) => ({
         textUk: answer.textUK,
@@ -240,8 +243,13 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
         mode: 'onChange'
     });
 
-    const { control, handleSubmit, reset, getValues, formState } = form;
+    const { control, handleSubmit, reset, getValues, formState, watch } = form;
     const { fields, append, remove } = useFieldArray({ control, name: 'answers' });
+    const hasAnswers = fields.length > 0;
+    const watchedIsActive = watch('isActive') ?? false;
+    const watchedTextUk = watch('textUk') ?? '';
+    const watchedTextEn = watch('textEn') ?? '';
+    const questionLevelLabel = locale === 'uk' ? question.level.nameUk : question.level.nameEn;
 
     const handleAddAnswer = useCallback(() => {
         append({ textUk: '', textEn: '', theoryUk: '', theoryEn: '', isCorrect: false });
@@ -267,7 +275,7 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                 toast.error(t('questions.detailSaveError'));
             }
         },
-        [question.id, reset, t]
+        [question.id, reset, setInitialData, t]
     );
 
     const handleCopyTopicJson = useCallback(async () => {
@@ -307,11 +315,21 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
         async (mock: QuestionMock) => {
             const formTopic = getValues('topicId');
             const targetTopic = formTopic ?? question.topicId ?? null;
-            const formData = mapMockToFormData(mock, targetTopic);
+            const currentIsActive = getValues('isActive');
+            const formData = mapMockToFormData(mock, targetTopic, currentIsActive ?? question.isActive);
             reset(formData);
             await handleSubmit(onSubmit)();
         },
-        [getValues, handleSubmit, onSubmit, question.topicId, reset]
+        [getValues, handleSubmit, onSubmit, question.isActive, question.topicId, reset]
+    );
+
+    const handleAnswersApplied = useCallback(
+        async (updated: QuestionDetail) => {
+            const nextInitial = mapQuestionToFormData(updated);
+            setInitialData(nextInitial);
+            reset(nextInitial);
+        },
+        [reset, setInitialData]
     );
 
     const answersError = formState.errors.answers;
@@ -340,9 +358,18 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
     return (
         <div className="space-y-6 p-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="space-y-1">
-                    <h1 className="text-2xl font-semibold">{t('questions.detailTitle')}</h1>
-                    <p className="text-sm text-muted-foreground">{t('questions.detailSubtitle')}</p>
+                <div className="space-y-2">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-semibold">{t('questions.detailTitle')}</h1>
+                        <p className="text-sm text-muted-foreground">{t('questions.detailSubtitle')}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <span>
+                            {t('questions.levelLabel')}: {questionLevelLabel}
+                        </span>
+                        <span>•</span>
+                        <span>{t(watchedIsActive ? 'questions.detailStatusActive' : 'questions.detailStatusInactive')}</span>
+                    </div>
                 </div>
             </div>
 
@@ -452,12 +479,41 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                         )}
                     />
 
+                    <FormField
+                        control={control}
+                        name="isActive"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                                <FormControl>
+                                    <input
+                                        ref={field.ref}
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={(event) => field.onChange(event.target.checked)}
+                                        className="size-4 rounded border border-input"
+                                    />
+                                </FormControl>
+                                <FormLabel className="text-sm font-medium">{t('questions.detailIsActiveLabel')}</FormLabel>
+                            </FormItem>
+                        )}
+                    />
+
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-semibold">{t('questions.detailAnswersHeading')}</h2>
-                            <Button type="button" variant="outline" onClick={handleAddAnswer}>
-                                {t('questions.detailAddAnswer')}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                {!hasAnswers && (
+                                    <QuestionAnswersDialog
+                                        questionId={question.id}
+                                        questionTextUk={watchedTextUk}
+                                        questionTextEn={watchedTextEn}
+                                        onApplied={handleAnswersApplied}
+                                    />
+                                )}
+                                <Button type="button" variant="outline" onClick={handleAddAnswer}>
+                                    {t('questions.detailAddAnswer')}
+                                </Button>
+                            </div>
                         </div>
                         <div className="space-y-4">
                             {fields.map((field, index) => (

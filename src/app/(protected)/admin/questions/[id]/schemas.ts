@@ -13,6 +13,7 @@ const createSchema = (messages: QuestionFormMessages) =>
             textEn: z.string().min(1, messages.required),
             theoryUk: z.string(),
             theoryEn: z.string(),
+            isActive: z.boolean(),
             topicId: z.union([z.string().min(1, messages.required), z.null()]).transform((val) => (typeof val === 'string' && val.length === 0 ? null : val)),
             answers: z
                 .array(

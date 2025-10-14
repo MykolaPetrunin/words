@@ -19,7 +19,7 @@ interface QuestionAnswersSuggestionsProps {
     };
 }
 
-interface QuestionAnswersSuggestion {
+export interface QuestionAnswersSuggestion {
     readonly textUk: string;
     readonly textEn: string;
     readonly isCorrect: boolean;
