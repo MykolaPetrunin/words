@@ -17,7 +17,6 @@ import type { UserLocale } from '@/lib/types/user';
 
 import { updateAdminQuestion } from '../../actions';
 
-import QuestionAiActions from './components/questionAiActions/QuestionAiActions';
 import { buildQuestionFormSchema, type QuestionFormData } from './schemas';
 
 interface TopicMockAnswer {
@@ -345,7 +344,6 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                     <h1 className="text-2xl font-semibold">{t('questions.detailTitle')}</h1>
                     <p className="text-sm text-muted-foreground">{t('questions.detailSubtitle')}</p>
                 </div>
-                <QuestionAiActions questionId={question.id} form={form} />
             </div>
 
             <Form {...form}>
