@@ -42,7 +42,7 @@ export async function reviewQuestionClarity(data: QuestionFormData): Promise<Pos
     try {
         const response = await client.responses.create({
             prompt: {
-                id: 'pmpt_68e8f8dac280819787521e56c03187a10d27a8d5e2372e7e'
+                id: process.env['PROMPT_ID_QUESTION_CLARITY'] ?? ''
             },
             input: JSON.stringify(data)
         });
@@ -97,7 +97,7 @@ export async function reviewQuestionTheory(data: QuestionFormData): Promise<Poss
     try {
         const response = await client.responses.create({
             prompt: {
-                id: 'pmpt_68ec022d109081908b80310657eb4d990c61dbc472de724e'
+                id: process.env['PROMPT_ID_QUESTION_THEORY'] ?? ''
             },
             input: JSON.stringify(data)
         });

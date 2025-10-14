@@ -18,7 +18,7 @@ export async function getBookTopicsSuggestions(data: DbBookWithRelations): Promi
     try {
         const response = await client.responses.create({
             prompt: {
-                id: 'pmpt_68ec0444633481958823ee9ce3db0c5b0dd7347e96147e92'
+                id: process.env['PROMPT_ID_BOOK_TOPICS'] ?? ''
             },
             input: JSON.stringify(data)
         });

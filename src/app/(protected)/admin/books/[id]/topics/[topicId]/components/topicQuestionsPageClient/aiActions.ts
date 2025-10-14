@@ -11,6 +11,10 @@ interface TopicQuestionsSuggestionsProps {
     readonly bookTitleUk: string;
     readonly bookDescriptionEn: string;
     readonly bookDescriptionUk: string;
+    readonly otherTopics: {
+        readonly titleEn: string;
+        readonly titleUk: string;
+    }[];
     readonly existingQuestions: {
         readonly textEn: string;
         readonly textUk: string;
@@ -33,7 +37,7 @@ export const getTopicQuestionsSuggestions = async (data: TopicQuestionsSuggestio
     try {
         const response = await client.responses.create({
             prompt: {
-                id: 'pmpt_68ec05820c4c8197b48c064f0fdef017058baa2a4d4c6bfa'
+                id: process.env['PROMPT_ID_TOPIC_QUESTIONS'] ?? ''
             },
             input: JSON.stringify(data)
         });

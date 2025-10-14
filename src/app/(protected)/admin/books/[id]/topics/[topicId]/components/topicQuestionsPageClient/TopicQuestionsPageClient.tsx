@@ -48,6 +48,7 @@ interface TopicQuestionsPageClientProps {
     readonly book: BookSummary;
     readonly topic: TopicSummary;
     readonly questions: readonly QuestionListItem[];
+    readonly otherTopics: readonly TopicSummary[];
 }
 
 const generateSuggestionId = (): string => {
@@ -57,7 +58,7 @@ const generateSuggestionId = (): string => {
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
-export default function TopicQuestionsPageClient({ book, topic, questions }: TopicQuestionsPageClientProps): React.ReactElement {
+export default function TopicQuestionsPageClient({ book, topic, questions, otherTopics }: TopicQuestionsPageClientProps): React.ReactElement {
     const t = useI18n();
     const router = useRouter();
     const reduxUser = useAppSelector((state) => state.currentUser.user);
@@ -84,6 +85,15 @@ export default function TopicQuestionsPageClient({ book, topic, questions }: Top
         [questions]
     );
 
+    const otherTopicsPayload = useMemo(
+        () =>
+            otherTopics.map((item) => ({
+                titleUk: item.titleUk,
+                titleEn: item.titleEn
+            })),
+        [otherTopics]
+    );
+
     const bookTitle = locale === 'en' ? book.titleEn : book.titleUk;
     const topicTitle = locale === 'en' ? topic.titleEn : topic.titleUk;
     const subtitle = t('admin.booksTopicQuestionsSubtitle').replace('{book}', bookTitle).replace('{topic}', topicTitle);
@@ -104,7 +114,8 @@ export default function TopicQuestionsPageClient({ book, topic, questions }: Top
                     bookTitleUk: book.titleUk,
                     bookDescriptionEn: book.descriptionEn,
                     bookDescriptionUk: book.descriptionUk,
-                    existingQuestions: existingQuestionsPayload
+                    existingQuestions: existingQuestionsPayload,
+                    otherTopics: otherTopicsPayload
                 });
 
                 if (!suggestions || suggestions.length === 0) {
@@ -135,6 +146,7 @@ export default function TopicQuestionsPageClient({ book, topic, questions }: Top
         book.titleEn,
         book.titleUk,
         existingQuestionsPayload,
+        otherTopicsPayload,
         startSuggestionsTransition,
         t,
         topic.id,

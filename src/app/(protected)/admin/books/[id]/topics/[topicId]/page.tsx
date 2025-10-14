@@ -21,6 +21,14 @@ export default async function AdminBookTopicPage({ params }: { params: Promise<A
         notFound();
     }
 
+    const otherTopics = book.topics
+        .filter((bookTopic) => bookTopic.id !== topic.id)
+        .map((bookTopic) => ({
+            id: bookTopic.id,
+            titleUk: bookTopic.titleUk,
+            titleEn: bookTopic.titleEn
+        }));
+
     return (
         <TopicQuestionsPageClient
             book={{
@@ -32,6 +40,7 @@ export default async function AdminBookTopicPage({ params }: { params: Promise<A
             }}
             topic={{ id: topic.id, titleUk: topic.titleUk, titleEn: topic.titleEn }}
             questions={questions}
+            otherTopics={otherTopics}
         />
     );
 }

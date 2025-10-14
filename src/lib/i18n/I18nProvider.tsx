@@ -10,7 +10,7 @@ import type { I18nKey } from './types';
 
 interface I18nContextValue {
     locale: keyof typeof translations;
-    t: (key: I18nKey) => string;
+    t: (key: I18nKey, params?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
@@ -23,9 +23,17 @@ export default function I18nProvider({ children, initialLocale }: { children: Re
     const value = useMemo<I18nContextValue>(
         () => ({
             locale,
-            t: (key: I18nKey) => {
+            t: (key: I18nKey, params?: Record<string, string | number>) => {
                 const [ns, k] = key.split('.') as [keyof (typeof translations)['uk'], string];
-                return translations[locale][ns][k as keyof (typeof translations)['uk'][typeof ns]] as string;
+                let template = translations[locale][ns][k as keyof (typeof translations)['uk'][typeof ns]] as string;
+
+                if (params) {
+                    Object.entries(params).forEach(([paramKey, value]) => {
+                        template = template.replace(new RegExp(`{${paramKey}}`, 'g'), String(value));
+                    });
+                }
+
+                return template;
             }
         }),
         [locale]

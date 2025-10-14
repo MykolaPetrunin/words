@@ -1,7 +1,8 @@
 'use client';
 
+import { intervalToDuration } from 'date-fns';
 import { Loader2, Sparkles } from 'lucide-react';
-import React, { useCallback, useMemo, useState, useTransition } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,15 @@ const priorityLabelMap: Record<TopicSuggestionPriority, I18nKey> = {
     optional: 'admin.booksTopicsSuggestPriorityOptional'
 } as const;
 
+const formatElapsedTime = (durationMs: number): string => {
+    const duration = intervalToDuration({ start: 0, end: durationMs });
+    const totalHours = (duration.days ?? 0) * 24 + (duration.hours ?? 0);
+    const minutes = duration.minutes ?? 0;
+    const seconds = duration.seconds ?? 0;
+    const parts = totalHours > 0 ? [totalHours, minutes, seconds] : [minutes, seconds];
+    return parts.map((value, index) => (index === 0 ? `${value}` : value.toString().padStart(2, '0'))).join(':');
+};
+
 export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicSuggestionsDialogProps): React.ReactElement {
     const t = useI18n();
     const [open, setOpen] = useState(false);
@@ -51,6 +61,9 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
     const [isPending, startTransition] = useTransition();
     const [isApplying, setIsApplying] = useState(false);
     const [errorKey, setErrorKey] = useState<I18nKey | null>(null);
+    const [requestStartedAt, setRequestStartedAt] = useState<number | null>(null);
+    const [elapsedMs, setElapsedMs] = useState(0);
+    const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
 
     const renderPriorityBadge = useCallback(
         (priority: TopicSuggestionPriority) => {
@@ -64,6 +77,10 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
     );
 
     const loadSuggestions = useCallback(() => {
+        const startedAt = Date.now();
+        setRequestStartedAt(startedAt);
+        setElapsedMs(0);
+        setLastDurationMs(null);
         startTransition(async () => {
             try {
                 const result = await generateAdminBookTopicSuggestions(book.id);
@@ -95,6 +112,11 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
                 toast.error(t('admin.booksTopicsSuggestError'));
                 setErrorKey('admin.booksTopicsSuggestError');
                 setSuggestions(null);
+            } finally {
+                const duration = Date.now() - startedAt;
+                setElapsedMs(duration);
+                setLastDurationMs(duration);
+                setRequestStartedAt(null);
             }
         });
     }, [book.id, t]);
@@ -107,6 +129,10 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
                 setSelectedNewKeys(new Set());
                 setErrorKey(null);
                 loadSuggestions();
+            } else {
+                setRequestStartedAt(null);
+                setElapsedMs(0);
+                setLastDurationMs(null);
             }
         },
         [loadSuggestions]
@@ -161,6 +187,29 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
         })();
     }, [book.id, onApply, selectedNewKeys, suggestions, t]);
 
+    useEffect(() => {
+        if (!requestStartedAt || !isPending) {
+            return;
+        }
+        setElapsedMs(Date.now() - requestStartedAt);
+        const interval = window.setInterval(() => {
+            setElapsedMs(Date.now() - requestStartedAt);
+        }, 250);
+        return () => {
+            window.clearInterval(interval);
+        };
+    }, [isPending, requestStartedAt]);
+
+    const timerLabel = useMemo(() => {
+        if (requestStartedAt !== null) {
+            return t('admin.booksTopicsSuggestTimerPending', { time: formatElapsedTime(elapsedMs) });
+        }
+        if (lastDurationMs !== null) {
+            return t('admin.booksTopicsSuggestTimerDone', { time: formatElapsedTime(lastDurationMs) });
+        }
+        return null;
+    }, [elapsedMs, lastDurationMs, requestStartedAt, t]);
+
     return (
         <>
             <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(true)} disabled={isPending} className="inline-flex items-center gap-2">
@@ -176,6 +225,7 @@ export default function BookTopicSuggestionsDialog({ book, onApply }: BookTopicS
                         </DialogTitle>
                         <DialogDescription>{t('admin.booksTopicsSuggestDescription')}</DialogDescription>
                     </DialogHeader>
+                    {timerLabel && <div className="flex justify-end text-xs text-muted-foreground">{timerLabel}</div>}
                     {isPending && (
                         <div className="flex items-center justify-center py-10">
                             <Loader2 className="h-6 w-6 animate-spin" />
