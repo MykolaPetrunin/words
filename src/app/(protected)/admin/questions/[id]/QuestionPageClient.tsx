@@ -19,8 +19,8 @@ import type { UserLocale } from '@/lib/types/user';
 
 import { updateAdminQuestion } from '../../actions';
 
-import QuestionAnswersDialog from './components/questionAnswers/QuestionAnswersDialog';
-import QuestionTheoryDialog from './components/questionTheory/QuestionTheoryDialog';
+import QuestionAnswersDialog from './components/questionAnswersDialog/QuestionAnswersDialog';
+import QuestionTheoryDialog from './components/questionTheoryDialog/QuestionTheoryDialog';
 import { buildQuestionFormSchema, type QuestionFormData } from './schemas';
 
 interface TopicMockAnswer {
