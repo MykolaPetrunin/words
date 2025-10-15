@@ -6,6 +6,7 @@ export interface QuestionListFilters {
     readonly subjectIds?: readonly string[];
     readonly bookIds?: readonly string[];
     readonly topicIds?: readonly string[];
+    readonly includeInactive?: boolean;
 }
 
 export interface QuestionListSubject {
@@ -39,6 +40,7 @@ export interface QuestionListItem {
     textEn: string;
     theoryUk: string | null;
     theoryEn: string | null;
+    isActive: boolean;
     level: QuestionListLevel;
     topic: QuestionListTopic | null;
     books: QuestionListBook[];
@@ -92,6 +94,11 @@ export interface QuestionDetail {
     topicId: string | null;
     level: QuestionDetailLevel;
     topic: QuestionListTopic | null;
+    book: {
+        id: string;
+        titleUk: string;
+        titleEn: string;
+    } | null;
     answers: DbAnswer[];
 }
 
@@ -118,10 +125,13 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
     const subjectIds = filters?.subjectIds ? Array.from(new Set(filters.subjectIds)) : [];
     const bookIds = filters?.bookIds ? Array.from(new Set(filters.bookIds)) : [];
     const topicIds = filters?.topicIds ? Array.from(new Set(filters.topicIds)) : [];
+    const includeInactive = filters?.includeInactive === true;
 
-    const where: Prisma.QuestionWhereInput = {
-        isActive: true
-    };
+    const where: Prisma.QuestionWhereInput = {};
+
+    if (!includeInactive) {
+        where.isActive = true;
+    }
 
     if (topicIds.length > 0) {
         where.topicId = { in: topicIds };
@@ -203,6 +213,7 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
             textEn: question.textEn,
             theoryUk: question.theoryUk,
             theoryEn: question.theoryEn,
+            isActive: question.isActive,
             level: {
                 id: question.level.id,
                 nameUk: question.level.nameUk,
@@ -226,6 +237,7 @@ export async function getQuestionDetailById(questionId: string): Promise<Questio
         include: {
             level: true,
             topic: true,
+            book: true,
             answers: {
                 orderBy: {
                     orderIndex: 'asc'
@@ -257,6 +269,13 @@ export async function getQuestionDetailById(questionId: string): Promise<Questio
                   id: question.topic.id,
                   titleUk: question.topic.titleUk,
                   titleEn: question.topic.titleEn
+              }
+            : null,
+        book: question.book
+            ? {
+                  id: question.book.id,
+                  titleUk: question.book.titleUk,
+                  titleEn: question.book.titleEn
               }
             : null,
         answers: question.answers.map((answer) => ({

@@ -33,7 +33,8 @@ export const getQusetionAnswersSuggestions = async (data: QuestionAnswersSuggest
     try {
         const response = await client.responses.create({
             prompt: {
-                id: process.env['PROMPT_ID_QUESTION_ANSWERS'] ?? ''
+                id: process.env['PROMPT_ID_QUESTION_ANSWERS'] ?? '',
+                ...(process.env['PROMPT_VERSION_QUESTION_ANSWERS'] ? { version: process.env['PROMPT_VERSION_QUESTION_ANSWERS'] } : {})
             },
             input: JSON.stringify(data)
         });

@@ -29,10 +29,10 @@ interface QuestionTheorySuggestionsProps {
     };
 }
 
-interface QuestionTheorySuggestion {
+export interface QuestionTheorySuggestion {
     readonly theoryUk: string;
     readonly theoryEn: string;
-    answers: {
+    readonly answers: readonly {
         readonly theoryUk: string;
         readonly theoryEn: string;
     }[];
@@ -42,7 +42,8 @@ export const getQuestionTheorySuggestions = async (data: QuestionTheorySuggestio
     try {
         const response = await client.responses.create({
             prompt: {
-                id: process.env['PROMPT_ID_QUESTION_THEORY'] ?? ''
+                id: process.env['PROMPT_ID_QUESTION_THEORY'] ?? '',
+                ...(process.env['PROMPT_VERSION_QUESTION_THEORY'] ? { version: process.env['PROMPT_VERSION_QUESTION_THEORY'] } : {})
             },
             input: JSON.stringify(data)
         });

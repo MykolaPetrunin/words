@@ -15,7 +15,11 @@ interface AdminBookTopicParams {
 export default async function AdminBookTopicPage({ params }: { params: Promise<AdminBookTopicParams> }): Promise<React.ReactElement> {
     const { id: bookId, topicId } = await params;
 
-    const [book, topic, questions] = await Promise.all([getBookWithRelations(bookId), getTopicById(topicId), getAllQuestions({ topicIds: [topicId] })]);
+    const [book, topic, questions] = await Promise.all([
+        getBookWithRelations(bookId),
+        getTopicById(topicId),
+        getAllQuestions({ topicIds: [topicId], includeInactive: true })
+    ]);
 
     if (!book || !topic || topic.bookId !== bookId) {
         notFound();

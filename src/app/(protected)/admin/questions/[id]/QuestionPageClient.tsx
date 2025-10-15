@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useI18n } from '@/hooks/useI18n';
+import { getAdminBookPath, getAdminBookTopicPath } from '@/lib/appPaths';
 import { clientLogger } from '@/lib/logger';
 import { useAppSelector } from '@/lib/redux/ReduxProvider';
 import type { QuestionDetail, QuestionListTopic } from '@/lib/repositories/questionRepository';
@@ -18,6 +20,7 @@ import type { UserLocale } from '@/lib/types/user';
 import { updateAdminQuestion } from '../../actions';
 
 import QuestionAnswersDialog from './components/questionAnswers/QuestionAnswersDialog';
+import QuestionTheoryDialog from './components/questionTheory/QuestionTheoryDialog';
 import { buildQuestionFormSchema, type QuestionFormData } from './schemas';
 
 interface TopicMockAnswer {
@@ -249,6 +252,13 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
     const watchedIsActive = watch('isActive') ?? false;
     const watchedTextUk = watch('textUk') ?? '';
     const watchedTextEn = watch('textEn') ?? '';
+    const watchedTheoryUk = watch('theoryUk') ?? '';
+    const watchedTheoryEn = watch('theoryEn') ?? '';
+    const watchedAnswers = watch('answers') ?? [];
+    const bookTitle = question.book ? (locale === 'uk' ? question.book.titleUk : question.book.titleEn) : null;
+    const bookLinkHref = question.book ? getAdminBookPath(question.book.id) : null;
+    const topicTitleDisplay = question.topic ? (locale === 'uk' ? question.topic.titleUk : question.topic.titleEn) : null;
+    const topicLinkHref = question.book && question.topic ? getAdminBookTopicPath(question.book.id, question.topic.id) : null;
     const questionLevelLabel = locale === 'uk' ? question.level.nameUk : question.level.nameEn;
 
     const handleAddAnswer = useCallback(() => {
@@ -264,6 +274,14 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
 
     const onSubmit = useCallback(
         async (values: QuestionFormData) => {
+            if (values.isActive) {
+                const missingQuestionTheory = values.theoryUk.trim().length === 0 || values.theoryEn.trim().length === 0;
+                const missingAnswersTheory = values.answers.some((answer) => answer.theoryUk.trim().length === 0 || answer.theoryEn.trim().length === 0);
+                if (missingQuestionTheory || missingAnswersTheory) {
+                    toast.error(t('questions.detailActivationTheoryError'));
+                    return;
+                }
+            }
             try {
                 const updated = await updateAdminQuestion(question.id, values);
                 const nextInitial = mapQuestionToFormData(updated);
@@ -271,12 +289,25 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                 reset(nextInitial);
                 toast.success(t('questions.detailSaveSuccess'));
             } catch (error) {
-                clientLogger.error('Form submission failed', error as Error, { questionId: question.id });
+                const err = error as Error;
+                if (err.message === 'QUESTION_THEORY_REQUIRED') {
+                    toast.error(t('questions.detailActivationTheoryError'));
+                    return;
+                }
+                clientLogger.error('Form submission failed', err, { questionId: question.id });
                 toast.error(t('questions.detailSaveError'));
             }
         },
         [question.id, reset, setInitialData, t]
     );
+
+    const activationTheoryError =
+        watchedIsActive &&
+        (watchedTheoryUk.trim().length === 0 ||
+            watchedTheoryEn.trim().length === 0 ||
+            watchedAnswers.some((answer) => (answer.theoryUk ?? '').trim().length === 0 || (answer.theoryEn ?? '').trim().length === 0))
+            ? t('questions.detailActivationTheoryError')
+            : null;
 
     const handleCopyTopicJson = useCallback(async () => {
         try {
@@ -323,7 +354,7 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
         [getValues, handleSubmit, onSubmit, question.isActive, question.topicId, reset]
     );
 
-    const handleAnswersApplied = useCallback(
+    const handleQuestionUpdated = useCallback(
         async (updated: QuestionDetail) => {
             const nextInitial = mapQuestionToFormData(updated);
             setInitialData(nextInitial);
@@ -369,6 +400,36 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                         </span>
                         <span>•</span>
                         <span>{t(watchedIsActive ? 'questions.detailStatusActive' : 'questions.detailStatusInactive')}</span>
+                        {bookTitle && (
+                            <>
+                                <span>•</span>
+                                <span>
+                                    {t('questions.detailBookLabel')}:{' '}
+                                    {bookLinkHref ? (
+                                        <Link href={bookLinkHref} className="text-primary hover:underline" prefetch={false}>
+                                            {bookTitle}
+                                        </Link>
+                                    ) : (
+                                        bookTitle
+                                    )}
+                                </span>
+                            </>
+                        )}
+                        {topicTitleDisplay && (
+                            <>
+                                <span>•</span>
+                                <span>
+                                    {t('questions.detailTopicLabel')}:{' '}
+                                    {topicLinkHref ? (
+                                        <Link href={topicLinkHref} className="text-primary hover:underline" prefetch={false}>
+                                            {topicTitleDisplay}
+                                        </Link>
+                                    ) : (
+                                        topicTitleDisplay
+                                    )}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -453,6 +514,18 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                         />
                     </div>
 
+                    {hasAnswers && (
+                        <div className="flex justify-end">
+                            <QuestionTheoryDialog
+                                questionId={question.id}
+                                questionTextUk={watchedTextUk}
+                                questionTextEn={watchedTextEn}
+                                hasAnswers={hasAnswers}
+                                onApplied={handleQuestionUpdated}
+                            />
+                        </div>
+                    )}
+
                     <FormField
                         control={control}
                         name="topicId"
@@ -483,17 +556,20 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                         control={control}
                         name="isActive"
                         render={({ field }) => (
-                            <FormItem className="flex flex-row items-center gap-2 space-y-0">
-                                <FormControl>
-                                    <input
-                                        ref={field.ref}
-                                        type="checkbox"
-                                        checked={field.value}
-                                        onChange={(event) => field.onChange(event.target.checked)}
-                                        className="size-4 rounded border border-input"
-                                    />
-                                </FormControl>
-                                <FormLabel className="text-sm font-medium">{t('questions.detailIsActiveLabel')}</FormLabel>
+                            <FormItem className="space-y-2">
+                                <div className="flex flex-row items-center gap-2">
+                                    <FormControl>
+                                        <input
+                                            ref={field.ref}
+                                            type="checkbox"
+                                            checked={field.value}
+                                            onChange={(event) => field.onChange(event.target.checked)}
+                                            className="size-4 rounded border border-input"
+                                        />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-medium">{t('questions.detailIsActiveLabel')}</FormLabel>
+                                </div>
+                                {activationTheoryError && <FormMessage>{activationTheoryError}</FormMessage>}
                             </FormItem>
                         )}
                     />
@@ -507,7 +583,7 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                                         questionId={question.id}
                                         questionTextUk={watchedTextUk}
                                         questionTextEn={watchedTextEn}
-                                        onApplied={handleAnswersApplied}
+                                        onApplied={handleQuestionUpdated}
                                     />
                                 )}
                                 <Button type="button" variant="outline" onClick={handleAddAnswer}>

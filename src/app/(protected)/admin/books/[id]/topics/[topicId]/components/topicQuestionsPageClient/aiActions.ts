@@ -36,7 +36,8 @@ export const getTopicQuestionsSuggestions = async (data: TopicQuestionsSuggestio
     try {
         const response = await client.responses.create({
             prompt: {
-                id: process.env['PROMPT_ID_TOPIC_QUESTIONS'] ?? ''
+                id: process.env['PROMPT_ID_TOPIC_QUESTIONS'] ?? '',
+                ...(process.env['PROMPT_VERSION_TOPIC_QUESTIONS'] ? { version: process.env['PROMPT_VERSION_TOPIC_QUESTIONS'] } : {})
             },
             input: JSON.stringify(data)
         });
