@@ -21,6 +21,7 @@ interface QuestionTheorySuggestionsProps {
         readonly textUk: string;
         readonly textEn: string;
         readonly answers: {
+            readonly id: string;
             readonly textUk: string;
             readonly textEn: string;
             readonly isCorrect: boolean;
