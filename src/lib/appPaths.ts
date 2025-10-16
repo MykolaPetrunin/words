@@ -9,6 +9,7 @@ export interface AppPaths {
     readonly books: '/books';
     readonly admin: '/admin';
     readonly adminSubjects: '/admin/subjects';
+    readonly adminSubjectDetail: '/admin/subjects/[id]';
     readonly adminBooks: '/admin/books';
     readonly adminBookDetail: '/admin/books/[id]';
     readonly adminBookTopics: '/admin/books/[id]/topics';
@@ -29,6 +30,7 @@ export const appPaths: AppPaths = {
     books: '/books',
     admin: '/admin',
     adminSubjects: '/admin/subjects',
+    adminSubjectDetail: '/admin/subjects/[id]',
     adminBooks: '/admin/books',
     adminBookDetail: '/admin/books/[id]',
     adminBookTopics: '/admin/books/[id]/topics',
@@ -44,3 +46,4 @@ export const getAdminQuestionPath = (questionId: string): `/admin/questions/${st
 export const getAdminBookPath = (bookId: string): `/admin/books/${string}` => `/admin/books/${bookId}`;
 export const getAdminBookTopicsPath = (bookId: string): `/admin/books/${string}/topics` => `/admin/books/${bookId}/topics`;
 export const getAdminBookTopicPath = (bookId: string, topicId: string): `/admin/books/${string}/topics/${string}` => `/admin/books/${bookId}/topics/${topicId}`;
+export const getAdminSubjectPath = (subjectId: string): `/admin/subjects/${string}` => `/admin/subjects/${subjectId}`;

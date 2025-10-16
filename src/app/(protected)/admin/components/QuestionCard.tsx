@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import { BadgeCheck, CircleOff, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { BadgeCheck, CircleOff } from 'lucide-react';
+import React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -52,6 +52,12 @@ export default function QuestionCard({ question, locale, t }: QuestionCardProps)
                         {topicLabel && (
                             <span>
                                 {t('questions.topicLabel')}: {topicLabel}
+                            </span>
+                        )}
+                        {question.previewMode && (
+                            <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-inset ring-blue-500/20">
+                                <Eye className="h-3 w-3" />
+                                {t('questions.previewBadge')}
                             </span>
                         )}
                     </div>

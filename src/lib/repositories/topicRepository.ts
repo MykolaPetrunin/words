@@ -7,6 +7,18 @@ export interface DbTopic {
     titleEn: string;
 }
 
+export interface DbTopicWithProcessing extends DbTopic {
+    isProcessing: boolean;
+    processingStartedAt: Date | null;
+}
+
+export interface DbTopicWithStats extends DbTopic {
+    totalQuestions: number;
+    activeQuestions: number;
+    inactiveQuestions: number;
+    previewQuestions: number;
+}
+
 export interface TopicInput {
     bookId: string;
     titleUk: string;
@@ -48,6 +60,43 @@ export async function getTopicsForBook(bookId: string): Promise<DbTopic[]> {
     return rows.map((topic) => mapToDbTopic(topic));
 }
 
+export async function getTopicsForBookWithStats(bookId: string): Promise<DbTopicWithStats[]> {
+    const topics = await prisma.topic.findMany({
+        where: {
+            bookId
+        },
+        include: {
+            questions: {
+                select: {
+                    isActive: true,
+                    previewMode: true
+                }
+            }
+        },
+        orderBy: {
+            titleUk: 'asc'
+        }
+    });
+
+    return topics.map((topic) => {
+        const totalQuestions = topic.questions.length;
+        const activeQuestions = topic.questions.filter((q) => q.isActive && !q.previewMode).length;
+        const inactiveQuestions = topic.questions.filter((q) => !q.isActive).length;
+        const previewQuestions = topic.questions.filter((q) => q.previewMode).length;
+
+        return {
+            id: topic.id,
+            bookId: topic.bookId,
+            titleUk: topic.titleUk,
+            titleEn: topic.titleEn,
+            totalQuestions,
+            activeQuestions,
+            inactiveQuestions,
+            previewQuestions
+        };
+    });
+}
+
 export async function getTopicById(topicId: string): Promise<DbTopic | null> {
     const topic = await prisma.topic.findUnique({
         where: {
@@ -84,4 +133,35 @@ export async function deleteTopicWithQuestions(topicId: string): Promise<void> {
             }
         });
     });
+}
+
+export async function setTopicProcessing(topicId: string, isProcessing: boolean, startedAt?: Date): Promise<void> {
+    await prisma.topic.update({
+        where: {
+            id: topicId
+        },
+        data: {
+            isProcessing,
+            processingStartedAt: isProcessing ? (startedAt ?? new Date()) : null
+        }
+    });
+}
+
+export async function getTopicWithProcessingStatus(topicId: string): Promise<DbTopicWithProcessing | null> {
+    const topic = await prisma.topic.findUnique({
+        where: {
+            id: topicId
+        }
+    });
+    if (!topic) {
+        return null;
+    }
+    return {
+        id: topic.id,
+        bookId: topic.bookId,
+        titleUk: topic.titleUk,
+        titleEn: topic.titleEn,
+        isProcessing: topic.isProcessing,
+        processingStartedAt: topic.processingStartedAt
+    };
 }

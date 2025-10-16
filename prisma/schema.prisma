@@ -32,6 +32,7 @@ model Book {
   titleEn       String   @map("title_en")
   descriptionUk String?  @map("description_uk") @db.Text
   descriptionEn String?  @map("description_en") @db.Text
+  coverUrl      String?  @map("cover_url")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -62,10 +63,12 @@ model Level {
 }
 
 model Topic {
-  id         String   @id @default(cuid())
-  titleUk    String   @map("title_uk")
-  titleEn    String   @map("title_en")
-  bookId     String   @map("book_id")
+  id                   String    @id @default(cuid())
+  titleUk              String    @map("title_uk")
+  titleEn              String    @map("title_en")
+  bookId               String    @map("book_id")
+  isProcessing         Boolean   @default(false) @map("is_processing")
+  processingStartedAt  DateTime? @map("processing_started_at")
 
   questions Question[]
   book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
@@ -75,17 +78,18 @@ model Topic {
 }
 
 model Question {
-  id        String   @id @default(cuid())
-  textUk    String   @map("text_uk")
-  textEn    String   @map("text_en")
-  theoryUk  String?  @map("theory_uk") @db.Text
-  theoryEn  String?  @map("theory_en") @db.Text
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  levelId   String   @map("level_id")
-  topicId   String?  @map("topic_id")
-  bookId    String   @map("book_id")
+  id          String   @id @default(cuid())
+  textUk      String   @map("text_uk")
+  textEn      String   @map("text_en")
+  theoryUk    String?  @map("theory_uk") @db.Text
+  theoryEn    String?  @map("theory_en") @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  previewMode Boolean  @default(false) @map("preview_mode")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  levelId     String   @map("level_id")
+  topicId     String?  @map("topic_id")
+  bookId      String   @map("book_id")
 
   answers       Answer[]
   userScores    UserQuestionScore[]
@@ -160,6 +164,7 @@ model Subject {
   nameEn        String   @map("name_en")
   descriptionUk String?  @map("description_uk") @db.Text
   descriptionEn String?  @map("description_en") @db.Text
+  coverUrl      String?  @map("cover_url")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

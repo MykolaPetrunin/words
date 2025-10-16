@@ -3,7 +3,7 @@ import React from 'react';
 
 import { getBookWithRelations } from '@/lib/repositories/bookRepository';
 import { getAllQuestions } from '@/lib/repositories/questionRepository';
-import { getTopicById } from '@/lib/repositories/topicRepository';
+import { getTopicWithProcessingStatus } from '@/lib/repositories/topicRepository';
 
 import TopicQuestionsPageClient from './components/topicQuestionsPageClient/TopicQuestionsPageClient';
 
@@ -17,7 +17,7 @@ export default async function AdminBookTopicPage({ params }: { params: Promise<A
 
     const [book, topic, questions] = await Promise.all([
         getBookWithRelations(bookId),
-        getTopicById(topicId),
+        getTopicWithProcessingStatus(topicId),
         getAllQuestions({ topicIds: [topicId], includeInactive: true })
     ]);
 
@@ -30,7 +30,9 @@ export default async function AdminBookTopicPage({ params }: { params: Promise<A
         .map((bookTopic) => ({
             id: bookTopic.id,
             titleUk: bookTopic.titleUk,
-            titleEn: bookTopic.titleEn
+            titleEn: bookTopic.titleEn,
+            isProcessing: false,
+            processingStartedAt: null
         }));
 
     return (
@@ -42,7 +44,13 @@ export default async function AdminBookTopicPage({ params }: { params: Promise<A
                 descriptionUk: book.descriptionUk ?? '',
                 descriptionEn: book.descriptionEn ?? ''
             }}
-            topic={{ id: topic.id, titleUk: topic.titleUk, titleEn: topic.titleEn }}
+            topic={{
+                id: topic.id,
+                titleUk: topic.titleUk,
+                titleEn: topic.titleEn,
+                isProcessing: topic.isProcessing,
+                processingStartedAt: topic.processingStartedAt
+            }}
             questions={questions}
             otherTopics={otherTopics}
         />

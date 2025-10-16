@@ -15,7 +15,7 @@ import { appPaths } from '@/lib/appPaths';
 import { clientLogger } from '@/lib/logger';
 import type { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import type { DbSubject } from '@/lib/repositories/subjectRepository';
-import type { DbTopic } from '@/lib/repositories/topicRepository';
+import type { DbTopicWithStats } from '@/lib/repositories/topicRepository';
 
 import { createAdminBookTopics, deleteAdminBookTopic, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
 import BookFormFields from '../components/BookFormFields';
@@ -28,7 +28,7 @@ import { mapBookToFormData } from '../utils';
 interface BookDetailPageClientProps {
     book: DbBookWithRelations;
     subjects: DbSubject[];
-    topics: DbTopic[];
+    topics: DbTopicWithStats[];
 }
 
 export default function BookDetailPageClient({ book, subjects, topics }: BookDetailPageClientProps): React.ReactElement {
@@ -55,12 +55,34 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     const [isPending, setIsPending] = useState(false);
     const bookId = book.id;
     const collator = useMemo(() => new Intl.Collator('uk', { sensitivity: 'base' }), []);
-    const sortedTopics = useMemo(
-        () => topics.filter((topic) => topic.bookId === bookId).sort((a, b) => collator.compare(a.titleUk, b.titleUk)),
-        [bookId, collator, topics]
-    );
-    const [availableTopics, setAvailableTopics] = useState<DbTopic[]>(sortedTopics);
-    const [topicToDelete, setTopicToDelete] = useState<DbTopic | null>(null);
+    const sortedTopics = useMemo(() => {
+        const bookTopics = topics.filter((topic) => topic.bookId === bookId);
+
+        return bookTopics.sort((a, b) => {
+            // Пріоритет 1: Топіки без питань
+            const aNoQuestions = a.totalQuestions === 0;
+            const bNoQuestions = b.totalQuestions === 0;
+            if (aNoQuestions && !bNoQuestions) return -1;
+            if (!aNoQuestions && bNoQuestions) return 1;
+
+            // Пріоритет 2: Топіки з питаннями в preview mode
+            const aHasPreview = a.previewQuestions > 0;
+            const bHasPreview = b.previewQuestions > 0;
+            if (aHasPreview && !bHasPreview) return -1;
+            if (!aHasPreview && bHasPreview) return 1;
+
+            // Пріоритет 3: Топіки з неактивними питаннями
+            const aHasInactive = a.inactiveQuestions > 0;
+            const bHasInactive = b.inactiveQuestions > 0;
+            if (aHasInactive && !bHasInactive) return -1;
+            if (!aHasInactive && bHasInactive) return 1;
+
+            // Всередині кожної категорії сортуємо за алфавітом
+            return collator.compare(a.titleUk, b.titleUk);
+        });
+    }, [bookId, collator, topics]);
+    const [availableTopics, setAvailableTopics] = useState<DbTopicWithStats[]>(sortedTopics);
+    const [topicToDelete, setTopicToDelete] = useState<DbTopicWithStats | null>(null);
     const [isDeletingTopic, setIsDeletingTopic] = useState(false);
     useEffect(() => {
         setAvailableTopics(sortedTopics);
@@ -79,7 +101,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         [isDeletingTopic]
     );
 
-    const handleTopicDeleteRequest = useCallback((topic: DbTopic) => {
+    const handleTopicDeleteRequest = useCallback((topic: DbTopicWithStats) => {
         setTopicToDelete(topic);
     }, []);
 
@@ -90,7 +112,40 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 const updated = await updateAdminBook(bookId, values);
                 const nextInitial = mapBookToFormData(updated);
                 reset(nextInitial);
-                setAvailableTopics(updated.topics.filter((topic) => topic.bookId === bookId).sort((a, b) => collator.compare(a.titleUk, b.titleUk)));
+                // Оновлюємо топіки з новими даними, але зберігаємо статистику з поточного стану
+                const updatedTopics = updated.topics.filter((topic) => topic.bookId === bookId);
+                const topicsWithStats = updatedTopics.map((topic) => {
+                    const existingTopic = availableTopics.find((t) => t.id === topic.id);
+                    return (
+                        existingTopic || {
+                            ...topic,
+                            totalQuestions: 0,
+                            activeQuestions: 0,
+                            inactiveQuestions: 0,
+                            previewQuestions: 0
+                        }
+                    );
+                });
+                setAvailableTopics(
+                    topicsWithStats.sort((a, b) => {
+                        const aNoQuestions = a.totalQuestions === 0;
+                        const bNoQuestions = b.totalQuestions === 0;
+                        if (aNoQuestions && !bNoQuestions) return -1;
+                        if (!aNoQuestions && bNoQuestions) return 1;
+
+                        const aHasPreview = a.previewQuestions > 0;
+                        const bHasPreview = b.previewQuestions > 0;
+                        if (aHasPreview && !bHasPreview) return -1;
+                        if (!aHasPreview && bHasPreview) return 1;
+
+                        const aHasInactive = a.inactiveQuestions > 0;
+                        const bHasInactive = b.inactiveQuestions > 0;
+                        if (aHasInactive && !bHasInactive) return -1;
+                        if (!aHasInactive && bHasInactive) return 1;
+
+                        return collator.compare(a.titleUk, b.titleUk);
+                    })
+                );
                 toast.success(t('admin.booksDetailSuccess'));
             } catch (error) {
                 clientLogger.error('Form submission failed', error as Error, { bookId });
@@ -99,11 +154,11 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 setIsPending(false);
             }
         },
-        [bookId, collator, reset, t]
+        [bookId, collator, reset, t, availableTopics]
     );
 
     const handleTopicCreated = useCallback(
-        (topic: DbTopic) => {
+        (topic: DbTopicWithStats) => {
             if (topic.bookId !== bookId) {
                 return;
             }
@@ -112,7 +167,25 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                     return prev;
                 }
                 const next = [...prev, topic];
-                return next.sort((a, b) => collator.compare(a.titleUk, b.titleUk));
+                return next.sort((a, b) => {
+                    // Використовуємо ту ж логіку сортування
+                    const aNoQuestions = a.totalQuestions === 0;
+                    const bNoQuestions = b.totalQuestions === 0;
+                    if (aNoQuestions && !bNoQuestions) return -1;
+                    if (!aNoQuestions && bNoQuestions) return 1;
+
+                    const aHasPreview = a.previewQuestions > 0;
+                    const bHasPreview = b.previewQuestions > 0;
+                    if (aHasPreview && !bHasPreview) return -1;
+                    if (!aHasPreview && bHasPreview) return 1;
+
+                    const aHasInactive = a.inactiveQuestions > 0;
+                    const bHasInactive = b.inactiveQuestions > 0;
+                    if (aHasInactive && !bHasInactive) return -1;
+                    if (!aHasInactive && bHasInactive) return 1;
+
+                    return collator.compare(a.titleUk, b.titleUk);
+                });
             });
             const nextSelected = Array.from(new Set([...getValues('topicIds'), topic.id]));
             setValue('topicIds', nextSelected, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
@@ -170,11 +243,36 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                         const merged = [...prev];
                         createdTopics.forEach((topic) => {
                             if (!ids.has(topic.id)) {
-                                merged.push(topic);
+                                // Додаємо новий топік з базовою статистикою
+                                const topicWithStats: DbTopicWithStats = {
+                                    ...topic,
+                                    totalQuestions: 0,
+                                    activeQuestions: 0,
+                                    inactiveQuestions: 0,
+                                    previewQuestions: 0
+                                };
+                                merged.push(topicWithStats);
                                 ids.add(topic.id);
                             }
                         });
-                        return merged.sort((a, b) => collator.compare(a.titleUk, b.titleUk));
+                        return merged.sort((a, b) => {
+                            const aNoQuestions = a.totalQuestions === 0;
+                            const bNoQuestions = b.totalQuestions === 0;
+                            if (aNoQuestions && !bNoQuestions) return -1;
+                            if (!aNoQuestions && bNoQuestions) return 1;
+
+                            const aHasPreview = a.previewQuestions > 0;
+                            const bHasPreview = b.previewQuestions > 0;
+                            if (aHasPreview && !bHasPreview) return -1;
+                            if (!aHasPreview && bHasPreview) return 1;
+
+                            const aHasInactive = a.inactiveQuestions > 0;
+                            const bHasInactive = b.inactiveQuestions > 0;
+                            if (aHasInactive && !bHasInactive) return -1;
+                            if (!aHasInactive && bHasInactive) return 1;
+
+                            return collator.compare(a.titleUk, b.titleUk);
+                        });
                     });
                     const nextTopicIds = Array.from(new Set([...getValues('topicIds'), ...createdTopics.map((topic) => topic.id)]));
                     setValue('topicIds', nextTopicIds, { shouldDirty: true, shouldTouch: true, shouldValidate: true });

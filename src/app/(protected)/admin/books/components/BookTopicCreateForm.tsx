@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -10,14 +10,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useI18n } from '@/hooks/useI18n';
 import { clientLogger } from '@/lib/logger';
-import type { DbTopic } from '@/lib/repositories/topicRepository';
+import type { DbTopicWithStats } from '@/lib/repositories/topicRepository';
 
 import { createAdminBookTopic } from '../actions';
 import { createBookTopicFormSchema, type BookTopicFormData } from '../schemas';
 
 interface BookTopicCreateFormProps {
     bookId: string;
-    onTopicCreated: (topic: DbTopic) => void;
+    onTopicCreated: (topic: DbTopicWithStats) => void;
 }
 
 export default function BookTopicCreateForm({ bookId, onTopicCreated }: BookTopicCreateFormProps): React.ReactElement {
@@ -50,9 +50,17 @@ export default function BookTopicCreateForm({ bookId, onTopicCreated }: BookTopi
             setIsPending(true);
             try {
                 const topic = await createAdminBookTopic(bookId, values);
+                // Створюємо топік зі статистикою (новий топік завжди має 0 питань)
+                const topicWithStats: DbTopicWithStats = {
+                    ...topic,
+                    totalQuestions: 0,
+                    activeQuestions: 0,
+                    inactiveQuestions: 0,
+                    previewQuestions: 0
+                };
                 const nextInitial: BookTopicFormData = { titleUk: '', titleEn: '' };
                 setInitialData(nextInitial);
-                onTopicCreated(topic);
+                onTopicCreated(topicWithStats);
                 toast.success(t('admin.booksTopicsCreateSuccess'));
             } catch (error) {
                 clientLogger.error('Form submission failed', error as Error, {

@@ -283,7 +283,7 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                 }
             }
             try {
-                const updated = await updateAdminQuestion(question.id, values);
+                const updated = await updateAdminQuestion(question.id, values, false);
                 const nextInitial = mapQuestionToFormData(updated);
                 setInitialData(nextInitial);
                 reset(nextInitial);
@@ -300,6 +300,21 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
         },
         [question.id, reset, setInitialData, t]
     );
+
+    const handleApprove = useCallback(async () => {
+        const values = getValues();
+        try {
+            const updated = await updateAdminQuestion(question.id, values, true);
+            const nextInitial = mapQuestionToFormData(updated);
+            setInitialData(nextInitial);
+            reset(nextInitial);
+            toast.success(t('questions.detailApproveSuccess'));
+        } catch (error) {
+            const err = error as Error;
+            clientLogger.error('Question approval failed', err, { questionId: question.id });
+            toast.error(t('questions.detailSaveError'));
+        }
+    }, [getValues, question.id, reset, setInitialData, t]);
 
     const activationTheoryError =
         watchedIsActive &&
@@ -702,9 +717,15 @@ export default function QuestionPageClient({ question, topics }: QuestionPageCli
                     />
 
                     <div className="flex flex-wrap gap-3">
-                        <Button type="submit" disabled={!formState.isDirty || formState.isSubmitting}>
-                            {t('questions.detailSave')}
-                        </Button>
+                        {question.previewMode ? (
+                            <Button type="button" disabled={formState.isSubmitting} onClick={handleApprove}>
+                                {t('questions.detailApproveButton')}
+                            </Button>
+                        ) : (
+                            <Button type="submit" disabled={!formState.isDirty || formState.isSubmitting}>
+                                {t('questions.detailSave')}
+                            </Button>
+                        )}
                         <Button type="button" variant="secondary" onClick={handleCopyTopicJson}>
                             {t('questions.detailCopyTopicJson')}
                         </Button>

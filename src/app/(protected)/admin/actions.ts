@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache';
 
 import { appPaths, getAdminQuestionPath } from '@/lib/appPaths';
-import { getAllQuestions, updateQuestionDetail } from '@/lib/repositories/questionRepository';
 import type { QuestionDetail, QuestionListFilters, QuestionListItem, UpdateQuestionInput } from '@/lib/repositories/questionRepository';
+import { getAllQuestions, updateQuestionDetail } from '@/lib/repositories/questionRepository';
 
 import { questionFormSchema, type QuestionFormData } from './questions/[id]/schemas';
 
@@ -17,7 +17,7 @@ export async function fetchAdminQuestions(filters: QuestionListFilters): Promise
     return getAllQuestions(filters);
 }
 
-export async function updateAdminQuestion(questionId: string, data: QuestionFormData): Promise<QuestionDetail> {
+export async function updateAdminQuestion(questionId: string, data: QuestionFormData, approvePreview = false): Promise<QuestionDetail> {
     const parsed = questionFormSchema.parse(data);
 
     const trimmedTheoryUk = trimOrNull(parsed.theoryUk);
@@ -46,7 +46,8 @@ export async function updateAdminQuestion(questionId: string, data: QuestionForm
         theoryEn: trimmedTheoryEn,
         isActive: parsed.isActive,
         topicId: parsed.topicId ?? null,
-        answers: trimmedAnswers
+        answers: trimmedAnswers,
+        approvePreview
     } satisfies UpdateQuestionInput;
 
     const updated = await updateQuestionDetail(questionId, payload);

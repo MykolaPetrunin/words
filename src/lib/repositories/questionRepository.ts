@@ -41,6 +41,7 @@ export interface QuestionListItem {
     theoryUk: string | null;
     theoryEn: string | null;
     isActive: boolean;
+    previewMode: boolean;
     level: QuestionListLevel;
     topic: QuestionListTopic | null;
     books: QuestionListBook[];
@@ -91,6 +92,7 @@ export interface QuestionDetail {
     theoryUk: string | null;
     theoryEn: string | null;
     isActive: boolean;
+    previewMode: boolean;
     topicId: string | null;
     level: QuestionDetailLevel;
     topic: QuestionListTopic | null;
@@ -119,6 +121,7 @@ export interface UpdateQuestionInput {
     isActive: boolean;
     topicId?: string | null;
     answers: QuestionAnswerUpdateInput[];
+    approvePreview?: boolean;
 }
 
 export async function getAllQuestions(filters?: QuestionListFilters): Promise<QuestionListItem[]> {
@@ -214,6 +217,7 @@ export async function getAllQuestions(filters?: QuestionListFilters): Promise<Qu
             theoryUk: question.theoryUk,
             theoryEn: question.theoryEn,
             isActive: question.isActive,
+            previewMode: question.previewMode,
             level: {
                 id: question.level.id,
                 nameUk: question.level.nameUk,
@@ -257,6 +261,7 @@ export async function getQuestionDetailById(questionId: string): Promise<Questio
         theoryUk: question.theoryUk,
         theoryEn: question.theoryEn,
         isActive: question.isActive,
+        previewMode: question.previewMode,
         topicId: question.topicId,
         level: {
             id: question.level.id,
@@ -406,6 +411,19 @@ export async function getPublicAnswersByQuestionId(questionId: string): Promise<
 
 export async function updateQuestionDetail(questionId: string, input: UpdateQuestionInput): Promise<QuestionDetail> {
     await prisma.$transaction(async (tx) => {
+        const question = await tx.question.findUnique({
+            where: { id: questionId },
+            select: { previewMode: true }
+        });
+
+        if (!question) {
+            throw new Error('Question not found');
+        }
+
+        if (input.isActive && question.previewMode && !input.approvePreview) {
+            throw new Error('Cannot activate question in preview mode');
+        }
+
         await tx.question.update({
             where: { id: questionId },
             data: {
@@ -414,7 +432,8 @@ export async function updateQuestionDetail(questionId: string, input: UpdateQues
                 theoryUk: input.theoryUk ?? null,
                 theoryEn: input.theoryEn ?? null,
                 isActive: input.isActive,
-                topicId: input.topicId ?? null
+                topicId: input.topicId ?? null,
+                previewMode: input.approvePreview ? false : undefined
             }
         });
 
@@ -471,4 +490,63 @@ export async function updateQuestionDetail(questionId: string, input: UpdateQues
     }
 
     return updatedQuestion;
+}
+
+export interface BulkAnswerInput {
+    textUk: string;
+    textEn: string;
+    isCorrect: boolean;
+}
+
+export async function bulkCreateAnswersForQuestion(questionId: string, answers: BulkAnswerInput[]): Promise<void> {
+    await prisma.$transaction(
+        answers.map((answer, index) =>
+            prisma.answer.create({
+                data: {
+                    questionId,
+                    textUk: answer.textUk,
+                    textEn: answer.textEn,
+                    isCorrect: answer.isCorrect,
+                    orderIndex: index
+                }
+            })
+        )
+    );
+}
+
+export async function setQuestionPreviewMode(questionId: string, previewMode: boolean): Promise<void> {
+    await prisma.question.update({
+        where: { id: questionId },
+        data: { previewMode }
+    });
+}
+
+export async function updateQuestionTheory(questionId: string, theoryUk: string, theoryEn: string): Promise<void> {
+    await prisma.question.update({
+        where: { id: questionId },
+        data: {
+            theoryUk,
+            theoryEn
+        }
+    });
+}
+
+export interface AnswerTheoryUpdate {
+    id: string;
+    theoryUk: string;
+    theoryEn: string;
+}
+
+export async function bulkUpdateAnswersTheory(answersTheory: AnswerTheoryUpdate[]): Promise<void> {
+    await prisma.$transaction(
+        answersTheory.map((answer) =>
+            prisma.answer.update({
+                where: { id: answer.id },
+                data: {
+                    theoryUk: answer.theoryUk,
+                    theoryEn: answer.theoryEn
+                }
+            })
+        )
+    );
 }

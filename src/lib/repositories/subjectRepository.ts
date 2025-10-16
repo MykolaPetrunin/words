@@ -6,6 +6,7 @@ export interface DbSubject {
     nameEn: string;
     descriptionUk: string | null;
     descriptionEn: string | null;
+    coverUrl: string | null;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -16,6 +17,7 @@ export interface SubjectInput {
     nameEn: string;
     descriptionUk: string | null;
     descriptionEn: string | null;
+    coverUrl: string | null;
     isActive: boolean;
 }
 
@@ -44,6 +46,13 @@ export async function getSubjectById(id: string): Promise<DbSubject | null> {
     return subject ? mapToDbSubject(subject) : null;
 }
 
+export async function getSubjectByIdForAdmin(id: string): Promise<DbSubject | null> {
+    const subject = await prisma.subject.findUnique({
+        where: { id }
+    });
+    return subject ? mapToDbSubject(subject) : null;
+}
+
 export async function createSubject(input: SubjectInput): Promise<DbSubject> {
     const subject = await prisma.subject.create({
         data: {
@@ -51,6 +60,7 @@ export async function createSubject(input: SubjectInput): Promise<DbSubject> {
             nameEn: input.nameEn,
             descriptionUk: input.descriptionUk,
             descriptionEn: input.descriptionEn,
+            coverUrl: input.coverUrl,
             isActive: input.isActive
         }
     });
@@ -65,8 +75,17 @@ export async function updateSubject(id: string, input: SubjectInput): Promise<Db
             nameEn: input.nameEn,
             descriptionUk: input.descriptionUk,
             descriptionEn: input.descriptionEn,
+            coverUrl: input.coverUrl,
             isActive: input.isActive
         }
+    });
+    return mapToDbSubject(subject);
+}
+
+export async function updateSubjectCover(id: string, coverUrl: string | null): Promise<DbSubject> {
+    const subject = await prisma.subject.update({
+        where: { id },
+        data: { coverUrl }
     });
     return mapToDbSubject(subject);
 }
@@ -79,6 +98,7 @@ const mapToDbSubject = (s: unknown): DbSubject => {
         nameEn: base.nameEn,
         descriptionUk: base.descriptionUk,
         descriptionEn: base.descriptionEn,
+        coverUrl: base.coverUrl,
         isActive: base.isActive,
         createdAt: base.createdAt,
         updatedAt: base.updatedAt

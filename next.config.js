@@ -11,7 +11,17 @@ const nextConfig = {
         optimizePackageImports: ['react', 'react-dom']
     },
     poweredByHeader: false,
-    compress: true
+    compress: true,
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'tvnxr6hgfk2kpio7.public.blob.vercel-storage.com',
+                port: '',
+                pathname: '/**'
+            }
+        ]
+    }
 };
 
 export default nextConfig;

@@ -75,10 +75,15 @@ export const uk = {
     detailAiEmptyResponse: 'OpenAI повернув порожню відповідь.',
     detailAiInvalidResponse: 'Не вдалося обробити відповідь OpenAI.',
     detailAiTruncated: 'OpenAI обрізав відповідь. Спробуйте ще раз.',
-    detailAiNetworkError: 'Не вдалося зв’язатися з OpenAI. Спробуйте ще раз.',
+    detailAiNetworkError: "Не вдалося зв'язатися з OpenAI. Спробуйте ще раз.",
     detailAiError: 'Сталася помилка під час роботи AI.',
     detailAiApplySuccess: 'AI-поради застосовано.',
-    detailAiNoChanges: 'AI не запропонувала змін.'
+    detailAiNoChanges: 'AI не запропонувала змін.',
+    previewMode: 'Режим попереднього перегляду',
+    previewModeWarning: 'Перевірте та підтвердьте перед активацією',
+    previewBadge: 'Попередній перегляд',
+    detailApproveButton: 'Підтвердити питання',
+    detailApproveSuccess: 'Питання підтверджено'
 } as const;
 
 export const en = {
@@ -161,5 +166,10 @@ export const en = {
     detailAiNetworkError: 'Unable to reach OpenAI. Please try again.',
     detailAiError: 'AI assistance failed.',
     detailAiApplySuccess: 'AI suggestions applied.',
-    detailAiNoChanges: 'Everything already looks great.'
+    detailAiNoChanges: 'Everything already looks great.',
+    previewMode: 'Preview Mode',
+    previewModeWarning: 'Review and approve before activation',
+    previewBadge: 'Preview',
+    detailApproveButton: 'Approve Question',
+    detailApproveSuccess: 'Question approved'
 } as const;
