@@ -21,7 +21,13 @@ export default function BooksGrid({ books, subject }: BooksGridProps): React.Rea
                     <h2 className="text-xl font-semibold mb-3">{subjectName}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         {books.map((book) => (
-                            <BookTile key={book.id} id={book.id} title={locale === 'uk' ? book.titleUk : book.titleEn} isLearning={book.isLearning} />
+                            <BookTile
+                                key={book.id}
+                                id={book.id}
+                                title={locale === 'uk' ? book.titleUk : book.titleEn}
+                                isLearning={book.isLearning}
+                                coverUrl={book.coverUrl}
+                            />
                         ))}
                     </div>
                 </div>

@@ -1,10 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { del, put } from '@vercel/blob';
 
 import { appPaths, getAdminBookPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
-import { createBook, getBookWithRelations, updateBook, type BookInput, type DbBookWithRelations } from '@/lib/repositories/bookRepository';
+import { createBook, getBookWithRelations, updateBook, updateBookCover, type BookInput, type DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import { createTopic, deleteTopicWithQuestions, getTopicById, type DbTopic } from '@/lib/repositories/topicRepository';
 
 import { getBookTopicsSuggestions } from './components/bookTopicSuggestionsDialog/aiActions';
@@ -15,6 +16,7 @@ const mapFormToInput = (data: BookFormData): BookInput => ({
     titleEn: data.titleEn,
     descriptionUk: data.descriptionUk.length > 0 ? data.descriptionUk : null,
     descriptionEn: data.descriptionEn.length > 0 ? data.descriptionEn : null,
+    coverUrl: typeof data.coverUrl === 'string' && data.coverUrl.length > 0 ? data.coverUrl : null,
     isActive: data.isActive,
     subjectIds: Array.from(new Set(data.subjectIds)),
     topicIds: Array.from(new Set(data.topicIds))
@@ -39,6 +41,67 @@ export async function updateAdminBook(bookId: string, data: BookFormData): Promi
     revalidateAdminBooks();
     revalidatePath(getAdminBookPath(bookId));
     return book;
+}
+
+const allowedCoverMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
+const maxCoverSizeBytes = 5 * 1024 * 1024;
+
+const deleteBookCoverBlob = async (url: string): Promise<void> => {
+    try {
+        await del(url);
+    } catch (error) {
+        serverLogger.error('Failed to delete book cover blob', error as Error, { url });
+    }
+};
+
+export interface BookCoverUploadResult {
+    url: string;
+    book: DbBookWithRelations;
+}
+
+export async function uploadAdminBookCover(bookId: string, formData: FormData): Promise<BookCoverUploadResult> {
+    const file = formData.get('file');
+    if (!(file instanceof File)) {
+        throw new Error('file-required');
+    }
+    if (!allowedCoverMimeTypes.has(file.type)) {
+        throw new Error('invalid-type');
+    }
+    if (file.size > maxCoverSizeBytes) {
+        throw new Error('file-too-large');
+    }
+    const existing = await getBookWithRelations(bookId);
+    if (!existing) {
+        throw new Error('book-not-found');
+    }
+    const objectName = `books/${crypto.randomUUID()}-${file.name}`;
+    const blob = await put(objectName, file, { access: 'public', addRandomSuffix: false, contentType: file.type });
+    const updatedBook = await updateBookCover(bookId, blob.url);
+    revalidateAdminBooks();
+    revalidatePath(getAdminBookPath(bookId));
+    if (existing.coverUrl && existing.coverUrl !== blob.url) {
+        await deleteBookCoverBlob(existing.coverUrl);
+    }
+    return { url: blob.url, book: updatedBook };
+}
+
+export interface BookCoverDeleteResult {
+    book: DbBookWithRelations;
+}
+
+export async function deleteAdminBookCover(bookId: string): Promise<BookCoverDeleteResult> {
+    const existing = await getBookWithRelations(bookId);
+    if (!existing) {
+        throw new Error('book-not-found');
+    }
+    const urlToDelete = existing.coverUrl;
+    const updatedBook = await updateBookCover(bookId, null);
+    revalidateAdminBooks();
+    revalidatePath(getAdminBookPath(bookId));
+    if (urlToDelete) {
+        await deleteBookCoverBlob(urlToDelete);
+    }
+    return { book: updatedBook };
 }
 
 export async function createAdminBookTopic(bookId: string, data: BookTopicFormData): Promise<DbTopic> {

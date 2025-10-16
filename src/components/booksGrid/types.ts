@@ -10,4 +10,5 @@ export interface BookTileProps {
     id: string;
     title: string;
     isLearning: boolean;
+    coverUrl: string | null;
 }

@@ -7,6 +7,7 @@ export const mapBookToFormData = (book: DbBookWithRelations): BookFormData => ({
     titleEn: book.titleEn,
     descriptionUk: book.descriptionUk ?? '',
     descriptionEn: book.descriptionEn ?? '',
+    coverUrl: book.coverUrl ?? null,
     isActive: book.isActive,
     subjectIds: book.subjects.map((subject) => subject.id),
     topicIds: book.topics.map((topic) => topic.id)
@@ -17,6 +18,7 @@ export const createEmptyBookFormData = (): BookFormData => ({
     titleEn: '',
     descriptionUk: '',
     descriptionEn: '',
+    coverUrl: null,
     isActive: false,
     subjectIds: [],
     topicIds: []

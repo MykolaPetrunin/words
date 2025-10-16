@@ -18,6 +18,7 @@ import type { DbSubject } from '@/lib/repositories/subjectRepository';
 import type { DbTopicWithStats } from '@/lib/repositories/topicRepository';
 
 import { createAdminBookTopics, deleteAdminBookTopic, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
+import BookCoverField from '../components/BookCoverField';
 import BookFormFields from '../components/BookFormFields';
 import BookTopicCreateForm from '../components/BookTopicCreateForm';
 import BookTopicsField from '../components/BookTopicsField';
@@ -51,9 +52,10 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     });
 
     const { control, handleSubmit, reset, formState, setValue, getValues } = form;
+    const [currentBook, setCurrentBook] = useState<DbBookWithRelations>(book);
     const router = useRouter();
     const [isPending, setIsPending] = useState(false);
-    const bookId = book.id;
+    const bookId = currentBook.id;
     const collator = useMemo(() => new Intl.Collator('uk', { sensitivity: 'base' }), []);
     const sortedTopics = useMemo(() => {
         const bookTopics = topics.filter((topic) => topic.bookId === bookId);
@@ -112,6 +114,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 const updated = await updateAdminBook(bookId, values);
                 const nextInitial = mapBookToFormData(updated);
                 reset(nextInitial);
+                setCurrentBook(updated);
                 // Оновлюємо топіки з новими даними, але зберігаємо статистику з поточного стану
                 const updatedTopics = updated.topics.filter((topic) => topic.bookId === bookId);
                 const topicsWithStats = updatedTopics.map((topic) => {
@@ -294,12 +297,13 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
 
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <BookCoverField control={control} setValue={setValue} bookId={bookId} onBookUpdated={setCurrentBook} />
                     <BookFormFields control={control} subjects={subjects} />
                     <div className="space-y-4">
                         <BookTopicsField
                             control={control}
                             topics={availableTopics}
-                            actions={<BookTopicSuggestionsDialog book={book} onApply={handleSuggestionApply} />}
+                            actions={<BookTopicSuggestionsDialog book={currentBook} onApply={handleSuggestionApply} />}
                             onDeleteTopic={handleTopicDeleteRequest}
                             deleteDisabled={isDeletingTopic}
                         />

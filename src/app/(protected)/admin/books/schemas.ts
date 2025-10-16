@@ -16,6 +16,12 @@ const buildBookFormSchema = (messages: BookFormSchemaMessages) =>
             titleEn: z.string().trim().min(1, { message: messages.titleEn }),
             descriptionUk: z.string().transform((value) => value.trim()),
             descriptionEn: z.string().transform((value) => value.trim()),
+            coverUrl: z.union([z.string().trim().url(), z.literal(''), z.null()]).transform((value) => {
+                if (value === null) {
+                    return null;
+                }
+                return value.length === 0 ? null : value;
+            }),
             isActive: z.boolean(),
             subjectIds: z
                 .array(subjectIdSchema)

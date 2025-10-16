@@ -10,6 +10,7 @@ export interface DbBook {
     titleEn: string;
     descriptionUk: string | null;
     descriptionEn: string | null;
+    coverUrl: string | null;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -48,6 +49,7 @@ export interface BookInput {
     titleEn: string;
     descriptionUk: string | null;
     descriptionEn: string | null;
+    coverUrl: string | null;
     isActive: boolean;
     subjectIds: readonly string[];
     topicIds: readonly string[];
@@ -59,6 +61,7 @@ type BookBaseRow = {
     titleEn: string;
     descriptionUk: string | null;
     descriptionEn: string | null;
+    coverUrl: string | null;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -90,6 +93,7 @@ const mapToDbBook = (book: BookBaseRow): DbBook => ({
     titleEn: book.titleEn,
     descriptionUk: book.descriptionUk,
     descriptionEn: book.descriptionEn,
+    coverUrl: book.coverUrl,
     isActive: book.isActive,
     createdAt: book.createdAt,
     updatedAt: book.updatedAt
@@ -178,6 +182,7 @@ export async function createBook(input: BookInput): Promise<DbBookWithRelations>
             titleEn: input.titleEn,
             descriptionUk: input.descriptionUk,
             descriptionEn: input.descriptionEn,
+            coverUrl: input.coverUrl,
             isActive: input.isActive,
             bookSubjects: {
                 create: input.subjectIds.map((subjectId) => ({ subjectId }))
@@ -217,6 +222,7 @@ export async function updateBook(id: string, input: BookInput): Promise<DbBookWi
                 titleEn: input.titleEn,
                 descriptionUk: input.descriptionUk,
                 descriptionEn: input.descriptionEn,
+                coverUrl: input.coverUrl,
                 isActive: input.isActive,
                 bookSubjects: {
                     deleteMany: {},
@@ -310,6 +316,7 @@ export async function getBooksBySubjectId(subjectId: string, userId?: string): P
         titleEn: bs.book.titleEn,
         descriptionUk: bs.book.descriptionUk,
         descriptionEn: bs.book.descriptionEn,
+        coverUrl: bs.book.coverUrl,
         isActive: bs.book.isActive,
         createdAt: bs.book.createdAt,
         updatedAt: bs.book.updatedAt,
@@ -428,6 +435,7 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
         titleEn: book.titleEn,
         descriptionUk: book.descriptionUk,
         descriptionEn: book.descriptionEn,
+        coverUrl: book.coverUrl,
         isActive: book.isActive,
         createdAt: book.createdAt,
         updatedAt: book.updatedAt,
@@ -455,6 +463,35 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
             userScore: userId ? question.userScores?.[0]?.score : undefined
         }))
     };
+}
+
+export async function updateBookCover(id: string, coverUrl: string | null): Promise<DbBookWithRelations> {
+    const book = await prisma.book.update({
+        where: { id },
+        data: { coverUrl },
+        include: {
+            bookSubjects: {
+                include: {
+                    subject: {
+                        select: {
+                            id: true,
+                            nameUk: true,
+                            nameEn: true
+                        }
+                    }
+                }
+            },
+            topics: {
+                select: {
+                    bookId: true,
+                    id: true,
+                    titleUk: true,
+                    titleEn: true
+                }
+            }
+        }
+    });
+    return mapToDbBookWithRelations(book);
 }
 
 export async function startLearningBook(userId: string, bookId: string): Promise<DbBookWithLearningStatus> {
@@ -551,6 +588,7 @@ export async function startLearningBook(userId: string, bookId: string): Promise
         titleEn: updatedBook.titleEn,
         descriptionUk: updatedBook.descriptionUk,
         descriptionEn: updatedBook.descriptionEn,
+        coverUrl: updatedBook.coverUrl,
         isActive: updatedBook.isActive,
         createdAt: updatedBook.createdAt,
         updatedAt: updatedBook.updatedAt,
@@ -616,6 +654,7 @@ export async function stopLearningBook(userId: string, bookId: string): Promise<
         titleEn: updatedBook.titleEn,
         descriptionUk: updatedBook.descriptionUk,
         descriptionEn: updatedBook.descriptionEn,
+        coverUrl: updatedBook.coverUrl,
         isActive: updatedBook.isActive,
         createdAt: updatedBook.createdAt,
         updatedAt: updatedBook.updatedAt,
