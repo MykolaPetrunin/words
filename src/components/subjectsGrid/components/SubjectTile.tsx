@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
 import NextImage from 'next/image';
+import Link from 'next/link';
+import React from 'react';
 
 import { appPaths } from '@/lib/appPaths';
 
@@ -11,7 +11,7 @@ import type { SubjectTileProps } from '../types';
 export default function SubjectTile({ id, name, coverUrl }: SubjectTileProps): React.ReactElement {
     return (
         <Link href={`${appPaths.subjects}/${id}`}>
-            <div className="relative aspect-[2/3] overflow-hidden rounded-lg group">
+            <div className="relative w-[250px] aspect-[2/3] overflow-hidden rounded-lg group">
                 {coverUrl ? (
                     <NextImage
                         src={coverUrl}

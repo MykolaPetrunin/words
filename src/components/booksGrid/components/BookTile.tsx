@@ -1,8 +1,8 @@
 'use client';
 
 import { BookOpenIcon } from 'lucide-react';
-import Link from 'next/link';
 import NextImage from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 import { cn } from '@/lib/utils';
@@ -12,7 +12,7 @@ import type { BookTileProps } from '../types';
 export default function BookTile({ id, title, isLearning, coverUrl }: BookTileProps): React.ReactElement {
     return (
         <Link href={`/books/${id}`}>
-            <div className={cn('relative aspect-[2/3] overflow-hidden rounded-lg cursor-pointer group border bg-muted transition hover:border-primary')}>
+            <div className={cn('relative w-[250px] aspect-[2/3] overflow-hidden rounded-lg cursor-pointer group border bg-muted transition hover:border-primary')}>
                 {coverUrl ? (
                     <NextImage
                         src={coverUrl}

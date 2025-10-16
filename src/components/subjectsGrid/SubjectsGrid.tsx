@@ -21,9 +21,11 @@ export default function SubjectsGrid({ subjects }: SubjectsGridProps): React.Rea
             <div className="space-y-8">
                 <div>
                     <h2 className="text-xl font-semibold mb-3">{t('dashboard.subjects')}</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                         {subjects.map((s: DbSubject) => (
-                            <SubjectTile key={s.id} id={s.id} name={locale === 'uk' ? s.nameUk : s.nameEn} coverUrl={s.coverUrl} />
+                            <div key={s.id} className="flex-shrink-0">
+                                <SubjectTile id={s.id} name={locale === 'uk' ? s.nameUk : s.nameEn} coverUrl={s.coverUrl} />
+                            </div>
                         ))}
                     </div>
                 </div>
