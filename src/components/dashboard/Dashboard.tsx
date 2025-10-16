@@ -1,7 +1,8 @@
 'use client';
 
-import { ArrowRight, BookOpen, Shield, Zap } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpenCheck, Compass, RefreshCw, Target } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,123 +14,183 @@ export const Dashboard = () => {
     const { user, loading } = useAuth();
     const t = useI18n();
 
-    return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-            {/* Navigation */}
-            <nav className="border-b bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm fixed top-0 w-full z-50">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-bold">Words Next</h1>
-                        <div className="flex gap-4">
-                            {loading ? (
-                                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                            ) : user ? (
-                                <Button asChild>
-                                    <Link href={appPaths.dashboard}>
-                                        {t('home.goToDashboard')}
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Link>
-                                </Button>
-                            ) : (
-                                <>
-                                    <Button variant="ghost" asChild>
-                                        <Link href={appPaths.login}>{t('home.login')}</Link>
-                                    </Button>
-                                    <Button asChild>
-                                        <Link href={appPaths.signup}>{t('home.signup')}</Link>
-                                    </Button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </nav>
+    const features = useMemo(
+        () => [
+            {
+                icon: RefreshCw,
+                title: t('home.featureRepeatTitle'),
+                description: t('home.featureRepeatDescription')
+            },
+            {
+                icon: BookOpenCheck,
+                title: t('home.featureStructureTitle'),
+                description: t('home.featureStructureDescription')
+            },
+            {
+                icon: BarChart3,
+                title: t('home.featureProgressTitle'),
+                description: t('home.featureProgressDescription')
+            }
+        ],
+        [t]
+    );
 
-            {/* Hero Section */}
-            <section className="pt-32 pb-20 px-4">
-                <div className="container mx-auto text-center">
-                    <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('home.heroTitle')}</h2>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">{t('home.heroSubtitle')}</p>
-                    <div className="flex gap-4 justify-center">
-                        {!user && (
+    const steps = useMemo(
+        () => [
+            {
+                icon: Compass,
+                title: t('home.workflowStepOneTitle'),
+                description: t('home.workflowStepOneDescription')
+            },
+            {
+                icon: BookOpenCheck,
+                title: t('home.workflowStepTwoTitle'),
+                description: t('home.workflowStepTwoDescription')
+            },
+            {
+                icon: RefreshCw,
+                title: t('home.workflowStepThreeTitle'),
+                description: t('home.workflowStepThreeDescription')
+            },
+            {
+                icon: Target,
+                title: t('home.workflowStepFourTitle'),
+                description: t('home.workflowStepFourDescription')
+            }
+        ],
+        [t]
+    );
+
+    return (
+        <div className="min-h-screen bg-background text-foreground">
+            <header className="border-b backdrop-blur">
+                <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">T</div>
+                        <span className="text-lg font-semibold">{t('home.brand')}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {loading ? (
+                            <div className="h-9 w-24 animate-pulse rounded bg-muted" />
+                        ) : user ? (
+                            <Button asChild size="sm">
+                                <Link href={appPaths.dashboard}>
+                                    {t('home.goToDashboard')}
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                        ) : (
                             <>
-                                <Button size="lg" asChild>
-                                    <Link href={appPaths.signup}>
-                                        {t('home.ctaStartFree')}
-                                        <ArrowRight className="ml-2 h-5 w-5" />
-                                    </Link>
+                                <Button variant="ghost" size="sm" asChild>
+                                    <Link href={appPaths.login}>{t('home.login')}</Link>
                                 </Button>
-                                <Button size="lg" variant="outline" asChild>
-                                    <Link href={appPaths.login}>{t('home.ctaLogin')}</Link>
+                                <Button size="sm" asChild>
+                                    <Link href={appPaths.signup}>{t('home.signup')}</Link>
                                 </Button>
                             </>
                         )}
                     </div>
                 </div>
-            </section>
+            </header>
 
-            {/* Features Section */}
-            <section className="py-20 px-4">
-                <div className="container mx-auto">
-                    <h3 className="text-3xl font-bold text-center mb-12">{t('home.whyTitle')}</h3>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <Card>
-                            <CardHeader>
-                                <Zap className="h-10 w-10 text-blue-600 mb-4" />
-                                <CardTitle>{t('home.featureFast')}</CardTitle>
-                                <CardDescription>Використовуйте сучасні методики для швидкого запам&apos;ятовування</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-gray-600 dark:text-gray-300">{t('home.featureFastDesc')}</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <BookOpen className="h-10 w-10 text-green-600 mb-4" />
-                                <CardTitle>{t('home.featureDict')}</CardTitle>
-                                <CardDescription>Тисячі слів з детальними поясненнями та прикладами</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-gray-600 dark:text-gray-300">{t('home.featureDictDesc')}</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <Shield className="h-10 w-10 text-purple-600 mb-4" />
-                                <CardTitle>{t('home.featureSecure')}</CardTitle>
-                                <CardDescription>Ваші дані захищені сучасними технологіями шифрування</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-gray-600 dark:text-gray-300">{t('home.featureSecureDesc')}</p>
-                            </CardContent>
-                        </Card>
+            <main>
+                <section className="mx-auto grid w-full max-w-6xl gap-12 px-4 py-16 md:grid-cols-[1.2fr_1fr] md:items-center">
+                    <div className="space-y-6">
+                        <span className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium uppercase text-muted-foreground">
+                            {t('home.tagline')}
+                        </span>
+                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{t('home.heroTitle')}</h1>
+                        <p className="text-lg text-muted-foreground">{t('home.heroSubtitle')}</p>
+                        <div className="flex flex-wrap gap-3">
+                            {user ? (
+                                <Button size="lg" asChild>
+                                    <Link href={appPaths.dashboard}>
+                                        {t('home.goToDashboard')}
+                                        <ArrowRight className="ml-2 h-5 w-5" />
+                                    </Link>
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button size="lg" asChild>
+                                        <Link href={appPaths.signup}>
+                                            {t('home.heroPrimaryCta')}
+                                            <ArrowRight className="ml-2 h-5 w-5" />
+                                        </Link>
+                                    </Button>
+                                    <Button size="lg" variant="outline" asChild>
+                                        <Link href={appPaths.login}>{t('home.heroSecondaryCta')}</Link>
+                                    </Button>
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </section>
+                    <Card className="border-dashed">
+                        <CardHeader>
+                            <CardTitle>{t('home.featuresTitle')}</CardTitle>
+                            <CardDescription>{t('home.featuresDescription')}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {features.map((feature) => (
+                                <div key={feature.title} className="flex items-start gap-4">
+                                    <feature.icon className="mt-1 h-6 w-6 text-primary" />
+                                    <div className="space-y-1">
+                                        <h3 className="text-sm font-semibold">{feature.title}</h3>
+                                        <p className="text-sm text-muted-foreground">{feature.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </section>
 
-            {/* CTA Section */}
-            <section className="py-20 px-4 bg-gray-100 dark:bg-gray-800">
-                <div className="container mx-auto text-center">
-                    <h3 className="text-3xl font-bold mb-4">{t('home.readyTitle')}</h3>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">{t('home.readyDesc')}</p>
-                    {!user && (
+                <section className="border-y bg-muted/20">
+                    <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-16">
+                        <div className="space-y-3 text-center">
+                            <h2 className="text-3xl font-semibold">{t('home.workflowTitle')}</h2>
+                            <p className="mx-auto max-w-2xl text-muted-foreground">{t('home.workflowDescription')}</p>
+                        </div>
+                        <div className="grid gap-6 md:grid-cols-2">
+                            {steps.map((step) => (
+                                <Card key={step.title} className="h-full">
+                                    <CardHeader className="flex flex-row items-start gap-4 pb-2">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                            <step.icon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="text-base">{step.title}</CardTitle>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground">{step.description}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="mx-auto w-full max-w-3xl space-y-6 px-4 py-16 text-center">
+                    <h2 className="text-3xl font-semibold">{t('home.ctaTitle')}</h2>
+                    <p className="mx-auto max-w-2xl text-muted-foreground">{t('home.ctaSubtitle')}</p>
+                    {user ? (
+                        <Button size="lg" asChild>
+                            <Link href={appPaths.dashboard}>
+                                {t('home.goToDashboard')}
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        </Button>
+                    ) : (
                         <Button size="lg" asChild>
                             <Link href={appPaths.signup}>
-                                {t('home.createFree')}
+                                {t('home.ctaPrimary')}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         </Button>
                     )}
-                </div>
-            </section>
-
-            {/* Footer */}
-            <footer className="py-8 px-4 border-t">
-                <div className="container mx-auto text-center text-gray-600 dark:text-gray-400">
-                    <p>&copy; 2025 Words Next. {t('home.footerRights')}</p>
-                </div>
+                </section>
+            </main>
+            <footer className="border-t py-8">
+                <div className="mx-auto w-full max-w-6xl px-4 text-center text-sm text-muted-foreground">{t('home.footerRights')}</div>
             </footer>
         </div>
     );

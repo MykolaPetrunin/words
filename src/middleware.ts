@@ -17,7 +17,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
         return NextResponse.redirect(new URL(appPaths.login, request.url));
     }
 
-    if (session && isPublicPath && path !== appPaths.root) {
+    if (session && isPublicPath) {
+        if (path === appPaths.notFound) {
+            return NextResponse.next();
+        }
         return NextResponse.redirect(new URL(appPaths.dashboard, request.url));
     }
 

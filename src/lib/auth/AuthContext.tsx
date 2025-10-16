@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { appPaths } from '@/lib/appPaths';
@@ -20,8 +20,6 @@ import { setUser as setCurrentUser } from '@/lib/redux/slices/currentUserSlice';
 import { AuthContextType } from '@/lib/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const PUBLIC_PATHS: ReadonlyArray<string> = [appPaths.root, appPaths.login, appPaths.signup];
 
 export const loadUserData = async (dispatch: ReturnType<typeof useAppDispatch>): Promise<void> => {
     if (process.env.NODE_ENV === 'test') {
@@ -46,7 +44,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const user = useAppSelector((s) => s.currentUser.user);
     const [loading, setLoading] = useState<boolean>(true);
     const router = useRouter();
-    const pathname = usePathname();
     const dispatch = useAppDispatch();
 
     useEffect(() => {
@@ -65,9 +62,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         setAuthToken(idToken);
                         await loadUserData(dispatch);
                     }
-                    if (response.ok && PUBLIC_PATHS.includes(pathname)) {
-                        router.replace(appPaths.dashboard);
-                    }
                 }
             } else {
                 await fetch('/api/auth/logout', {
@@ -81,7 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         return () => unsubscribe();
-    }, [pathname, router, dispatch]);
+    }, [router, dispatch]);
 
     const signIn = async (email: string, password: string): Promise<void> => {
         try {
