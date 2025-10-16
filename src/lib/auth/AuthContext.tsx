@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         return () => unsubscribe();
-    }, [router, dispatch]);
+    }, [dispatch]);
 
     const signIn = async (email: string, password: string): Promise<void> => {
         try {

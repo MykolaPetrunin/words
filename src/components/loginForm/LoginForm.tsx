@@ -2,7 +2,8 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -28,8 +29,9 @@ type FormData = z.infer<typeof formSchema>;
 
 export const LoginForm: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const { signIn } = useAuth();
+    const { signIn, user, loading: authLoading } = useAuth();
     const t = useI18n();
+    const router = useRouter();
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -38,6 +40,12 @@ export const LoginForm: React.FC = () => {
             password: ''
         }
     });
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            router.replace(appPaths.dashboard);
+        }
+    }, [authLoading, router, user]);
 
     const onSubmit = async (data: FormData): Promise<void> => {
         setIsLoading(true);

@@ -33,6 +33,8 @@ export const en = {
     password: 'Password',
     submitLogin: 'Log in',
     submittingLogin: 'Logging in...',
+    loginSuccess: 'You are signed in!',
+    loginError: 'Sign-in failed. Check your details and try again.',
     noAccount: "Don't have an account?",
     signupCta: 'Sign up',
     or: 'or',
