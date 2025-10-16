@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client';
+
 import prisma from '@/lib/prisma';
 
 export interface DbTopic {
@@ -17,6 +19,9 @@ export interface DbTopicWithStats extends DbTopic {
     activeQuestions: number;
     inactiveQuestions: number;
     previewQuestions: number;
+    questionsWithoutAnswers: number;
+    isProcessing: boolean;
+    processingStartedAt: Date | null;
 }
 
 export interface TopicInput {
@@ -31,6 +36,22 @@ type TopicRow = {
     titleUk: string;
     titleEn: string;
 };
+
+type _TopicWithStatsRow = Prisma.TopicGetPayload<{
+    include: {
+        questions: {
+            select: {
+                isActive: true;
+                previewMode: true;
+                _count: {
+                    select: {
+                        answers: true;
+                    };
+                };
+            };
+        };
+    };
+}>;
 
 const mapToDbTopic = (topic: TopicRow): DbTopic => ({
     id: topic.id,
@@ -69,7 +90,12 @@ export async function getTopicsForBookWithStats(bookId: string): Promise<DbTopic
             questions: {
                 select: {
                     isActive: true,
-                    previewMode: true
+                    previewMode: true,
+                    _count: {
+                        select: {
+                            answers: true
+                        }
+                    }
                 }
             }
         },
@@ -83,6 +109,7 @@ export async function getTopicsForBookWithStats(bookId: string): Promise<DbTopic
         const activeQuestions = topic.questions.filter((q) => q.isActive && !q.previewMode).length;
         const inactiveQuestions = topic.questions.filter((q) => !q.isActive).length;
         const previewQuestions = topic.questions.filter((q) => q.previewMode).length;
+        const questionsWithoutAnswers = topic.questions.filter((q) => q._count.answers === 0).length;
 
         return {
             id: topic.id,
@@ -92,7 +119,10 @@ export async function getTopicsForBookWithStats(bookId: string): Promise<DbTopic
             totalQuestions,
             activeQuestions,
             inactiveQuestions,
-            previewQuestions
+            previewQuestions,
+            questionsWithoutAnswers,
+            isProcessing: topic.isProcessing,
+            processingStartedAt: topic.processingStartedAt
         };
     });
 }

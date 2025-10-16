@@ -17,7 +17,7 @@ import type { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import type { DbSubject } from '@/lib/repositories/subjectRepository';
 import type { DbTopicWithStats } from '@/lib/repositories/topicRepository';
 
-import { createAdminBookTopics, deleteAdminBookTopic, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
+import { createAdminBookTopics, deleteAdminBookTopic, processAdminBookTopics, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
 import BookCoverField from '../components/BookCoverField';
 import BookFormFields from '../components/BookFormFields';
 import BookTopicCreateForm from '../components/BookTopicCreateForm';
@@ -89,6 +89,8 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     useEffect(() => {
         setAvailableTopics(sortedTopics);
     }, [sortedTopics]);
+    const isAnyTopicProcessing = useMemo(() => availableTopics.some((topic) => topic.isProcessing), [availableTopics]);
+    const hasTopicsMissingAnswers = useMemo(() => availableTopics.some((topic) => topic.questionsWithoutAnswers > 0), [availableTopics]);
 
     const handleCancel = useCallback(() => {
         router.push(appPaths.adminBooks);
@@ -125,7 +127,10 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                             totalQuestions: 0,
                             activeQuestions: 0,
                             inactiveQuestions: 0,
-                            previewQuestions: 0
+                            previewQuestions: 0,
+                            questionsWithoutAnswers: 0,
+                            isProcessing: false,
+                            processingStartedAt: null
                         }
                     );
                 });
@@ -252,7 +257,10 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                                     totalQuestions: 0,
                                     activeQuestions: 0,
                                     inactiveQuestions: 0,
-                                    previewQuestions: 0
+                                    previewQuestions: 0,
+                                    questionsWithoutAnswers: 0,
+                                    isProcessing: false,
+                                    processingStartedAt: null
                                 };
                                 merged.push(topicWithStats);
                                 ids.add(topic.id);
@@ -288,6 +296,56 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         [availableTopics, bookId, collator, getValues, setValue]
     );
 
+    const handleBookTopicsBulkGenerate = useCallback(async () => {
+        if (availableTopics.length === 0) {
+            toast.error(t('admin.booksTopicsBulkNoTopics'));
+            return;
+        }
+        if (!hasTopicsMissingAnswers) {
+            toast.error(t('admin.booksTopicsBulkNoPending'));
+            return;
+        }
+
+        const snapshot = availableTopics.map((topic) => ({ ...topic }));
+        setAvailableTopics((prev) =>
+            prev.map((topic) => ({
+                ...topic,
+                isProcessing: true,
+                processingStartedAt: topic.processingStartedAt ?? new Date()
+            }))
+        );
+
+        try {
+            const result = await processAdminBookTopics(bookId);
+            if (!result.success) {
+                if (result.error === 'ALREADY_PROCESSING') {
+                    toast.error(t('admin.bulkAlreadyProcessing'));
+                    setAvailableTopics(snapshot);
+                    router.refresh();
+                } else if (result.error === 'NO_TOPICS') {
+                    toast.error(t('admin.booksTopicsBulkNoTopics'));
+                    setAvailableTopics(snapshot);
+                } else if (result.error === 'NO_PENDING') {
+                    toast.error(t('admin.booksTopicsBulkNoPending'));
+                    setAvailableTopics(snapshot);
+                } else {
+                    toast.error(t('admin.bulkGenerateError'));
+                    setAvailableTopics(snapshot);
+                    router.refresh();
+                }
+                return;
+            }
+
+            toast.success(t('admin.bulkGenerateSuccess'));
+            router.refresh();
+        } catch (error) {
+            clientLogger.error('Book-level bulk topic processing failed', error as Error, { bookId });
+            toast.error(t('admin.bulkGenerateError'));
+            setAvailableTopics(snapshot);
+            router.refresh();
+        }
+    }, [availableTopics, bookId, hasTopicsMissingAnswers, router, t]);
+
     return (
         <div className="space-y-6">
             <div className="space-y-1">
@@ -303,9 +361,18 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                         <BookTopicsField
                             control={control}
                             topics={availableTopics}
-                            actions={<BookTopicSuggestionsDialog book={currentBook} onApply={handleSuggestionApply} />}
+                            actions={
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <BookTopicSuggestionsDialog book={currentBook} onApply={handleSuggestionApply} />
+                                    {availableTopics.length > 0 && hasTopicsMissingAnswers && !isAnyTopicProcessing ? (
+                                        <Button type="button" variant="outline" onClick={() => void handleBookTopicsBulkGenerate()}>
+                                            {t('admin.booksTopicsGenerateAnswers')}
+                                        </Button>
+                                    ) : null}
+                                </div>
+                            }
                             onDeleteTopic={handleTopicDeleteRequest}
-                            deleteDisabled={isDeletingTopic}
+                            deleteDisabled={isDeletingTopic || isAnyTopicProcessing}
                         />
                         <BookTopicCreateForm bookId={bookId} onTopicCreated={handleTopicCreated} />
                     </div>

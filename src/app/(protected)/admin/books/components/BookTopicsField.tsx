@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, AlertTriangle, Eye, Trash2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Eye, Loader2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 import type { Control } from 'react-hook-form';
@@ -26,10 +26,18 @@ export default function BookTopicsField({ control, topics, actions, onDeleteTopi
     const t = useI18n();
 
     const getTopicStatusIcon = (topic: DbTopicWithStats) => {
+        if (topic.isProcessing) {
+            return {
+                icon: Loader2,
+                className: 'text-primary animate-spin',
+                tooltip: t('admin.bulkGenerating')
+            };
+        }
+
         if (topic.totalQuestions === 0) {
             return {
                 icon: AlertCircle,
-                color: 'text-red-500',
+                className: 'text-red-500',
                 tooltip: t('admin.booksTopicNoQuestions')
             };
         }
@@ -37,7 +45,7 @@ export default function BookTopicsField({ control, topics, actions, onDeleteTopi
         if (topic.previewQuestions > 0) {
             return {
                 icon: Eye,
-                color: 'text-yellow-500',
+                className: 'text-yellow-500',
                 tooltip: t('admin.booksTopicHasPreviewQuestions', { count: topic.previewQuestions })
             };
         }
@@ -45,7 +53,7 @@ export default function BookTopicsField({ control, topics, actions, onDeleteTopi
         if (topic.inactiveQuestions > 0) {
             return {
                 icon: AlertTriangle,
-                color: 'text-orange-500',
+                className: 'text-orange-500',
                 tooltip: t('admin.booksTopicHasInactiveQuestions', { count: topic.inactiveQuestions })
             };
         }
@@ -86,7 +94,7 @@ export default function BookTopicsField({ control, topics, actions, onDeleteTopi
                                                     {statusIcon && StatusIcon && (
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
-                                                                <StatusIcon className={`h-4 w-4 ${statusIcon.color}`} />
+                                                                <StatusIcon className={`h-4 w-4 ${statusIcon.className}`} />
                                                             </TooltipTrigger>
                                                             <TooltipContent>
                                                                 <p>{statusIcon.tooltip}</p>

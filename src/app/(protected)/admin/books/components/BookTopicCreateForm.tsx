@@ -56,7 +56,10 @@ export default function BookTopicCreateForm({ bookId, onTopicCreated }: BookTopi
                     totalQuestions: 0,
                     activeQuestions: 0,
                     inactiveQuestions: 0,
-                    previewQuestions: 0
+                    previewQuestions: 0,
+                    questionsWithoutAnswers: 0,
+                    isProcessing: false,
+                    processingStartedAt: null
                 };
                 const nextInitial: BookTopicFormData = { titleUk: '', titleEn: '' };
                 setInitialData(nextInitial);
