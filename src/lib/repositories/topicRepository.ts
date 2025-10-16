@@ -181,6 +181,14 @@ export async function getTopicWithProcessingStatus(topicId: string): Promise<DbT
     const topic = await prisma.topic.findUnique({
         where: {
             id: topicId
+        },
+        select: {
+            id: true,
+            bookId: true,
+            titleUk: true,
+            titleEn: true,
+            isProcessing: true,
+            processingStartedAt: true
         }
     });
     if (!topic) {
