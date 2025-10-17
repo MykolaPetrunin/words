@@ -2,12 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { getQusetionAnswersSuggestions, type QuestionAnswersSuggestion } from '@/lib/aiActions/getQusetionAnswersSuggestions';
 import { appPaths, getAdminQuestionPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { getQuestionDetailById, updateQuestionDetail, type QuestionDetail, type UpdateQuestionInput } from '@/lib/repositories/questionRepository';
-
-import { getQusetionAnswersSuggestions, type QuestionAnswersSuggestion } from './aiActions';
 
 interface SuggestionFailParams {
     code: QuestionAnswersSuggestionErrorCode;

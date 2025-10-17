@@ -3,6 +3,7 @@
 import { del, put } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 
+import { getBookTopicsSuggestions } from '@/lib/aiActions/getBookTopicsSuggestions';
 import { appPaths, getAdminBookPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
@@ -10,7 +11,6 @@ import { createBook, getBookWithRelations, updateBook, updateBookCover, type Boo
 import { createTopic, deleteTopicWithQuestions, getTopicById, type DbTopic } from '@/lib/repositories/topicRepository';
 
 import { processBulkTopicQuestions } from './[id]/topics/[topicId]/actions';
-import { getBookTopicsSuggestions } from './components/bookTopicSuggestionsDialog/aiActions';
 import { bookFormSchema, bookTopicFormSchema, type BookFormData, type BookTopicFormData } from './schemas';
 
 const mapFormToInput = (data: BookFormData): BookInput => ({

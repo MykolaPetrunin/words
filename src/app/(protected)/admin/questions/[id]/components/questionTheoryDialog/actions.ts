@@ -2,12 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { getQuestionTheorySuggestions, QuestionTheorySuggestion } from '@/lib/aiActions/getQuestionTheorySuggestions';
 import { appPaths, getAdminQuestionPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { getQuestionDetailById, updateQuestionDetail, type QuestionDetail, type UpdateQuestionInput } from '@/lib/repositories/questionRepository';
-
-import { getQuestionTheorySuggestions, type QuestionTheorySuggestion } from './aiActions';
 
 interface SuggestionFailParams {
     readonly code: QuestionTheorySuggestionErrorCode;

@@ -8,12 +8,12 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useI18n } from '@/hooks/useI18n';
+import { getTopicQuestionsSuggestions, type TopicQuestionSuggestion } from '@/lib/aiActions/getTopicQuestionsSuggestions';
 import type { I18nKey } from '@/lib/i18n/types';
 import { clientLogger } from '@/lib/logger';
 
 import { createTopicQuestionsFromSuggestions } from '../../actions';
 import type { TopicSummary } from '../topicQuestionsPageClient/TopicQuestionsPageClient';
-import { getTopicQuestionsSuggestions, type TopicQuestionSuggestion } from '../topicQuestionsPageClient/aiActions';
 
 interface BookSummary {
     readonly id: string;

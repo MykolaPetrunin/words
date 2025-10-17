@@ -2,16 +2,15 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { getQusetionAnswersSuggestions } from '@/app/(protected)/admin/questions/[id]/components/questionAnswersDialog/aiActions';
-import { getQuestionTheorySuggestions } from '@/app/(protected)/admin/questions/[id]/components/questionTheoryDialog/aiActions';
+import { getQuestionTheorySuggestions } from '@/lib/aiActions/getQuestionTheorySuggestions';
+import { getQusetionAnswersSuggestions } from '@/lib/aiActions/getQusetionAnswersSuggestions';
+import type { TopicQuestionSuggestion } from '@/lib/aiActions/getTopicQuestionsSuggestions';
 import { appPaths, getAdminBookPath, getAdminBookTopicPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import type { LevelKey } from '@/lib/repositories/bookLevelProgress';
 import { bulkCreateAnswersForQuestion, bulkUpdateAnswersTheory, setQuestionPreviewMode, updateQuestionTheory } from '@/lib/repositories/questionRepository';
 import { getTopicWithProcessingStatus, setTopicProcessing } from '@/lib/repositories/topicRepository';
-
-import type { TopicQuestionSuggestion } from './components/topicQuestionsPageClient/aiActions';
 
 interface CreateTopicQuestionsInput {
     readonly bookId: string;
@@ -141,8 +140,12 @@ export const processBulkTopicQuestions = async (topicId: string): Promise<{ succ
             }
         });
 
+        const questionIds = questions.map((question) => question.id);
+        serverLogger.info('Bulk topic question generation started', { topicId, questionIds });
+
         for (const question of questions) {
             try {
+                serverLogger.info('Question content generation started', { topicId, questionId: question.id });
                 const answersSuggestions = await getQusetionAnswersSuggestions({
                     book: {
                         titleUk: book.titleUk,
@@ -172,6 +175,7 @@ export const processBulkTopicQuestions = async (topicId: string): Promise<{ succ
                         isCorrect: ans.isCorrect
                     }))
                 );
+                serverLogger.info('Question answers generated and stored', { topicId, questionId: question.id, answersCount: answersSuggestions.length });
 
                 await setQuestionPreviewMode(question.id, true);
 
@@ -223,6 +227,12 @@ export const processBulkTopicQuestions = async (topicId: string): Promise<{ succ
                             }))
                         );
                     }
+
+                    serverLogger.info('Question theory generated and stored', {
+                        topicId,
+                        questionId: question.id,
+                        hasAnswerTheory: Boolean(theorySuggestions.answers && theorySuggestions.answers.length === updatedQuestion.answers.length)
+                    });
                 }
             } catch (error) {
                 serverLogger.error('Question processing failed', error as Error, { questionId: question.id, topicId });

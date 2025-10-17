@@ -9,13 +9,13 @@ import { Prose } from '@/components/prose/Prose';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useI18n } from '@/hooks/useI18n';
+import { QuestionTheorySuggestion } from '@/lib/aiActions/getQuestionTheorySuggestions';
 import type { I18nKey } from '@/lib/i18n/types';
 import { clientLogger } from '@/lib/logger';
 import type { QuestionDetail } from '@/lib/repositories/questionRepository';
 import { cn } from '@/lib/utils';
 
 import { applyAdminQuestionTheory, generateAdminQuestionTheory, type QuestionTheorySuggestionErrorCode } from './actions';
-import type { QuestionTheorySuggestion } from './aiActions';
 
 interface QuestionTheoryDialogProps {
     questionId: string;
