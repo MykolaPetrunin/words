@@ -5,7 +5,6 @@ export interface AppPaths {
     readonly notFound: '/_not-found';
     readonly dashboard: '/dashboard';
     readonly account: '/account';
-    readonly subjects: '/subjects';
     readonly books: '/books';
     readonly admin: '/admin';
     readonly adminSubjects: '/admin/subjects';
@@ -26,7 +25,6 @@ export const appPaths: AppPaths = {
     notFound: '/_not-found',
     dashboard: '/dashboard',
     account: '/account',
-    subjects: '/subjects',
     books: '/books',
     admin: '/admin',
     adminSubjects: '/admin/subjects',

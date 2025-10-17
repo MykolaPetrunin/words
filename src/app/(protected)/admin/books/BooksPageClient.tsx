@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import NextImage from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -186,58 +187,68 @@ export default function BooksPageClient({ initialBooks, subjects }: BooksPageCli
                     {books.map((book) => {
                         const editPath = getAdminBookPath(book.id);
                         return (
-                            <div key={book.id} className="space-y-3 rounded-lg border p-4 shadow-xs">
-                                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                                    <div>
-                                        <p className="text-lg font-semibold">{book.titleUk}</p>
-                                        <p className="text-sm text-muted-foreground">{book.titleEn}</p>
+                            <Link
+                                key={book.id}
+                                href={editPath}
+                                className="block rounded-lg border p-4 shadow-xs transition hover:border-primary hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <div className="flex flex-col gap-4 md:flex-row">
+                                    <div className="relative aspect-[2/3] w-24 overflow-hidden rounded-md border bg-muted sm:w-28">
+                                        {book.coverUrl ? (
+                                            <NextImage src={book.coverUrl} alt={book.titleUk} fill sizes="112px" className="object-cover" />
+                                        ) : (
+                                            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">{t('admin.booksCoverEmpty')}</div>
+                                        )}
                                     </div>
-                                    <span
-                                        className={
-                                            book.isActive
-                                                ? 'inline-flex items-center justify-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700'
-                                                : 'inline-flex items-center justify-center rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700'
-                                        }
-                                    >
-                                        {book.isActive ? t('admin.booksStatusActive') : t('admin.booksStatusInactive')}
-                                    </span>
-                                </div>
-                                {(book.descriptionUk && book.descriptionUk.length > 0) || (book.descriptionEn && book.descriptionEn.length > 0) ? (
-                                    <div className="grid gap-3 md:grid-cols-2">
-                                        {book.descriptionUk && book.descriptionUk.length > 0 ? (
-                                            <p className="text-sm leading-relaxed text-muted-foreground">{book.descriptionUk}</p>
+                                    <div className="flex-1 space-y-3">
+                                        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                                            <div>
+                                                <p className="text-lg font-semibold">{book.titleUk}</p>
+                                                <p className="text-sm text-muted-foreground">{book.titleEn}</p>
+                                            </div>
+                                            <span
+                                                className={
+                                                    book.isActive
+                                                        ? 'inline-flex items-center justify-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700'
+                                                        : 'inline-flex items-center justify-center rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700'
+                                                }
+                                            >
+                                                {book.isActive ? t('admin.booksStatusActive') : t('admin.booksStatusInactive')}
+                                            </span>
+                                        </div>
+                                        {(book.descriptionUk && book.descriptionUk.length > 0) || (book.descriptionEn && book.descriptionEn.length > 0) ? (
+                                            <div className="grid gap-3 md:grid-cols-2">
+                                                {book.descriptionUk && book.descriptionUk.length > 0 ? (
+                                                    <p className="text-sm leading-relaxed text-muted-foreground">{book.descriptionUk}</p>
+                                                ) : null}
+                                                {book.descriptionEn && book.descriptionEn.length > 0 ? (
+                                                    <p className="text-sm leading-relaxed text-muted-foreground">{book.descriptionEn}</p>
+                                                ) : null}
+                                            </div>
                                         ) : null}
-                                        {book.descriptionEn && book.descriptionEn.length > 0 ? (
-                                            <p className="text-sm leading-relaxed text-muted-foreground">{book.descriptionEn}</p>
-                                        ) : null}
+                                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                            {book.subjects.map((subject) => (
+                                                <span key={subject.id} className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">
+                                                    {subject.nameUk}
+                                                </span>
+                                            ))}
+                                            {book.subjects.length === 0 ? (
+                                                <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">{t('admin.booksNoSubjects')}</span>
+                                            ) : null}
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                            {book.topics.map((topic) => (
+                                                <span key={topic.id} className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                                                    {topic.titleUk}
+                                                </span>
+                                            ))}
+                                            {book.topics.length === 0 ? (
+                                                <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">{t('admin.booksNoTopics')}</span>
+                                            ) : null}
+                                        </div>
                                     </div>
-                                ) : null}
-                                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                    {book.subjects.map((subject) => (
-                                        <span key={subject.id} className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">
-                                            {subject.nameUk}
-                                        </span>
-                                    ))}
-                                    {book.subjects.length === 0 ? (
-                                        <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">{t('admin.booksNoSubjects')}</span>
-                                    ) : null}
                                 </div>
-                                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                    {book.topics.map((topic) => (
-                                        <span key={topic.id} className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
-                                            {topic.titleUk}
-                                        </span>
-                                    ))}
-                                    {book.topics.length === 0 ? (
-                                        <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">{t('admin.booksNoTopics')}</span>
-                                    ) : null}
-                                </div>
-                                <div className="flex justify-end">
-                                    <Button asChild variant="outline" size="sm">
-                                        <Link href={editPath}>{t('admin.booksEditButton')}</Link>
-                                    </Button>
-                                </div>
-                            </div>
+                            </Link>
                         );
                     })}
                 </div>

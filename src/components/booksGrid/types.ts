@@ -3,7 +3,7 @@ import type { DbSubject } from '@/lib/repositories/subjectRepository';
 
 export interface BooksGridProps {
     books: DbBookWithLearningStatus[];
-    subject: DbSubject;
+    subject?: DbSubject;
 }
 
 export interface BookTileProps {

@@ -1,7 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { del, put } from '@vercel/blob';
+import { revalidatePath } from 'next/cache';
 
 import { appPaths, getAdminSubjectPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
@@ -24,7 +24,6 @@ const revalidateAdminSubjects = (subjectId?: string): void => {
     revalidatePath(appPaths.adminBooks);
     revalidatePath(appPaths.adminQuestions);
     revalidatePath(appPaths.dashboard);
-    revalidatePath(appPaths.subjects);
     if (subjectId) {
         revalidatePath(getAdminSubjectPath(subjectId));
     }

@@ -25,7 +25,9 @@ export const uk = {
     answerQuestion: 'Відповісти на питання',
     nextQuestion: 'Наступне питання',
     selectAllCorrect: 'Відмітьте всі правильні варіанти',
-    errorSyncingBook: 'Помилка при синхронізації книги'
+    errorSyncingBook: 'Помилка при синхронізації книги',
+    emptyHeading: 'Книги',
+    emptyDescription: 'Ще немає книг.'
 } as const;
 
 export const en = {
@@ -55,5 +57,7 @@ export const en = {
     answerQuestion: 'Answer question',
     nextQuestion: 'Next question',
     selectAllCorrect: 'Select all correct options',
-    errorSyncingBook: 'Error syncing book'
+    errorSyncingBook: 'Error syncing book',
+    emptyHeading: 'Books',
+    emptyDescription: 'No books yet.'
 } as const;

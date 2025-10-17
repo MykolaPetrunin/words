@@ -7,6 +7,8 @@ import { getUserByFirebaseId } from '@/lib/repositories/userRepository';
 
 import AccountForm from './components/AccountForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AccountPage(): Promise<React.ReactElement> {
     const sessionUser = await requireAuth();
 

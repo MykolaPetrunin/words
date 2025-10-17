@@ -6,17 +6,7 @@ import { usePathname } from 'next/navigation';
 
 import { UserNav } from '@/components/appSidebar/components/userNav/UserNav';
 import { menuItemsConfig } from '@/components/appSidebar/configs';
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuItem,
-    SidebarMenuSubButton,
-    SidebarRail,
-    SidebarTrigger
-} from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -77,10 +67,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     )}
                 </SidebarMenu>
             </SidebarContent>
-
-            <SidebarFooter>{isUserLoading ? <Skeleton className="h-8 w-8 rounded-md hidden md:block" /> : <SidebarTrigger className="hidden md:flex" />}</SidebarFooter>
-
-            <SidebarRail />
         </Sidebar>
     );
 }
