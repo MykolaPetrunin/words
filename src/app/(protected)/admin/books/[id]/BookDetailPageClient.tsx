@@ -57,32 +57,36 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     const [isPending, setIsPending] = useState(false);
     const bookId = currentBook.id;
     const collator = useMemo(() => new Intl.Collator('uk', { sensitivity: 'base' }), []);
+    const getTopicPriority = useCallback((topic: DbTopicWithStats) => {
+        if (topic.totalQuestions === 0) {
+            return 0;
+        }
+        if (topic.questionsWithoutAnswers > 0) {
+            return 1;
+        }
+        if (topic.previewQuestions > 0) {
+            return 2;
+        }
+        if (topic.inactiveQuestions > 0) {
+            return 3;
+        }
+        return 4;
+    }, []);
+    const compareTopics = useCallback(
+        (a: DbTopicWithStats, b: DbTopicWithStats) => {
+            const priorityDiff = getTopicPriority(a) - getTopicPriority(b);
+            if (priorityDiff !== 0) {
+                return priorityDiff;
+            }
+            return collator.compare(a.titleUk, b.titleUk);
+        },
+        [collator, getTopicPriority]
+    );
     const sortedTopics = useMemo(() => {
         const bookTopics = topics.filter((topic) => topic.bookId === bookId);
 
-        return bookTopics.sort((a, b) => {
-            // Пріоритет 1: Топіки без питань
-            const aNoQuestions = a.totalQuestions === 0;
-            const bNoQuestions = b.totalQuestions === 0;
-            if (aNoQuestions && !bNoQuestions) return -1;
-            if (!aNoQuestions && bNoQuestions) return 1;
-
-            // Пріоритет 2: Топіки з питаннями в preview mode
-            const aHasPreview = a.previewQuestions > 0;
-            const bHasPreview = b.previewQuestions > 0;
-            if (aHasPreview && !bHasPreview) return -1;
-            if (!aHasPreview && bHasPreview) return 1;
-
-            // Пріоритет 3: Топіки з неактивними питаннями
-            const aHasInactive = a.inactiveQuestions > 0;
-            const bHasInactive = b.inactiveQuestions > 0;
-            if (aHasInactive && !bHasInactive) return -1;
-            if (!aHasInactive && bHasInactive) return 1;
-
-            // Всередині кожної категорії сортуємо за алфавітом
-            return collator.compare(a.titleUk, b.titleUk);
-        });
-    }, [bookId, collator, topics]);
+        return bookTopics.sort((a, b) => compareTopics(a, b));
+    }, [bookId, compareTopics, topics]);
     const [availableTopics, setAvailableTopics] = useState<DbTopicWithStats[]>(sortedTopics);
     const [topicToDelete, setTopicToDelete] = useState<DbTopicWithStats | null>(null);
     const [isDeletingTopic, setIsDeletingTopic] = useState(false);
@@ -134,26 +138,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                         }
                     );
                 });
-                setAvailableTopics(
-                    topicsWithStats.sort((a, b) => {
-                        const aNoQuestions = a.totalQuestions === 0;
-                        const bNoQuestions = b.totalQuestions === 0;
-                        if (aNoQuestions && !bNoQuestions) return -1;
-                        if (!aNoQuestions && bNoQuestions) return 1;
-
-                        const aHasPreview = a.previewQuestions > 0;
-                        const bHasPreview = b.previewQuestions > 0;
-                        if (aHasPreview && !bHasPreview) return -1;
-                        if (!aHasPreview && bHasPreview) return 1;
-
-                        const aHasInactive = a.inactiveQuestions > 0;
-                        const bHasInactive = b.inactiveQuestions > 0;
-                        if (aHasInactive && !bHasInactive) return -1;
-                        if (!aHasInactive && bHasInactive) return 1;
-
-                        return collator.compare(a.titleUk, b.titleUk);
-                    })
-                );
+                setAvailableTopics(topicsWithStats.sort((a, b) => compareTopics(a, b)));
                 toast.success(t('admin.booksDetailSuccess'));
             } catch (error) {
                 clientLogger.error('Form submission failed', error as Error, { bookId });
@@ -162,7 +147,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 setIsPending(false);
             }
         },
-        [bookId, collator, reset, t, availableTopics]
+        [availableTopics, bookId, compareTopics, reset, t]
     );
 
     const handleTopicCreated = useCallback(
@@ -175,30 +160,12 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                     return prev;
                 }
                 const next = [...prev, topic];
-                return next.sort((a, b) => {
-                    // Використовуємо ту ж логіку сортування
-                    const aNoQuestions = a.totalQuestions === 0;
-                    const bNoQuestions = b.totalQuestions === 0;
-                    if (aNoQuestions && !bNoQuestions) return -1;
-                    if (!aNoQuestions && bNoQuestions) return 1;
-
-                    const aHasPreview = a.previewQuestions > 0;
-                    const bHasPreview = b.previewQuestions > 0;
-                    if (aHasPreview && !bHasPreview) return -1;
-                    if (!aHasPreview && bHasPreview) return 1;
-
-                    const aHasInactive = a.inactiveQuestions > 0;
-                    const bHasInactive = b.inactiveQuestions > 0;
-                    if (aHasInactive && !bHasInactive) return -1;
-                    if (!aHasInactive && bHasInactive) return 1;
-
-                    return collator.compare(a.titleUk, b.titleUk);
-                });
+                return next.sort((a, b) => compareTopics(a, b));
             });
             const nextSelected = Array.from(new Set([...getValues('topicIds'), topic.id]));
             setValue('topicIds', nextSelected, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
         },
-        [bookId, collator, getValues, setValue]
+        [bookId, compareTopics, getValues, setValue]
     );
 
     const handleConfirmTopicDelete = useCallback(async () => {
@@ -266,24 +233,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                                 ids.add(topic.id);
                             }
                         });
-                        return merged.sort((a, b) => {
-                            const aNoQuestions = a.totalQuestions === 0;
-                            const bNoQuestions = b.totalQuestions === 0;
-                            if (aNoQuestions && !bNoQuestions) return -1;
-                            if (!aNoQuestions && bNoQuestions) return 1;
-
-                            const aHasPreview = a.previewQuestions > 0;
-                            const bHasPreview = b.previewQuestions > 0;
-                            if (aHasPreview && !bHasPreview) return -1;
-                            if (!aHasPreview && bHasPreview) return 1;
-
-                            const aHasInactive = a.inactiveQuestions > 0;
-                            const bHasInactive = b.inactiveQuestions > 0;
-                            if (aHasInactive && !bHasInactive) return -1;
-                            if (!aHasInactive && bHasInactive) return 1;
-
-                            return collator.compare(a.titleUk, b.titleUk);
-                        });
+                        return merged.sort((a, b) => compareTopics(a, b));
                     });
                     const nextTopicIds = Array.from(new Set([...getValues('topicIds'), ...createdTopics.map((topic) => topic.id)]));
                     setValue('topicIds', nextTopicIds, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
@@ -293,7 +243,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                 }
             }
         },
-        [availableTopics, bookId, collator, getValues, setValue]
+        [availableTopics, bookId, compareTopics, getValues, setValue]
     );
 
     const handleBookTopicsBulkGenerate = useCallback(async () => {

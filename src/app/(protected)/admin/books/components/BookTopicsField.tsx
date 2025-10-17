@@ -1,6 +1,7 @@
 'use client';
 
-import { AlertCircle, AlertTriangle, Eye, Loader2, Trash2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Eye, Loader2, MessageCircleWarning, Trash2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 import type { Control } from 'react-hook-form';
@@ -25,42 +26,67 @@ interface BookTopicsFieldProps {
 export default function BookTopicsField({ control, topics, actions, onDeleteTopic, deleteDisabled = false }: BookTopicsFieldProps): React.ReactElement {
     const t = useI18n();
 
-    const getTopicStatusIcon = (topic: DbTopicWithStats) => {
+    type TopicIndicator = {
+        key: string;
+        icon: LucideIcon;
+        className: string;
+        tooltip: string;
+    };
+
+    const getTopicIndicators = (topic: DbTopicWithStats): TopicIndicator[] => {
         if (topic.isProcessing) {
-            return {
-                icon: Loader2,
-                className: 'text-primary animate-spin',
-                tooltip: t('admin.bulkGenerating')
-            };
+            return [
+                {
+                    key: 'processing',
+                    icon: Loader2,
+                    className: 'text-primary animate-spin',
+                    tooltip: t('admin.bulkGenerating')
+                }
+            ];
         }
 
         if (topic.totalQuestions === 0) {
-            return {
-                icon: AlertCircle,
-                className: 'text-red-500',
-                tooltip: t('admin.booksTopicNoQuestions')
-            };
+            return [
+                {
+                    key: 'no-questions',
+                    icon: AlertCircle,
+                    className: 'text-red-500',
+                    tooltip: t('admin.booksTopicNoQuestions')
+                }
+            ];
         }
 
+        const indicators: TopicIndicator[] = [];
+
         if (topic.previewQuestions > 0) {
-            return {
+            indicators.push({
+                key: 'preview',
                 icon: Eye,
                 className: 'text-yellow-500',
                 tooltip: t('admin.booksTopicHasPreviewQuestions', { count: topic.previewQuestions })
-            };
+            });
         }
 
         if (topic.inactiveQuestions > 0) {
-            return {
+            indicators.push({
+                key: 'inactive',
                 icon: AlertTriangle,
                 className: 'text-orange-500',
                 tooltip: t('admin.booksTopicHasInactiveQuestions', { count: topic.inactiveQuestions })
-            };
+            });
         }
 
-        return null;
-    };
+        if (topic.questionsWithoutAnswers > 0) {
+            indicators.push({
+                key: 'no-answers',
+                icon: MessageCircleWarning,
+                className: 'text-red-500',
+                tooltip: t('admin.booksTopicQuestionsWithoutAnswers', { count: topic.questionsWithoutAnswers })
+            });
+        }
 
+        return indicators;
+    };
     return (
         <TooltipProvider>
             <FormField
@@ -77,8 +103,7 @@ export default function BookTopicsField({ control, topics, actions, onDeleteTopi
                         ) : (
                             <div className="grid gap-2">
                                 {topics.map((topic) => {
-                                    const statusIcon = getTopicStatusIcon(topic);
-                                    const StatusIcon = statusIcon?.icon;
+                                    const indicators = getTopicIndicators(topic);
 
                                     return (
                                         <div
@@ -91,16 +116,23 @@ export default function BookTopicsField({ control, topics, actions, onDeleteTopi
                                             >
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-sm font-medium">{topic.titleUk}</p>
-                                                    {statusIcon && StatusIcon && (
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <StatusIcon className={`h-4 w-4 ${statusIcon.className}`} />
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>
-                                                                <p>{statusIcon.tooltip}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    )}
+                                                    {indicators.length > 0 ? (
+                                                        <div className="flex flex-wrap items-center gap-1.5">
+                                                            {indicators.map((indicator) => {
+                                                                const IndicatorIcon = indicator.icon;
+                                                                return (
+                                                                    <Tooltip key={indicator.key}>
+                                                                        <TooltipTrigger asChild>
+                                                                            <IndicatorIcon className={`h-4 w-4 ${indicator.className}`} />
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>{indicator.tooltip}</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : null}
                                                 </div>
                                                 <p className="text-xs text-muted-foreground">{topic.titleEn}</p>
                                             </Link>
