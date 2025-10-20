@@ -17,7 +17,15 @@ import type { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import type { DbSubject } from '@/lib/repositories/subjectRepository';
 import type { DbTopicWithStats } from '@/lib/repositories/topicRepository';
 
-import { createAdminBookTopics, deleteAdminBookTopic, processAdminBookTopics, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
+import {
+    createAdminBookTopics,
+    deleteAdminBookTopic,
+    processAdminBookTopics,
+    startFillingBookData,
+    updateAdminBook,
+    type TopicSuggestionExisting,
+    type TopicSuggestionNew
+} from '../actions';
 import BookCoverField from '../components/BookCoverField';
 import BookFormFields from '../components/BookFormFields';
 import BookTopicCreateForm from '../components/BookTopicCreateForm';
@@ -90,6 +98,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     const [availableTopics, setAvailableTopics] = useState<DbTopicWithStats[]>(sortedTopics);
     const [topicToDelete, setTopicToDelete] = useState<DbTopicWithStats | null>(null);
     const [isDeletingTopic, setIsDeletingTopic] = useState(false);
+    const [isStartingFill, setIsStartingFill] = useState(false);
     useEffect(() => {
         setAvailableTopics(sortedTopics);
     }, [sortedTopics]);
@@ -246,6 +255,24 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         [availableTopics, bookId, compareTopics, getValues, setValue]
     );
 
+    const handleStartFillingBookData = useCallback(async () => {
+        setIsStartingFill(true);
+        try {
+            const result = await startFillingBookData(bookId);
+            if (result.success) {
+                toast.success(t('admin.booksTopicsFillSuccess'));
+                return;
+            }
+            clientLogger.error('Book data fill trigger failed', new Error(result.message), { bookId, code: result.code });
+            toast.error(t('admin.booksTopicsFillError'));
+        } catch (error) {
+            clientLogger.error('Book data fill trigger failed', error as Error, { bookId });
+            toast.error(t('admin.booksTopicsFillError'));
+        } finally {
+            setIsStartingFill(false);
+        }
+    }, [bookId, t]);
+
     const handleBookTopicsBulkGenerate = useCallback(async () => {
         if (availableTopics.length === 0) {
             toast.error(t('admin.booksTopicsBulkNoTopics'));
@@ -313,6 +340,10 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                             topics={availableTopics}
                             actions={
                                 <div className="flex flex-wrap items-center gap-2">
+                                    <Button type="button" variant="outline" onClick={() => void handleStartFillingBookData()} disabled={isStartingFill}>
+                                        {isStartingFill ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                        {t('admin.booksTopicsFillButton')}
+                                    </Button>
                                     <BookTopicSuggestionsDialog book={currentBook} onApply={handleSuggestionApply} />
                                     {availableTopics.length > 0 && hasTopicsMissingAnswers && !isAnyTopicProcessing ? (
                                         <Button type="button" variant="outline" onClick={() => void handleBookTopicsBulkGenerate()}>

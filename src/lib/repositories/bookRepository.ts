@@ -12,6 +12,7 @@ export interface DbBook {
     descriptionEn: string | null;
     coverUrl: string | null;
     isActive: boolean;
+    isGenerating: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -63,6 +64,7 @@ type BookBaseRow = {
     descriptionEn: string | null;
     coverUrl: string | null;
     isActive: boolean;
+    isGenerating: boolean;
     createdAt: Date;
     updatedAt: Date;
 };
@@ -95,6 +97,7 @@ const mapToDbBook = (book: BookBaseRow): DbBook => ({
     descriptionEn: book.descriptionEn,
     coverUrl: book.coverUrl,
     isActive: book.isActive,
+    isGenerating: book.isGenerating,
     createdAt: book.createdAt,
     updatedAt: book.updatedAt
 });
@@ -318,6 +321,7 @@ export async function getBooksBySubjectId(subjectId: string, userId?: string): P
         descriptionEn: bs.book.descriptionEn,
         coverUrl: bs.book.coverUrl,
         isActive: bs.book.isActive,
+        isGenerating: bs.book.isGenerating,
         createdAt: bs.book.createdAt,
         updatedAt: bs.book.updatedAt,
         isLearning: userId ? bs.book.userLevelScores.length > 0 : false,
@@ -437,6 +441,7 @@ export async function getBookWithQuestions(bookId: string, userId?: string): Pro
         descriptionEn: book.descriptionEn,
         coverUrl: book.coverUrl,
         isActive: book.isActive,
+        isGenerating: book.isGenerating,
         createdAt: book.createdAt,
         updatedAt: book.updatedAt,
         isLearning: userId ? book.userLevelScores.length > 0 : false,
@@ -590,6 +595,7 @@ export async function startLearningBook(userId: string, bookId: string): Promise
         descriptionEn: updatedBook.descriptionEn,
         coverUrl: updatedBook.coverUrl,
         isActive: updatedBook.isActive,
+        isGenerating: updatedBook.isGenerating,
         createdAt: updatedBook.createdAt,
         updatedAt: updatedBook.updatedAt,
         isLearning: true,
@@ -656,6 +662,7 @@ export async function stopLearningBook(userId: string, bookId: string): Promise<
         descriptionEn: updatedBook.descriptionEn,
         coverUrl: updatedBook.coverUrl,
         isActive: updatedBook.isActive,
+        isGenerating: updatedBook.isGenerating,
         createdAt: updatedBook.createdAt,
         updatedAt: updatedBook.updatedAt,
         isLearning: false,

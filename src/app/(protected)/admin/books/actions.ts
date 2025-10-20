@@ -315,3 +315,59 @@ export async function processAdminBookTopics(bookId: string): Promise<{ success:
         return { success: false, error: 'PROCESSING_FAILED' };
     }
 }
+
+export type StartFillingBookDataErrorCode = 'missing_worker_url' | 'request_failed';
+
+export interface StartFillingBookDataSuccess {
+    success: true;
+}
+
+export interface StartFillingBookDataFailure {
+    success: false;
+    code: StartFillingBookDataErrorCode;
+    message: string;
+}
+
+export type StartFillingBookDataResult = StartFillingBookDataSuccess | StartFillingBookDataFailure;
+
+export const startFillingBookData = async (bookId: string): Promise<StartFillingBookDataResult> => {
+    const workerUrlRaw = process.env.WORKER_URL;
+    if (!workerUrlRaw) {
+        return {
+            success: false,
+            code: 'missing_worker_url',
+            message: 'WORKER_URL is not configured.'
+        };
+    }
+
+    const workerUrl = workerUrlRaw.endsWith('/') ? workerUrlRaw.slice(0, -1) : workerUrlRaw;
+
+    try {
+        const response = await fetch(`${workerUrl}/start-filling-topics-with-data`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ bookId })
+        });
+
+        if (!response.ok) {
+            const error = new Error(`Worker request failed with status ${response.status}`);
+            serverLogger.error('Worker start filling topics failed', error, { bookId, status: response.status });
+            return {
+                success: false,
+                code: 'request_failed',
+                message: `Worker request failed with status ${response.status}.`
+            };
+        }
+
+        return { success: true };
+    } catch (error) {
+        serverLogger.error('Worker start filling topics failed', error as Error, { bookId });
+        return {
+            success: false,
+            code: 'request_failed',
+            message: 'Worker request failed.'
+        };
+    }
+};
