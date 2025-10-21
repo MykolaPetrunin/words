@@ -3,11 +3,20 @@
 import { del, put } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 
+import { checkBookTopicsDifficulty } from '@/lib/aiActions/checkBookTopicsDifficulty';
 import { getBookTopicsSuggestions } from '@/lib/aiActions/getBookTopicsSuggestions';
 import { appPaths, getAdminBookPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
 import { createBook, getBookWithRelations, updateBook, updateBookCover, type BookInput, type DbBookWithRelations } from '@/lib/repositories/bookRepository';
-import { createTopic, deleteTopicWithQuestions, getTopicById, type DbTopic } from '@/lib/repositories/topicRepository';
+import {
+    createTopic,
+    deleteTopicWithQuestions,
+    getTopicById,
+    getTopicsForBook,
+    updateTopicsDifficulty,
+    type DbTopic,
+    type TopicDifficultyUpdate
+} from '@/lib/repositories/topicRepository';
 
 import { bookFormSchema, bookTopicFormSchema, type BookFormData, type BookTopicFormData } from './schemas';
 
@@ -262,6 +271,55 @@ export async function deleteAdminBookTopic(bookId: string, topicId: string): Pro
 }
 
 export type StartFillingBookDataErrorCode = 'missing_worker_url' | 'request_failed';
+
+export type SyncTopicsDifficultyErrorCode = 'no_topics' | 'ai_failure' | 'invalid_response';
+
+export interface SyncTopicsDifficultySuccess {
+    success: true;
+    items: TopicDifficultyUpdate[];
+}
+
+export interface SyncTopicsDifficultyFailure {
+    success: false;
+    code: SyncTopicsDifficultyErrorCode;
+    message: string;
+}
+
+export type SyncTopicsDifficultyResult = SyncTopicsDifficultySuccess | SyncTopicsDifficultyFailure;
+
+export async function syncBookTopicsDifficulty(bookId: string): Promise<SyncTopicsDifficultyResult> {
+    const topics = await getTopicsForBook(bookId);
+    if (topics.length === 0) {
+        return {
+            success: false,
+            code: 'no_topics',
+            message: 'No topics available.'
+        };
+    }
+    const payload = topics.map((topic) => ({
+        id: topic.id,
+        titleUk: topic.titleUk,
+        titleEn: topic.titleEn
+    }));
+    const response = await checkBookTopicsDifficulty(payload);
+
+    if (!response) {
+        serverLogger.error('Topic difficulty sync failed', undefined, { bookId, reason: 'ai_failure' });
+        return {
+            success: false,
+            code: 'ai_failure',
+            message: 'Unable to evaluate topic difficulty.'
+        };
+    }
+
+    await updateTopicsDifficulty(response);
+    revalidateAdminBooks();
+    revalidatePath(getAdminBookPath(bookId));
+    return {
+        success: true,
+        items: response
+    };
+}
 
 export interface StartFillingBookDataSuccess {
     success: true;

@@ -28,6 +28,7 @@ export interface BookTopicInfo {
     bookId: string;
     titleUk: string;
     titleEn: string;
+    difficulty: number;
 }
 
 export interface DbBookWithRelations extends DbBook {
@@ -82,6 +83,7 @@ type TopicRow = {
     id: string;
     titleUk: string;
     titleEn: string;
+    difficulty: number;
 };
 
 type BookWithRelationsRow = BookBaseRow & {
@@ -115,7 +117,8 @@ const mapToDbBookWithRelations = (book: BookWithRelationsRow): DbBookWithRelatio
             id: topic.id,
             bookId: topic.bookId,
             titleUk: topic.titleUk,
-            titleEn: topic.titleEn
+            titleEn: topic.titleEn,
+            difficulty: topic.difficulty
         }))
 });
 
@@ -139,7 +142,8 @@ export async function getAllBooks(): Promise<DbBookWithRelations[]> {
                     bookId: true,
                     id: true,
                     titleUk: true,
-                    titleEn: true
+                    titleEn: true,
+                    difficulty: true
                 }
             }
         }
@@ -167,7 +171,8 @@ export async function getBookWithRelations(id: string): Promise<DbBookWithRelati
                     bookId: true,
                     id: true,
                     titleUk: true,
-                    titleEn: true
+                    titleEn: true,
+                    difficulty: true
                 }
             }
         }
@@ -208,7 +213,8 @@ export async function createBook(input: BookInput): Promise<DbBookWithRelations>
                     bookId: true,
                     id: true,
                     titleUk: true,
-                    titleEn: true
+                    titleEn: true,
+                    difficulty: true
                 }
             }
         }
@@ -270,7 +276,8 @@ export async function updateBook(id: string, input: BookInput): Promise<DbBookWi
                     bookId: true,
                     id: true,
                     titleUk: true,
-                    titleEn: true
+                    titleEn: true,
+                    difficulty: true
                 }
             }
         }
@@ -491,7 +498,8 @@ export async function updateBookCover(id: string, coverUrl: string | null): Prom
                     bookId: true,
                     id: true,
                     titleUk: true,
-                    titleEn: true
+                    titleEn: true,
+                    difficulty: true
                 }
             }
         }

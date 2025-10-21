@@ -5,6 +5,7 @@ export interface DbTopic {
     bookId: string;
     titleUk: string;
     titleEn: string;
+    difficulty: number;
 }
 
 export interface DbTopicWithProcessing extends DbTopic {
@@ -28,11 +29,17 @@ export interface TopicInput {
     titleEn: string;
 }
 
+export interface TopicDifficultyUpdate {
+    id: string;
+    difficulty: number;
+}
+
 type TopicRow = {
     id: string;
     bookId: string;
     titleUk: string;
     titleEn: string;
+    difficulty: number;
 };
 
 type TopicStatsRow = {
@@ -47,13 +54,15 @@ type TopicStatsRow = {
     questions_without_answers: number;
     is_processing: boolean;
     processing_started_at: Date | null;
+    difficulty: number;
 };
 
 const mapToDbTopic = (topic: TopicRow): DbTopic => ({
     id: topic.id,
     bookId: topic.bookId,
     titleUk: topic.titleUk,
-    titleEn: topic.titleEn
+    titleEn: topic.titleEn,
+    difficulty: topic.difficulty
 });
 
 export async function getAllTopics(): Promise<DbTopic[]> {
@@ -89,6 +98,7 @@ export async function getTopicsForBookWithStats(bookId: string): Promise<DbTopic
             t.book_id,
             t.title_uk,
             t.title_en,
+            t.difficulty,
             COALESCE(COUNT(q.id), 0)::int AS total_questions,
             COALESCE(SUM(CASE WHEN q.is_active = true AND q.preview_mode = false THEN 1 ELSE 0 END), 0)::int AS active_questions,
             COALESCE(
@@ -117,7 +127,7 @@ export async function getTopicsForBookWithStats(bookId: string): Promise<DbTopic
         LEFT JOIN answer_counts ac ON ac.question_id = q.id
         WHERE t.book_id = ${bookId}
         GROUP BY t.id
-        ORDER BY t.title_uk ASC
+        ORDER BY t.difficulty ASC, t.title_uk ASC
     `;
 
     return rows.map((topic) => ({
@@ -125,6 +135,7 @@ export async function getTopicsForBookWithStats(bookId: string): Promise<DbTopic
         bookId: topic.book_id,
         titleUk: topic.title_uk,
         titleEn: topic.title_en,
+        difficulty: topic.difficulty,
         totalQuestions: topic.total_questions,
         activeQuestions: topic.active_questions,
         inactiveQuestions: topic.inactive_questions,
@@ -195,6 +206,7 @@ export async function getTopicWithProcessingStatus(topicId: string): Promise<DbT
             bookId: true,
             titleUk: true,
             titleEn: true,
+            difficulty: true,
             isProcessing: true,
             processingStartedAt: true
         }
@@ -207,7 +219,26 @@ export async function getTopicWithProcessingStatus(topicId: string): Promise<DbT
         bookId: topic.bookId,
         titleUk: topic.titleUk,
         titleEn: topic.titleEn,
+        difficulty: topic.difficulty,
         isProcessing: topic.isProcessing,
         processingStartedAt: topic.processingStartedAt
     };
+}
+
+export async function updateTopicsDifficulty(updates: readonly TopicDifficultyUpdate[]): Promise<void> {
+    if (updates.length === 0) {
+        return;
+    }
+    await prisma.$transaction(
+        updates.map((update) =>
+            prisma.topic.update({
+                where: {
+                    id: update.id
+                },
+                data: {
+                    difficulty: update.difficulty
+                }
+            })
+        )
+    );
 }

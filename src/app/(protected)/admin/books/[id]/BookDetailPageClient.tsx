@@ -17,7 +17,15 @@ import type { DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import type { DbSubject } from '@/lib/repositories/subjectRepository';
 import type { DbTopicWithStats } from '@/lib/repositories/topicRepository';
 
-import { createAdminBookTopics, deleteAdminBookTopic, startFillingBookData, updateAdminBook, type TopicSuggestionExisting, type TopicSuggestionNew } from '../actions';
+import {
+    createAdminBookTopics,
+    deleteAdminBookTopic,
+    startFillingBookData,
+    syncBookTopicsDifficulty,
+    updateAdminBook,
+    type TopicSuggestionExisting,
+    type TopicSuggestionNew
+} from '../actions';
 import BookCoverField from '../components/BookCoverField';
 import BookFormFields from '../components/BookFormFields';
 import BookTopicCreateForm from '../components/BookTopicCreateForm';
@@ -74,6 +82,9 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     }, []);
     const compareTopics = useCallback(
         (a: DbTopicWithStats, b: DbTopicWithStats) => {
+            if (a.difficulty !== b.difficulty) {
+                return a.difficulty - b.difficulty;
+            }
             const priorityDiff = getTopicPriority(a) - getTopicPriority(b);
             if (priorityDiff !== 0) {
                 return priorityDiff;
@@ -91,6 +102,7 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
     const [topicToDelete, setTopicToDelete] = useState<DbTopicWithStats | null>(null);
     const [isDeletingTopic, setIsDeletingTopic] = useState(false);
     const [isStartingFill, setIsStartingFill] = useState(false);
+    const [isUpdatingDifficulty, setIsUpdatingDifficulty] = useState(false);
     useEffect(() => {
         setAvailableTopics(sortedTopics);
     }, [sortedTopics]);
@@ -263,6 +275,38 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
         }
     }, [bookId, t]);
 
+    const handleSyncTopicsDifficulty = useCallback(async () => {
+        setIsUpdatingDifficulty(true);
+        try {
+            const result = await syncBookTopicsDifficulty(bookId);
+            if (result.success) {
+                setAvailableTopics((prev) => {
+                    const map = new Map(result.items.map((item) => [item.id, item.difficulty]));
+                    const next = prev.map((topic) => {
+                        const difficulty = map.get(topic.id);
+                        if (typeof difficulty !== 'number') {
+                            return topic;
+                        }
+                        return {
+                            ...topic,
+                            difficulty
+                        };
+                    });
+                    return next.sort((a, b) => compareTopics(a, b));
+                });
+                toast.success(t('admin.booksTopicsDifficultySuccess'));
+                return;
+            }
+            clientLogger.error('Book topics difficulty sync failed', new Error(result.message), { bookId, code: result.code });
+            toast.error(t('admin.booksTopicsDifficultyError'));
+        } catch (error) {
+            clientLogger.error('Book topics difficulty sync failed', error as Error, { bookId });
+            toast.error(t('admin.booksTopicsDifficultyError'));
+        } finally {
+            setIsUpdatingDifficulty(false);
+        }
+    }, [bookId, compareTopics, t]);
+
     return (
         <div className="space-y-6">
             <div className="space-y-1">
@@ -280,6 +324,15 @@ export default function BookDetailPageClient({ book, subjects, topics }: BookDet
                             topics={availableTopics}
                             actions={
                                 <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => void handleSyncTopicsDifficulty()}
+                                        disabled={isUpdatingDifficulty || availableTopics.length === 0}
+                                    >
+                                        {isUpdatingDifficulty ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                        {t('admin.booksTopicsDifficultyButton')}
+                                    </Button>
                                     <Button type="button" variant="outline" onClick={() => void handleStartFillingBookData()} disabled={isStartingFill}>
                                         {isStartingFill ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                         {t('admin.booksTopicsFillButton')}
