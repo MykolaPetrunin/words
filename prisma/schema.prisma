@@ -70,6 +70,9 @@ model Topic {
   bookId               String    @map("book_id")
   isProcessing         Boolean   @default(false) @map("is_processing")
   processingStartedAt  DateTime? @map("processing_started_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  difficulty           Int       @default(0) @map("difficulty")
 
   questions Question[]
   book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)

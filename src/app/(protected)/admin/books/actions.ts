@@ -6,11 +6,9 @@ import { revalidatePath } from 'next/cache';
 import { getBookTopicsSuggestions } from '@/lib/aiActions/getBookTopicsSuggestions';
 import { appPaths, getAdminBookPath } from '@/lib/appPaths';
 import { serverLogger } from '@/lib/logger';
-import prisma from '@/lib/prisma';
 import { createBook, getBookWithRelations, updateBook, updateBookCover, type BookInput, type DbBookWithRelations } from '@/lib/repositories/bookRepository';
 import { createTopic, deleteTopicWithQuestions, getTopicById, type DbTopic } from '@/lib/repositories/topicRepository';
 
-import { processBulkTopicQuestions } from './[id]/topics/[topicId]/actions';
 import { bookFormSchema, bookTopicFormSchema, type BookFormData, type BookTopicFormData } from './schemas';
 
 const mapFormToInput = (data: BookFormData): BookInput => ({
@@ -261,59 +259,6 @@ export async function deleteAdminBookTopic(bookId: string, topicId: string): Pro
     }
     revalidateAdminBooks();
     revalidatePath(getAdminBookPath(bookId));
-}
-
-export async function processAdminBookTopics(bookId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-        const topics = await prisma.topic.findMany({
-            where: { bookId },
-            select: {
-                id: true,
-                isProcessing: true
-            }
-        });
-
-        if (topics.length === 0) {
-            return { success: false, error: 'NO_TOPICS' };
-        }
-
-        const hasProcessing = topics.some((topic) => topic.isProcessing);
-        if (hasProcessing) {
-            return { success: false, error: 'ALREADY_PROCESSING' };
-        }
-
-        let processedAny = false;
-
-        for (const topic of topics) {
-            const hasQuestionsWithoutAnswers = await prisma.question.count({
-                where: {
-                    topicId: topic.id,
-                    answers: {
-                        none: {}
-                    }
-                }
-            });
-
-            if (hasQuestionsWithoutAnswers === 0) {
-                continue;
-            }
-
-            const result = await processBulkTopicQuestions(topic.id);
-            if (!result.success) {
-                return result;
-            }
-            processedAny = true;
-        }
-
-        if (!processedAny) {
-            return { success: false, error: 'NO_PENDING' };
-        }
-
-        return { success: true };
-    } catch (error) {
-        serverLogger.error('Book-level bulk topic processing failed', error as Error, { bookId });
-        return { success: false, error: 'PROCESSING_FAILED' };
-    }
 }
 
 export type StartFillingBookDataErrorCode = 'missing_worker_url' | 'request_failed';
